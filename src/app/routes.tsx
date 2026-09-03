@@ -13,6 +13,7 @@ import { ProcessosInteligentesPage } from '../modules/processos/ProcessosIntelig
 import { DashboardProcessoPage } from '../modules/processos/DashboardProcessoPage'
 import { StatusArtefatosPage } from '../modules/processos/StatusArtefatosPage'
 import { ProcessosWorkflowPage } from '../modules/processos/ProcessosWorkflowPage'
+import { WorkflowDetailPage } from '../modules/processos/WorkflowDetailPage'
 import { ModeloPersonalizadoPage } from '../modules/processos/ModeloPersonalizadoPage'
 import { SollAcademyPage } from '../modules/academy/SollAcademyPage'
 import { NormativaPage } from '../modules/normativa/NormativaPage'
@@ -45,6 +46,7 @@ export const router = createBrowserRouter([
       { path: 'DashboardProcesso', element: <DashboardProcessoPage /> },
       { path: 'StatusArtefatos', element: <StatusArtefatosPage /> },
       { path: 'ProcessosWorkflow', element: <ProcessosWorkflowPage /> },
+      { path: 'Workflow/:id', element: <WorkflowDetailPage /> },
       { path: 'ModeloPersonalizado', element: <ModeloPersonalizadoPage /> },
 
       { path: 'SollAcademy', element: <SollAcademyPage /> },

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Plus, Search, Trash2 } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { Button } from '../../components/common/Button'
@@ -11,36 +12,42 @@ import { WORKFLOWS } from '../../mocks'
 
 type Row = (typeof WORKFLOWS)[number]
 
-const cols: Column<Row>[] = [
-  { key: 'tipo', header: 'Tipo de Processo', align: 'center' },
-  { key: 'legislacao', header: 'Legislação', align: 'center' },
-  {
-    key: 'ativo',
-    header: 'Status',
-    align: 'center',
-    render: (r) => <Badge tone={r.ativo ? 'success' : 'neutral'}>{r.ativo ? 'Ativo' : 'Inativo'}</Badge>,
-  },
-  { key: 'inclusao', header: 'Data de inclusão', align: 'center' },
-  {
-    key: 'acoes',
-    header: 'Ações',
-    align: 'right',
-    render: () => (
-      <div className="flex justify-end gap-2">
-        <button className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-success)] px-3 py-1.5 text-xs font-semibold text-white">
-          <Search size={13} /> Detalhes
-        </button>
-        <button className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-[#f0c2c8] px-3 py-1.5 text-xs font-semibold text-[var(--color-danger)]">
-          <Trash2 size={13} /> Inativar
-        </button>
-      </div>
-    ),
-  },
-]
-
 export function ProcessosWorkflowPage() {
   useModuleLinks(PROCESSOS_MODULE_LINKS)
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
+
+  const cols: Column<Row>[] = [
+    { key: 'tipo', header: 'Tipo de Processo', align: 'center' },
+    { key: 'legislacao', header: 'Legislação', align: 'center' },
+    {
+      key: 'ativo',
+      header: 'Status',
+      align: 'center',
+      render: (r) => (
+        <Badge tone={r.ativo ? 'success' : 'neutral'}>{r.ativo ? 'Ativo' : 'Inativo'}</Badge>
+      ),
+    },
+    { key: 'inclusao', header: 'Data de inclusão', align: 'center' },
+    {
+      key: 'acoes',
+      header: 'Ações',
+      align: 'right',
+      render: (r) => (
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => navigate(`/Workflow/${r.id}`)}
+            className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-success)] px-3 py-1.5 text-xs font-semibold text-white"
+          >
+            <Search size={13} /> Detalhes
+          </button>
+          <button className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-[#f0c2c8] px-3 py-1.5 text-xs font-semibold text-[var(--color-danger)]">
+            <Trash2 size={13} /> Inativar
+          </button>
+        </div>
+      ),
+    },
+  ]
 
   return (
     <div>

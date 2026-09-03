@@ -224,22 +224,41 @@ export const PROCESSOS = [
 
 /** Fluxos de Processos — dados reais do SollAI (/ProcessosWorkflow). */
 export const WORKFLOWS = [
-  { id: 'w1', tipo: 'Obras', legislacao: '14.133', inclusao: '22/12/2025', ativo: true },
+  { id: '41', tipo: 'Obras', legislacao: '14.133', inclusao: '22/12/2025', ativo: true },
   {
-    id: 'w2',
+    id: '42',
     tipo: 'Contratação Direta - inexigibilidade',
     legislacao: '14.133',
     inclusao: '23/12/2025',
     ativo: true,
   },
   {
-    id: 'w3',
+    id: '43',
     tipo: 'Pregão - Bens e Serviços',
     legislacao: '14.133',
     inclusao: '03/09/2026',
     ativo: true,
   },
 ]
+
+/** Nós do editor de fluxo (/Workflow/:id) — 13 artefatos, na ordem real do SollAI. */
+export const WORKFLOW_NODES = [
+  'Anteprojeto',
+  'Projeto Básico',
+  'Mapa de Risco',
+  'Termo de Referência',
+  'Pesquisa de Preços',
+  'Edital',
+  'Parecer de Adequação da Modalidade',
+  'Parecer de Controle Interno',
+  'Parecer Parametrizado',
+  'Proposta Vencedora',
+  'Termo de Homologação',
+  'Minuta do Contrato',
+  'Autorização do Ordenador de Despesas',
+]
+
+export const WORKFLOW_NODE_CHIPS = ['Sem prazo', 'Revisão', 'Aprovação', 'Assinatura', 'Independente']
 
 export const MODELOS_PERSONALIZADOS = [
   {
