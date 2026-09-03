@@ -1,0 +1,84 @@
+@import 'tailwindcss';
+
+/*
+  Design tokens extracted from the real geracaotech admin panel CSS
+  (theme.css — "PAINEL ADMIN — GERENCIAR INSCRIÇÕES").
+  The SollAI clone uses SollAI's features with Geração Tech's visual identity.
+*/
+@theme {
+  --font-sans: 'Inter', 'Poppins', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Poppins', 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  --color-primary: #174ea6;
+  --color-primary-strong: #103b82;
+  --color-primary-soft: #eef4ff;
+
+  --color-success: #198754;
+  --color-danger: #c93645;
+  --color-warning: #d39a16;
+  --color-info: #2672c9;
+
+  --color-canvas: #f3f6fb;
+  --color-surface: #ffffff;
+  --color-ink: #1f2a44;
+  --color-muted: #6f7b91;
+  --color-line: #dce3ef;
+
+  --radius-card: 18px;
+  --radius-control: 10px;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 14px 38px rgba(15, 41, 87, 0.08);
+  --shadow-pop: 0 18px 44px rgba(15, 41, 87, 0.14);
+}
+
+:root {
+  /* Plain CSS vars mirror the theme tokens for components that read them directly. */
+  --color-ink: #1f2a44;
+  --color-muted: #6f7b91;
+  --color-line: #dce3ef;
+  --color-primary: #174ea6;
+  --color-surface: #ffffff;
+  color-scheme: light;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(46, 114, 201, 0.08), transparent 60%),
+    linear-gradient(180deg, #f6f8fc 0%, #f3f6fb 100%);
+  background-attachment: fixed;
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-display);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Shared control styles matching the geracaotech inputs. */
+.gt-input {
+  width: 100%;
+  border: 1px solid #d5deeb;
+  border-radius: var(--radius-control);
+  background: #fff;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.9rem;
+  color: var(--color-ink);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.gt-input:focus {
+  outline: none;
+  border-color: var(--color-info);
+  box-shadow: 0 0 0 4px rgba(60, 114, 200, 0.11);
+}
