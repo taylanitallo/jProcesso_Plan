@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { CalendarClock, FileCheck2, FilePen, FileSignature, Settings, X } from 'lucide-react'
+import { Combo } from '../../components/common/Combo'
 
 function Toggle({
   label,
@@ -37,12 +38,14 @@ function Card({
   title,
   desc,
   children,
+  below,
   full,
 }: {
   icon: ReactNode
   title: string
   desc: string
   children: ReactNode
+  below?: ReactNode
   full?: boolean
 }) {
   return (
@@ -62,6 +65,7 @@ function Card({
         {full && children}
       </div>
       {!full && <div className="mt-3">{children}</div>}
+      {below && <div className="mt-3">{below}</div>}
     </div>
   )
 }
@@ -71,6 +75,8 @@ export function ControleGeralModal({ open, onClose }: { open: boolean; onClose: 
   const [revisao, setRevisao] = useState(false)
   const [aprovacao, setAprovacao] = useState(false)
   const [assinatura, setAssinatura] = useState(false)
+  const [duracao, setDuracao] = useState('')
+  const [contagem, setContagem] = useState('')
 
   if (!open) return null
 
@@ -117,6 +123,32 @@ export function ControleGeralModal({ open, onClose }: { open: boolean; onClose: 
             icon={<CalendarClock size={18} />}
             title="Prazos"
             desc="Defina a duração padrão e o tipo de contagem que todos os artefatos seguirão."
+            below={
+              prazo ? (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
+                    Duração padrão (dias)
+                    <input
+                      type="number"
+                      min={1}
+                      value={duracao}
+                      onChange={(e) => setDuracao(e.target.value)}
+                      placeholder="Ex.: 5"
+                      className="gt-input font-normal normal-case"
+                    />
+                  </label>
+                  <label className="flex min-w-0 flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
+                    Tipo de contagem
+                    <Combo
+                      value={contagem}
+                      onChange={setContagem}
+                      options={['Dias corridos', 'Dias úteis']}
+                      placeholder="Selecione:"
+                    />
+                  </label>
+                </div>
+              ) : undefined
+            }
           >
             <Toggle label="Possui prazo" checked={prazo} onChange={() => setPrazo((v) => !v)} />
           </Card>
