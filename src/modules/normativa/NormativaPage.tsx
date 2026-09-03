@@ -4,10 +4,11 @@ import { Badge } from '../../components/common/Badge'
 import { Button } from '../../components/common/Button'
 import { Modal } from '../../components/common/Modal'
 import { useModuleLinks } from '../../components/shell/useModuleLinks'
+import { PROCESSOS_MODULE_LINKS } from '../processos/processosLinks'
 import { NORMATIVAS } from '../../mocks'
 
 export function NormativaPage() {
-  useModuleLinks([{ key: 'base', label: 'Normativa', to: '/Normativa', icon: 'database' }])
+  useModuleLinks(PROCESSOS_MODULE_LINKS)
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const list = NORMATIVAS.filter((n) => n.nome.toLowerCase().includes(query.toLowerCase()))

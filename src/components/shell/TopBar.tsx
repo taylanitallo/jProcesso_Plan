@@ -2,12 +2,16 @@ import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import {
   Bell,
-  Database,
-  Scale,
   BookText,
-  Search,
-  FileSearch,
   ClipboardList,
+  Database,
+  DatabaseBackup,
+  FilePenLine,
+  FileSearch,
+  ListChecks,
+  Scale,
+  Search,
+  Workflow,
   type LucideIcon,
 } from 'lucide-react'
 import { useAuth } from '../../store/auth'
@@ -22,6 +26,10 @@ const ICONS: Record<string, LucideIcon> = {
   database: Database,
   analyzer: FileSearch,
   clipboard: ClipboardList,
+  list: ListChecks,
+  workflow: Workflow,
+  modelo: FilePenLine,
+  normativa: DatabaseBackup,
 }
 
 export function TopBar() {
@@ -43,17 +51,18 @@ export function TopBar() {
         </Link>
 
         {moduleLinks.length > 0 && (
-          <nav className="flex items-center gap-2 border-l border-[var(--color-line)] pl-4">
+          <nav className="flex items-center gap-2 overflow-x-auto border-l border-[var(--color-line)] pl-4">
             {moduleLinks.map((l) => {
               const Icon = ICONS[l.icon] ?? Database
               return (
                 <NavLink
                   key={l.key}
                   to={l.to}
+                  end
                   title={l.label}
                   aria-label={l.label}
                   className={({ isActive }) =>
-                    `grid h-10 w-10 place-items-center rounded-[10px] border transition ${
+                    `grid h-10 w-10 shrink-0 place-items-center rounded-[10px] border transition ${
                       isActive
                         ? 'border-[#bcd0ee] bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)]'
                         : 'border-[var(--color-line)] bg-white text-[var(--color-muted)] hover:text-[var(--color-ink)]'
@@ -66,13 +75,6 @@ export function TopBar() {
             })}
           </nav>
         )}
-
-        <div className="mx-auto hidden max-w-xl items-center gap-2 rounded-[var(--radius-control)] border border-[#f2d999] bg-[#fdf6e3] px-4 py-2 text-xs font-medium text-[#8a6d1a] lg:flex">
-          <span className="grid h-4 w-4 place-items-center rounded-full bg-[#e0a92a] text-[10px] font-bold text-white">
-            !
-          </span>
-          Seu contrato encerra em 5 dias. Entre em contato com nossa equipe para renovação.
-        </div>
 
         <div className="relative ml-auto">
           <button

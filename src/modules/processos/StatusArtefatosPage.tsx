@@ -3,6 +3,8 @@ import { ChevronLeft, ChevronRight, FileText } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { Badge } from '../../components/common/Badge'
 import { DataTable, type Column } from '../../components/common/DataTable'
+import { useModuleLinks } from '../../components/shell/useModuleLinks'
+import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 import { PROCESSOS } from '../../mocks'
 
 /** 27 artefatos típicos do fluxo da Lei 14.133/2021. */
@@ -45,6 +47,7 @@ const cols: Column<(typeof PROCESSOS)[number]>[] = [
 ]
 
 export function StatusArtefatosPage() {
+  useModuleLinks(PROCESSOS_MODULE_LINKS)
   const [page, setPage] = useState(0)
   const perPage = 6
   const pages = Math.ceil(ARTEFATOS.length / perPage)

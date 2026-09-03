@@ -14,14 +14,17 @@ import {
 import { PageHeader } from '../../components/common/PageHeader'
 import { Badge } from '../../components/common/Badge'
 import { DataTable, Pagination, type Column } from '../../components/common/DataTable'
+import { useModuleLinks } from '../../components/shell/useModuleLinks'
 import { AgendaModal } from './AgendaModal'
 import { PendingModal } from './PendingModal'
 import { NovoProcessoModal } from './NovoProcessoModal'
+import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 import { PROCESSOS } from '../../mocks'
 
 type Row = (typeof PROCESSOS)[number]
 
 export function ProcessosInteligentesPage() {
+  useModuleLinks(PROCESSOS_MODULE_LINKS)
   const navigate = useNavigate()
   const [modal, setModal] = useState<
     'none' | 'agenda' | 'revisoes' | 'aprovacoes' | 'assinaturas' | 'novo'

@@ -4,6 +4,8 @@ import { PageHeader } from '../../components/common/PageHeader'
 import { DataTable, type Column } from '../../components/common/DataTable'
 import { EmptyState } from '../../components/common/EmptyState'
 import { BarChart, DonutChart, LineChart } from '../../components/charts'
+import { useModuleLinks } from '../../components/shell/useModuleLinks'
+import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 
 const MESES = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -20,6 +22,7 @@ const criticosCols: Column<never>[] = [
 ]
 
 export function DashboardProcessoPage() {
+  useModuleLinks(PROCESSOS_MODULE_LINKS)
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title="Dashboard de Processos" subtitle="Acompanhe os KPIs e métricas de desempenho" />

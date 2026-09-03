@@ -12,6 +12,8 @@ import { RegistroNecessidadePage } from '../modules/necessidades/RegistroNecessi
 import { ProcessosInteligentesPage } from '../modules/processos/ProcessosInteligentesPage'
 import { DashboardProcessoPage } from '../modules/processos/DashboardProcessoPage'
 import { StatusArtefatosPage } from '../modules/processos/StatusArtefatosPage'
+import { ProcessosWorkflowPage } from '../modules/processos/ProcessosWorkflowPage'
+import { ModeloPersonalizadoPage } from '../modules/processos/ModeloPersonalizadoPage'
 import { SollAcademyPage } from '../modules/academy/SollAcademyPage'
 import { NormativaPage } from '../modules/normativa/NormativaPage'
 import { GerenciarUsuariosPage } from '../modules/usuario/GerenciarUsuariosPage'
@@ -42,6 +44,8 @@ export const router = createBrowserRouter([
       { path: 'processosinteligentes', element: <ProcessosInteligentesPage /> },
       { path: 'DashboardProcesso', element: <DashboardProcessoPage /> },
       { path: 'StatusArtefatos', element: <StatusArtefatosPage /> },
+      { path: 'ProcessosWorkflow', element: <ProcessosWorkflowPage /> },
+      { path: 'ModeloPersonalizado', element: <ModeloPersonalizadoPage /> },
 
       { path: 'SollAcademy', element: <SollAcademyPage /> },
       { path: 'Normativa', element: <NormativaPage /> },

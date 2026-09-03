@@ -222,6 +222,35 @@ export const PROCESSOS = [
   },
 ]
 
+export const WORKFLOWS = [
+  {
+    id: 'w1',
+    nome: 'Obras e Serviços de Engenharia',
+    etapas: 9,
+    artefatos: 'DFD, ETP, Projeto Básico, Matriz de Riscos, Edital, Contrato',
+    atualizado: '12/12/2025',
+    ativo: true,
+  },
+  {
+    id: 'w2',
+    nome: 'Contratação Direta (Dispensa / Inexigibilidade)',
+    etapas: 6,
+    artefatos: 'DFD, ETP simplificado, TR, Pesquisa de Preços, Parecer Jurídico, Contrato',
+    atualizado: '05/12/2025',
+    ativo: true,
+  },
+]
+
+export const MODELOS_PERSONALIZADOS = [
+  {
+    id: 'm1',
+    nome: 'Termo de Referência de Aquisições',
+    base: '14.133/2021',
+    tipo: 'Termo de Referência',
+    atualizado: '18/12/2025',
+  },
+]
+
 export const NORMATIVAS = [
   { id: 'n1', nome: 'DECRETO_120_2023_0000001.pdf', status: 'PROCESSADO' },
   { id: 'n2', nome: 'INSTRUÇÃO NORMATIVA TCE-CE Nº 01.2025.pdf', status: 'PROCESSADO' },
