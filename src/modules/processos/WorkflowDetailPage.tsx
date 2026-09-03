@@ -2,7 +2,6 @@ import { useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Check, ChevronLeft, Minus, Move, Plus, Settings } from 'lucide-react'
 import { useModuleLinks } from '../../components/shell/useModuleLinks'
-import { Combo } from '../../components/common/Combo'
 import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 import { ControleGeralModal } from './ControleGeralModal'
 import { NodeConfigModal } from './NodeConfigModal'
@@ -28,14 +27,10 @@ export function WorkflowDetailPage() {
   useModuleLinks(PROCESSOS_MODULE_LINKS)
   const { id } = useParams()
 
-  const fluxoOptions = useMemo(
-    () => WORKFLOWS.map((w) => `${w.tipo} - ${w.legislacao}`),
-    [],
-  )
   const current = WORKFLOWS.find((w) => w.id === id)
-  const [fluxoNome, setFluxoNome] = useState(
-    current ? `${current.tipo} - ${current.legislacao}` : fluxoOptions[0],
-  )
+  const nomeOriginal = current?.nome ?? 'Novo fluxo'
+  const [fluxoNome, setFluxoNome] = useState(nomeOriginal)
+  const nomeAlterado = fluxoNome.trim() !== nomeOriginal && fluxoNome.trim() !== ''
 
   const [nodes, setNodes] = useState<string[]>(WORKFLOW_NODES)
   const [positions, setPositions] = useState<Record<string, Pos>>(() => gridFor(WORKFLOW_NODES))
@@ -109,10 +104,7 @@ export function WorkflowDetailPage() {
 
       <div className="overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white shadow-[var(--shadow-card)]">
         <div className="flex items-center justify-between border-b border-[var(--color-line)] px-5 py-3">
-          <div>
-            <h1 className="font-display text-base font-bold text-[#183263]">Modelos do Fluxo</h1>
-            <p className="text-[11px] text-[var(--color-muted)]">Fluxo #{id}</p>
-          </div>
+          <h1 className="font-display text-base font-bold text-[#183263]">Modelos do Fluxo</h1>
           <button
             onClick={() => setControle(true)}
             className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-primary-strong)]"
@@ -125,15 +117,21 @@ export function WorkflowDetailPage() {
           <span className="inline-flex items-center gap-1.5">
             <Move size={13} /> {nodes.length} nós • 0 conexões
           </span>
-          <div className="w-56 min-w-0">
-            <Combo
+          <label className="flex items-center gap-2">
+            <span className="sr-only">Nome do fluxo</span>
+            <input
               value={fluxoNome}
-              onChange={setFluxoNome}
-              options={fluxoOptions}
-              placeholder="Selecione o fluxo"
+              onChange={(e) => setFluxoNome(e.target.value)}
+              placeholder="Nome do fluxo"
+              className="gt-input h-8 w-56 min-w-0 text-xs"
             />
-          </div>
-          <button className="font-semibold text-[var(--color-muted)]">Salvar nome</button>
+          </label>
+          <button
+            disabled={!nomeAlterado}
+            className="font-semibold text-[var(--color-primary)] disabled:cursor-not-allowed disabled:text-[var(--color-muted)]"
+          >
+            Salvar nome
+          </button>
           <button onClick={organizar} className="font-semibold text-[var(--color-primary)]">
             Organizar ordem
           </button>
@@ -150,7 +148,13 @@ export function WorkflowDetailPage() {
             >
               <Minus size={13} />
             </button>
-            <span className="w-10 text-center font-semibold text-[var(--color-ink)]">{zoom}%</span>
+            <button
+              onClick={() => setZoom(100)}
+              title="Redefinir zoom"
+              className="w-12 text-center font-semibold text-[var(--color-ink)]"
+            >
+              {zoom}%
+            </button>
             <button
               onClick={() => setZoom((z) => Math.min(150, z + 10))}
               className="grid h-7 w-7 place-items-center rounded-[8px] border border-[var(--color-line)]"

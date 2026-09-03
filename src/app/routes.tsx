@@ -12,6 +12,7 @@ import { RegistroNecessidadePage } from '../modules/necessidades/RegistroNecessi
 import { ProcessosInteligentesPage } from '../modules/processos/ProcessosInteligentesPage'
 import { DashboardProcessoPage } from '../modules/processos/DashboardProcessoPage'
 import { StatusArtefatosPage } from '../modules/processos/StatusArtefatosPage'
+import { ProcessoDetailPage } from '../modules/processos/ProcessoDetailPage'
 import { ProcessosWorkflowPage } from '../modules/processos/ProcessosWorkflowPage'
 import { WorkflowDetailPage } from '../modules/processos/WorkflowDetailPage'
 import { ModeloPersonalizadoPage } from '../modules/processos/ModeloPersonalizadoPage'
@@ -45,6 +46,7 @@ export const router = createBrowserRouter([
       { path: 'processosinteligentes', element: <ProcessosInteligentesPage /> },
       { path: 'DashboardProcesso', element: <DashboardProcessoPage /> },
       { path: 'StatusArtefatos', element: <StatusArtefatosPage /> },
+      { path: 'Processo/:id', element: <ProcessoDetailPage /> },
       { path: 'ProcessosWorkflow', element: <ProcessosWorkflowPage /> },
       { path: 'Workflow/:id', element: <WorkflowDetailPage /> },
       { path: 'ModeloPersonalizado', element: <ModeloPersonalizadoPage /> },

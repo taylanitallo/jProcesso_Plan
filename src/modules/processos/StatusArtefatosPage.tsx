@@ -1,107 +1,153 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, FileText } from 'lucide-react'
-import { PageHeader } from '../../components/common/PageHeader'
+import { Filter, Search } from 'lucide-react'
 import { Badge } from '../../components/common/Badge'
-import { DataTable, type Column } from '../../components/common/DataTable'
+import { DataTable, Pagination, type Column } from '../../components/common/DataTable'
 import { useModuleLinks } from '../../components/shell/useModuleLinks'
 import { PROCESSOS_MODULE_LINKS } from './processosLinks'
-import { PROCESSOS } from '../../mocks'
+import { ArtefatoDetalheModal } from './ArtefatoDetalheModal'
 
-/** 27 artefatos típicos do fluxo da Lei 14.133/2021. */
+/** Artefatos do fluxo 14.133 — ordem e rótulos conforme o SollAI real. */
 const ARTEFATOS = [
-  'Documento de Formalização da Demanda (DFD)',
+  'Documento de Formalização de Demanda (DFD)',
   'Estudo Técnico Preliminar (ETP)',
-  'Mapa de Riscos',
-  'Termo de Referência (TR)',
-  'Projeto Básico',
-  'Projeto Executivo',
-  'Pesquisa de Preços',
-  'Mapa Comparativo de Preços',
-  'Justificativa de Preço',
+  'Mapa de Risco',
+  'Termo de Referência',
+  'Edital',
+  'Proposta Vencedora',
   'Anteprojeto',
-  'Matriz de Riscos Contratual',
-  'Edital de Licitação',
-  'Minuta de Contrato',
-  'Minuta de Ata de Registro de Preços',
-  'Parecer Jurídico',
-  'Parecer Técnico',
-  'Despacho de Autorização',
-  'Autorização da Autoridade Competente',
-  'Portaria de Designação de Fiscal',
-  'Nota Técnica',
-  'Relatório de Fiscalização',
-  'Termo de Recebimento Provisório',
-  'Termo de Recebimento Definitivo',
-  'Ordem de Serviço / Fornecimento',
-  'Ata de Reunião',
-  'Checklist de Instrução Processual',
-  'Relatório Final da Contratação',
+  'Projeto Básico',
+  'Parecer Parametrizado',
+  'Minuta do Contrato',
+  'Disponibilidade Orçamentária',
+  'Pesquisa de Preços',
+  'Autorização do Ordenador de Despesas',
+  'Aviso de Dispensa',
+  'Ata de Registro de Preços',
+  'Despacho de Adesão',
+  'Checklist de Adesão',
+  'Autorização da Alta Administração',
+  'Parecer da Assessoria Jurídica',
+  'Autorização Definitiva da Alta Administração',
+  'Formalização da Contratação',
+  'Justificativa de Inexigibilidade',
+  'Parecer de Adequação da Modalidade',
+  'Checklist de Habilitação e Qualificação',
+  'Autorização e Ratificação da Contratação',
+  'Designação de Gestor e Fiscal do Contrato',
+  'Razão da escolha do contratado',
+  'Termo de Homologação e Adjudicação',
+  'Parecer de Controle Interno',
+  'Termo de Homologação',
 ]
 
-const cols: Column<(typeof PROCESSOS)[number]>[] = [
-  { key: 'numero', header: 'Número' },
-  { key: 'tipo', header: 'Tipo' },
-  { key: 'nome', header: 'Nome' },
-  { key: 'inclusao', header: 'Inclusão' },
-  { key: 'status', header: 'Status', render: (r) => <Badge tone="neutral">{r.status}</Badge> },
+type LinhaProcesso = {
+  numero: string
+  nome: string
+  responsavel: string
+  prazo: string
+  status: string
+}
+
+const LINHAS: LinhaProcesso[] = [
+  {
+    numero: '1',
+    nome: 'PERMANENTE',
+    responsavel: 'Não definido',
+    prazo: 'Sem prazo',
+    status: 'ENVIADO',
+  },
 ]
 
 export function StatusArtefatosPage() {
   useModuleLinks(PROCESSOS_MODULE_LINKS)
-  const [page, setPage] = useState(0)
-  const perPage = 6
-  const pages = Math.ceil(ARTEFATOS.length / perPage)
-  const slice = ARTEFATOS.slice(page * perPage, page * perPage + perPage)
+  const [sel, setSel] = useState(0)
+  const [detalhe, setDetalhe] = useState<string | null>(null)
+
+  const cols: Column<LinhaProcesso>[] = [
+    { key: 'numero', header: 'Número do Processo', align: 'center' },
+    {
+      key: 'nome',
+      header: 'Nome do Processo',
+      render: (r) => (
+        <span className="font-semibold text-[var(--color-primary-strong)]">{r.nome}</span>
+      ),
+    },
+    { key: 'responsavel', header: 'Responsável', align: 'center' },
+    { key: 'prazo', header: 'Prazo', align: 'center' },
+    {
+      key: 'status',
+      header: 'Status Atual',
+      align: 'center',
+      render: (r) => <Badge tone="success">{r.status}</Badge>,
+    },
+    {
+      key: 'acoes',
+      header: 'Ações',
+      align: 'right',
+      render: () => (
+        <div className="flex justify-end">
+          <button
+            onClick={() => setDetalhe(ARTEFATOS[sel])}
+            className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-success)] px-3 py-1.5 text-xs font-semibold text-white"
+          >
+            <Search size={13} /> Detalhes
+          </button>
+        </div>
+      ),
+    },
+  ]
 
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Status Individual de Cada Artefato"
-        subtitle="Acompanhe a situação de cada um dos 27 artefatos por processo"
-      />
-
-      <div className="rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-5 shadow-[var(--shadow-card)]">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-[#183263]">Tipos de artefato</h3>
-          <div className="flex gap-1">
-            <button
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={page === 0}
-              className="grid h-8 w-8 place-items-center rounded-[10px] border border-[var(--color-line)] text-[var(--color-muted)] disabled:opacity-40"
+    <div className="flex flex-col gap-4">
+      <div className="flex gap-2 overflow-x-auto pb-2">
+        {ARTEFATOS.map((a, i) => (
+          <button
+            key={a}
+            onClick={() => setSel(i)}
+            className={`flex min-w-[180px] max-w-[180px] shrink-0 items-center gap-2 rounded-[var(--radius-card)] border px-3 py-3 text-left text-xs font-semibold transition ${
+              i === sel
+                ? 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white'
+                : 'border-[#bcd0ee] bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)] hover:bg-white'
+            }`}
+          >
+            <span
+              className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${
+                i === sel ? 'bg-white/20' : 'bg-white'
+              }`}
             >
-              <ChevronLeft size={16} />
-            </button>
-            <button
-              onClick={() => setPage((p) => Math.min(pages - 1, p + 1))}
-              disabled={page >= pages - 1}
-              className="grid h-8 w-8 place-items-center rounded-[10px] border border-[var(--color-line)] text-[var(--color-muted)] disabled:opacity-40"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {slice.map((a) => (
-            <div
-              key={a}
-              className="flex items-start gap-3 rounded-[12px] border border-[var(--color-line)] bg-[#f8fafd] p-3"
-            >
-              <FileText size={18} className="mt-0.5 shrink-0 text-[var(--color-primary-strong)]" />
-              <div>
-                <p className="text-sm font-semibold text-[var(--color-ink)]">{a}</p>
-                <Badge tone="neutral">Aguardando Envio</Badge>
-              </div>
-            </div>
-          ))}
-        </div>
+              <Search size={15} />
+            </span>
+            <span className="leading-tight">{a}</span>
+          </button>
+        ))}
       </div>
 
-      <DataTable
+      <div className="flex items-start justify-between gap-3 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white px-5 py-4 shadow-[var(--shadow-card)]">
+        <div>
+          <h3 className="font-display text-base font-bold text-[#183263]">Processos gerais</h3>
+          <p className="text-xs text-[var(--color-muted)]">{ARTEFATOS[sel]}</p>
+        </div>
+        <button
+          aria-label="Filtrar resultados"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-[var(--radius-control)] border border-[var(--color-line)] text-[var(--color-muted)]"
+        >
+          <Filter size={15} />
+        </button>
+      </div>
+
+      <DataTable<LinhaProcesso>
         columns={cols}
-        rows={PROCESSOS}
-        rowKey={(r) => String(r.id)}
-        footer={<span>Registros encontrados: {PROCESSOS.length}</span>}
+        rows={LINHAS}
+        rowKey={(r) => r.numero}
+        footer={
+          <>
+            <Pagination />
+            <span>Registros encontrados: {LINHAS.length}</span>
+          </>
+        }
       />
+
+      <ArtefatoDetalheModal artefato={detalhe} onClose={() => setDetalhe(null)} />
     </div>
   )
 }

@@ -11,6 +11,7 @@ export function AnalisadoresPage() {
       history={[]}
       itemIcon={FileSearch}
       showTabs={false}
+      searchPlaceholder="Pesquisar no histórico..."
     >
       <Wizard steps={RESEARCH_STEPS} finishLabel="Analisar" resultKind="analise" />
     </ChatShell>

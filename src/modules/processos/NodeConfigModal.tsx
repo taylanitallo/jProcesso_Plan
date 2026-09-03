@@ -5,6 +5,7 @@ import {
   FilePen,
   FileSignature,
   Network,
+  Power,
   Search,
   Settings,
   X,
@@ -69,6 +70,7 @@ function Card({
 
 /** Abre ao clicar num nó do fluxo. Espelha "Configuração do Fluxo de Trabalho" do SollAI. */
 export function NodeConfigModal({ node, onClose }: { node: string | null; onClose: () => void }) {
+  const [ativo, setAtivo] = useState(true)
   const [deps, setDeps] = useState(false)
   const [prazo, setPrazo] = useState(false)
   const [revisao, setRevisao] = useState(false)
@@ -130,6 +132,21 @@ export function NodeConfigModal({ node, onClose }: { node: string | null; onClos
         </div>
 
         <div className="flex flex-col gap-3">
+          {/* Situação do artefato */}
+          <Card
+            inlineToggle
+            icon={<Power size={18} />}
+            title="Situação do artefato"
+            desc="Ao inativar, o artefato deixa de ser exigido. Nos processos, ele só permanece visível quando já possui um envio, para consulta do histórico."
+            toggle={
+              <Toggle
+                label={ativo ? 'Ativo' : 'Inativo'}
+                checked={ativo}
+                onChange={() => setAtivo((v) => !v)}
+              />
+            }
+          />
+
           {/* Dependências */}
           <Card
             inlineToggle

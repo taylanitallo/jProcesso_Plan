@@ -10,11 +10,13 @@ export function Combo({
   onChange,
   options,
   placeholder,
+  disabled,
 }: {
   value: string
   onChange: (v: string) => void
   options: string[]
   placeholder: string
+  disabled?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -32,8 +34,9 @@ export function Combo({
     <div ref={ref} className="relative min-w-0">
       <button
         type="button"
+        disabled={disabled}
         onClick={() => setOpen((o) => !o)}
-        className="gt-input flex w-full items-center gap-2 text-left font-normal normal-case"
+        className="gt-input flex w-full items-center gap-2 text-left font-normal normal-case disabled:cursor-not-allowed disabled:bg-[#f1f4f9] disabled:text-[var(--color-muted)]"
       >
         <span className={`min-w-0 flex-1 truncate ${value ? '' : 'text-[var(--color-muted)]'}`}>
           {value || placeholder}

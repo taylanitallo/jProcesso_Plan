@@ -20,6 +20,8 @@ interface ShellProps {
   itemIcon: LucideIcon
   /** show the Consulta/Artefato/Research tab switcher */
   showTabs?: boolean
+  /** override the history search placeholder */
+  searchPlaceholder?: string
   activeId?: string | null
   onSelect?: (item: HistoryItem) => void
   onNew?: () => void
@@ -32,6 +34,7 @@ export function ChatShell({
   history,
   itemIcon: ItemIcon,
   showTabs = true,
+  searchPlaceholder,
   activeId,
   onSelect,
   onNew,
@@ -83,7 +86,7 @@ export function ChatShell({
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={showTabs ? 'Pesquisar no histórico...' : 'Pesquisar...'}
+            placeholder={searchPlaceholder ?? (showTabs ? 'Pesquisar no histórico...' : 'Pesquisar...')}
             className="gt-input !py-2 !pl-9 text-xs"
           />
         </div>

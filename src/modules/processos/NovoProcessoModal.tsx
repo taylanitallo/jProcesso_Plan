@@ -1,24 +1,8 @@
-import { useState } from 'react'
 import { Plus, X } from 'lucide-react'
-import { Combo } from '../../components/common/Combo'
-import { ARTEFATO_LEGISLACOES } from '../../mocks'
+import { ProcessoFields } from './ProcessoFields'
 
-const TIPOS_PROCESSO = [
-  'Pregão - Bens e Serviços',
-  'Pregão - Serviços de Engenharia',
-  'Concorrência - Obras',
-  'Dispensa Eletrônica',
-  'Inexigibilidade',
-  'Adesão a Ata de Registro de Preços',
-  'Credenciamento',
-]
-
-/** "+ Novo" → cadastro de processo. Campos conforme o modal real do SollAI. */
+/** "+ Novo" → "Processo com preenchimento manual". Campos conforme o modal real do SollAI. */
 export function NovoProcessoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [legislacao, setLegislacao] = useState('')
-  const [tipo, setTipo] = useState('')
-  const [lote, setLote] = useState('')
-
   if (!open) return null
 
   return (
@@ -52,42 +36,7 @@ export function NovoProcessoModal({ open, onClose }: { open: boolean; onClose: (
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="NÚMERO DO PROCESSO" placeholder="Digite o número do processo" />
-          <Labelled label="LEGISLAÇÃO">
-            <Combo
-              value={legislacao}
-              onChange={setLegislacao}
-              options={ARTEFATO_LEGISLACOES}
-              placeholder="Selecione uma Legislação"
-            />
-          </Labelled>
-          <Labelled label="TIPO DE PROCESSO">
-            <Combo
-              value={tipo}
-              onChange={setTipo}
-              options={TIPOS_PROCESSO}
-              placeholder="Selecione um Tipo"
-            />
-          </Labelled>
-          <Labelled label="LOTE ÚNICO">
-            <Combo value={lote} onChange={setLote} options={['Sim', 'Não']} placeholder="Selecione:" />
-          </Labelled>
-          <div className="sm:col-span-2">
-            <Field label="NOME DO PROCESSO" placeholder="Digite o nome do processo" />
-          </div>
-        </div>
-
-        <label className="mt-4 flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
-          Descrição do Processo
-          <textarea
-            rows={4}
-            maxLength={500}
-            className="gt-input resize-y font-normal normal-case"
-            placeholder="Caso queira, descreva detalhes adicionais"
-          />
-        </label>
-        <p className="mt-1 text-xs text-[var(--color-muted)]">Máximo de 500 caracteres.</p>
+        <ProcessoFields />
 
         <button
           onClick={onClose}
@@ -97,26 +46,5 @@ export function NovoProcessoModal({ open, onClose }: { open: boolean; onClose: (
         </button>
       </div>
     </div>
-  )
-}
-
-function Labelled({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
-      {label}
-      {children}
-    </div>
-  )
-}
-
-function Field({
-  label,
-  ...rest
-}: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <label className="flex min-w-0 flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
-      {label}
-      <input className="gt-input min-w-0 font-normal normal-case" {...rest} />
-    </label>
   )
 }

@@ -18,6 +18,11 @@ export function ProcessosWorkflowPage() {
   const [open, setOpen] = useState(false)
 
   const cols: Column<Row>[] = [
+    {
+      key: 'nome',
+      header: 'Nome do Fluxo',
+      render: (r) => <span className="font-semibold text-[var(--color-primary-strong)]">{r.nome}</span>,
+    },
     { key: 'tipo', header: 'Tipo de Processo', align: 'center' },
     { key: 'legislacao', header: 'Legislação', align: 'center' },
     {

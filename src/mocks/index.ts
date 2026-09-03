@@ -66,6 +66,48 @@ export const ARTEFATO_LEGISLACOES = [
   'Sistema S',
 ]
 
+/** Legislações disponíveis nos módulos de Processos Inteligentes (Novo Fluxo / Novo Processo). */
+export const PROCESSO_LEGISLACOES = ['14.133']
+
+/** Usuários da instituição (para seletores de responsável). */
+export const USUARIOS_NOMES = ['ALEF MATHEUS TEIXEIRA DE SOUSA']
+
+/** Tipos de processo disponíveis nos módulos de Processos Inteligentes. */
+export const PROCESSO_TIPOS = [
+  'Pregão - Bens e Serviços',
+  'Obras',
+  'Dispensa Eletrônica',
+  'Bens de Registro de Preços',
+  'Contratação Direta - inexigibilidade',
+  'Serviços de Registro de Preços',
+  'Obras Registro de Preços',
+  'Adesão a ata de Registro de Preço',
+  'Contratação Direta - Dispensa',
+  'Concorrência',
+  'Dispensa Eletrônica - com Registro de Preços',
+]
+
+/**
+ * Artefatos do processo aberto em `/Processo/:id` — ordem e status conforme o
+ * SollAI real (apenas o DFD já foi enviado; os demais seguem pendentes).
+ */
+export const PROCESSO_ARTEFATOS = [
+  { nome: 'DFD', enviado: true },
+  { nome: 'ETP', enviado: false },
+  { nome: 'Mapa de Risco', enviado: false },
+  { nome: 'Termo de Referência', enviado: false },
+  { nome: 'Pesquisa de Preços', enviado: false },
+  { nome: 'Disponibilidade Orçamentária', enviado: false },
+  { nome: 'Edital', enviado: false },
+  { nome: 'Minuta do Contrato', enviado: false },
+  { nome: 'Parecer de Adequação da Modalidade', enviado: false },
+  { nome: 'Parecer de Controle Interno', enviado: false },
+  { nome: 'Parecer Parametrizado', enviado: false },
+  { nome: 'Proposta Vencedora', enviado: false },
+  { nome: 'Termo de Homologação', enviado: false },
+  { nome: 'Autorização do Ordenador de Despesas', enviado: false },
+]
+
 /** 27 artefatos típicos do fluxo da Lei 14.133/2021. */
 export const ARTEFATO_TIPOS = [
   'Documento de Formalização da Demanda (DFD)',
@@ -173,7 +215,7 @@ export const ARTEFATO_GRUPOS: { grupo: string; itens: string[] }[] = [
 ]
 
 export const RESEARCH_FUNCOES = [
-  'Análise Comparativa e Crítica',
+  'Análise Comparativa e Critíca',
   'Analisador de Impugnações de Edital',
   'Analisador de Pedidos de Esclarecimento',
   'Analisador de Recursos',
@@ -224,9 +266,17 @@ export const PROCESSOS = [
 
 /** Fluxos de Processos — dados reais do SollAI (/ProcessosWorkflow). */
 export const WORKFLOWS = [
-  { id: '41', tipo: 'Obras', legislacao: '14.133', inclusao: '22/12/2025', ativo: true },
+  {
+    id: '41',
+    nome: 'Obras - 14.133',
+    tipo: 'Obras',
+    legislacao: '14.133',
+    inclusao: '22/12/2025',
+    ativo: true,
+  },
   {
     id: '42',
+    nome: 'Contratação Direta - inexigibilidade - 14.133',
     tipo: 'Contratação Direta - inexigibilidade',
     legislacao: '14.133',
     inclusao: '23/12/2025',
@@ -234,6 +284,7 @@ export const WORKFLOWS = [
   },
   {
     id: '43',
+    nome: 'Pregão - Bens e Serviços - 14.133',
     tipo: 'Pregão - Bens e Serviços',
     legislacao: '14.133',
     inclusao: '03/09/2026',
@@ -262,17 +313,19 @@ export const WORKFLOW_NODE_CHIPS = ['Sem prazo', 'Revisão', 'Aprovação', 'Ass
 
 export const MODELOS_PERSONALIZADOS = [
   {
-    id: 'm1',
-    nome: 'Termo de Referência de Aquisições',
-    base: '14.133/2021',
-    tipo: 'Termo de Referência',
-    atualizado: '18/12/2025',
+    id: '406',
+    nome: 'Termo de Referência de Aquisições (2026) - Bens',
+    identificador: '406',
+    inclusao: '31/08/2026 14:44',
+    inclusaoPor: 'AL',
+    ultimaEdicao: '31/08/2026 14:44',
+    ultimaEdicaoPor: 'AL',
   },
 ]
 
 export const NORMATIVAS = [
   { id: 'n1', nome: 'DECRETO_120_2023_0000001.pdf', status: 'PROCESSADO' },
-  { id: 'n2', nome: 'INSTRUÇÃO NORMATIVA TCE-CE Nº 01.2025.pdf', status: 'PROCESSADO' },
+  { id: 'n2', nome: 'INSTRUÇÃO NORMATIVA TCE-CE Nº 01.2025 - PCS.pdf', status: 'PROCESSADO' },
 ]
 
 export const ACADEMY_RAILS: { title: string; courses: { title: string; desc: string }[] }[] = [

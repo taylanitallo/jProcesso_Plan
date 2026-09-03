@@ -21,6 +21,12 @@ export function UserModals() {
   return (
     <>
       <Modal open={modal === 'perfil'} onClose={close} title="Atualize seu perfil" size="lg">
+        <p className="mb-4 text-sm text-[var(--color-muted)]">
+          Mantenha suas informações sempre atualizadas para garantir a melhor experiência.
+        </p>
+        <div className="mb-4 sm:max-w-xs">
+          <UploadBox label="Foto de perfil" hint="Formatos recomendados: JPG ou PNG até 5MB." />
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Nome" defaultValue={user?.name} />
           <Field label="E-mail" defaultValue={user?.email} />

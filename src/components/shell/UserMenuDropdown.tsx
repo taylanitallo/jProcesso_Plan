@@ -6,6 +6,7 @@ import {
   Headset,
   KeyRound,
   LogOut,
+  Moon,
   Network,
   Users,
   UserCog,
@@ -21,6 +22,8 @@ export function UserMenuDropdown({ onClose }: { onClose: () => void }) {
   const user = useAuth((s) => s.user)
   const logout = useAuth((s) => s.logout)
   const setUserModal = useUi((s) => s.setUserModal)
+  const theme = useUi((s) => s.theme)
+  const toggleTheme = useUi((s) => s.toggleTheme)
 
   const openModal = (m: 'perfil' | 'instituicao' | 'senha' | 'metodo') => {
     onClose()
@@ -36,6 +39,28 @@ export function UserMenuDropdown({ onClose }: { onClose: () => void }) {
       <div className="border-b border-[var(--color-line)] px-4 py-3">
         <p className="truncate text-sm font-bold text-[#183263]">{user?.name}</p>
         <p className="truncate text-xs text-[var(--color-muted)]">{user?.email}</p>
+      </div>
+      <div className="flex items-center justify-between border-b border-[var(--color-line)] px-4 py-2.5">
+        <span className="flex items-center gap-3 text-sm text-[var(--color-ink)]">
+          <Moon size={16} className="text-[var(--color-muted)]" />
+          Tema escuro
+        </span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={theme === 'dark'}
+          aria-label="Tema escuro"
+          onClick={toggleTheme}
+          className={`relative h-5 w-9 shrink-0 rounded-full transition ${
+            theme === 'dark' ? 'bg-[var(--color-primary)]' : 'bg-[#cdd6e4]'
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition ${
+              theme === 'dark' ? 'left-[18px]' : 'left-0.5'
+            }`}
+          />
+        </button>
       </div>
       <div className="py-1">
         <Item icon={UserCog} label="Dados" onClick={() => openModal('perfil')} />

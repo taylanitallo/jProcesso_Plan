@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   BarChart3,
@@ -18,17 +18,54 @@ import { useModuleLinks } from '../../components/shell/useModuleLinks'
 import { AgendaModal } from './AgendaModal'
 import { PendingModal } from './PendingModal'
 import { NovoProcessoModal } from './NovoProcessoModal'
+import { ProcessoWizardModal } from './ProcessoWizardModal'
 import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 import { PROCESSOS } from '../../mocks'
 
 type Row = (typeof PROCESSOS)[number]
 
+const CRIAR_OPCOES = [
+  {
+    key: 'novo' as const,
+    titulo: 'Processo com preenchimento manual',
+    desc: 'Cadastre o processo informando todos os dados e parâmetros do início ao fim.',
+  },
+  {
+    key: 'registros' as const,
+    titulo: 'Processo a partir de Registro de Necessidade',
+    desc: 'Selecione um registro existente e utilize seus itens para compor o processo.',
+  },
+  {
+    key: 'solicitacao' as const,
+    titulo: 'Processo com Registro de Necessidade integrado com outros setores',
+    desc: 'Selecione itens do catálogo, gere o registro de necessidade e crie o processo em sequência.',
+  },
+]
+
 export function ProcessosInteligentesPage() {
   useModuleLinks(PROCESSOS_MODULE_LINKS)
   const navigate = useNavigate()
   const [modal, setModal] = useState<
-    'none' | 'agenda' | 'revisoes' | 'aprovacoes' | 'assinaturas' | 'novo'
+    | 'none'
+    | 'agenda'
+    | 'revisoes'
+    | 'aprovacoes'
+    | 'assinaturas'
+    | 'novo'
+    | 'registros'
+    | 'solicitacao'
   >('none')
+  const [criarOpen, setCriarOpen] = useState(false)
+  const criarRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!criarOpen) return
+    const onDoc = (e: MouseEvent) => {
+      if (criarRef.current && !criarRef.current.contains(e.target as Node)) setCriarOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [criarOpen])
 
   const columns: Column<Row>[] = [
     { key: 'id', header: 'ID', render: (r) => <Pill>{r.id}</Pill> },
@@ -55,9 +92,12 @@ export function ProcessosInteligentesPage() {
       key: 'acoes',
       header: 'Ações',
       align: 'right',
-      render: () => (
+      render: (r) => (
         <div className="flex justify-end gap-2">
-          <button className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-success)] px-3 py-1.5 text-xs font-semibold text-white">
+          <button
+            onClick={() => navigate(`/Processo/${r.id}`)}
+            className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-success)] px-3 py-1.5 text-xs font-semibold text-white"
+          >
             <Search size={13} /> Detalhes
           </button>
           <button className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] border border-[var(--color-line)] text-[var(--color-muted)]">
@@ -109,12 +149,35 @@ export function ProcessosInteligentesPage() {
       </button>
 
       <div className="mb-4 flex flex-wrap items-center gap-3 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-4 shadow-[var(--shadow-card)]">
-        <button
-          onClick={() => setModal('novo')}
-          className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-4 py-2.5 text-sm font-semibold text-white"
-        >
-          <Plus size={16} /> Novo <ChevronDown size={14} />
-        </button>
+        <div ref={criarRef} className="relative">
+          <button
+            onClick={() => setCriarOpen((o) => !o)}
+            className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-4 py-2.5 text-sm font-semibold text-white"
+          >
+            <Plus size={16} /> Novo <ChevronDown size={14} />
+          </button>
+          {criarOpen && (
+            <div className="absolute left-0 top-full z-30 mt-2 w-[22rem] max-w-[80vw] rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-2 shadow-[var(--shadow-pop)]">
+              <p className="px-2 pt-1 font-display text-sm font-bold text-[#183263]">Criar processo</p>
+              <p className="px-2 pb-2 text-xs text-[var(--color-muted)]">
+                Escolha a forma de criação para iniciar.
+              </p>
+              {CRIAR_OPCOES.map((op) => (
+                <button
+                  key={op.key}
+                  onClick={() => {
+                    setCriarOpen(false)
+                    setModal(op.key)
+                  }}
+                  className="w-full rounded-[var(--radius-control)] px-2 py-2 text-left transition hover:bg-[var(--color-primary-soft)]"
+                >
+                  <p className="text-sm font-semibold text-[var(--color-ink)]">{op.titulo}</p>
+                  <p className="text-xs text-[var(--color-muted)]">{op.desc}</p>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <input placeholder="Buscar por Nome" className="gt-input min-w-40 flex-1" />
         <button className="grid h-10 w-10 place-items-center rounded-[var(--radius-control)] border border-[var(--color-line)] text-[var(--color-muted)]">
           <Filter size={15} />
@@ -153,6 +216,20 @@ export function ProcessosInteligentesPage() {
         icon={<FileSignature size={20} />}
       />
       <NovoProcessoModal open={modal === 'novo'} onClose={() => setModal('none')} />
+      <ProcessoWizardModal
+        open={modal === 'registros'}
+        onClose={() => setModal('none')}
+        title="Criar Processo a partir de Registros"
+        subtitle="Defina os dados do processo e selecione, por item, de quais registros/setores você vai utilizar."
+        tabs={['Processo', 'Itens', 'Quantidades']}
+      />
+      <ProcessoWizardModal
+        open={modal === 'solicitacao'}
+        onClose={() => setModal('none')}
+        title="Criar Processo + Solicitar Registro de Necessidade"
+        subtitle="Informe os dados do processo."
+        tabs={['Processo', 'Solicitação + Itens']}
+      />
     </div>
   )
 }

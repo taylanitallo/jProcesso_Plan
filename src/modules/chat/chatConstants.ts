@@ -9,6 +9,7 @@ export type Step =
   | {
       kind: 'upload'
       prompt: ReactNode
+      optional?: boolean
       warning?: { title: string; bullets: string[]; note?: ReactNode }
     }
 
@@ -29,6 +30,21 @@ export const ARTEFATO_STEPS: Step[] = [
     kind: 'group',
     prompt: 'Escolha seus Artefatos: Selecione artefatos específicos que deseja produzir.',
     groups: ARTEFATO_GRUPOS,
+  },
+  {
+    kind: 'upload',
+    optional: true,
+    prompt:
+      'Gostaria de me ajudar a produzir o esboço? Envie aqui as informações que você já possui sobre a contratação (Exemplo: descrição do objeto ou serviço que deseja licitar; um processo anterior já realizado; pesquisa de preços; etc).',
+    warning: {
+      title: 'Aviso sobre envio de documentos',
+      bullets: [
+        'Digitalizados (em formato de imagem/PDF escaneado)',
+        'Bloqueados para cópia ou edição',
+        'Com imagens muito grandes que possam comprometer o processamento',
+      ],
+      note: 'Dê preferência a arquivos em formato .docx, .pdf editável.',
+    },
   },
 ]
 

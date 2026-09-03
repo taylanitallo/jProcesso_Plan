@@ -26,15 +26,10 @@ export function Wizard({
   }
 
   const setSingle = (i: number, v: string) => setAnswers((a) => ({ ...a, [i]: [v] }))
-  const toggleMulti = (i: number, v: string) =>
-    setAnswers((a) => {
-      const cur = a[i] ?? []
-      return { ...a, [i]: cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v] }
-    })
 
   const stepAnswered = (i: number) => {
     const s = steps[i]
-    if (s.kind === 'upload') return true
+    if (s.kind === 'upload') return s.optional || (answers[i]?.[0]?.length ?? 0) > 0
     if (s.kind === 'text') return s.optional || (answers[i]?.[0]?.trim().length ?? 0) > 0
     return (answers[i]?.length ?? 0) > 0
   }
@@ -52,7 +47,6 @@ export function Wizard({
               stepIndex={i}
               selected={answers[i] ?? []}
               onSingle={(v) => setSingle(i, v)}
-              onMulti={(v) => toggleMulti(i, v)}
               onText={(v) => setAnswers((a) => ({ ...a, [i]: [v] }))}
               onUpload={() => setAnswers((a) => ({ ...a, [i]: ['(arquivo enviado)'] }))}
             />
@@ -123,7 +117,6 @@ function StepBubble({
   stepIndex,
   selected,
   onSingle,
-  onMulti,
   onText,
   onUpload,
 }: {
@@ -131,7 +124,6 @@ function StepBubble({
   stepIndex: number
   selected: string[]
   onSingle: (v: string) => void
-  onMulti: (v: string) => void
   onText: (v: string) => void
   onUpload: () => void
 }) {
@@ -165,9 +157,10 @@ function StepBubble({
                 {g.itens.map((it) => (
                   <label key={it} className="flex cursor-pointer items-start gap-2.5 text-[13px]">
                     <input
-                      type="checkbox"
-                      checked={selected.includes(it)}
-                      onChange={() => onMulti(it)}
+                      type="radio"
+                      name={`step-${stepIndex}`}
+                      checked={selected[0] === it}
+                      onChange={() => onSingle(it)}
                       className="mt-0.5 accent-[var(--color-primary)]"
                     />
                     {it}
