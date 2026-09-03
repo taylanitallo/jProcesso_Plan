@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { Plus, X } from 'lucide-react'
+import { Combo } from '../../components/common/Combo'
 import { ARTEFATO_LEGISLACOES } from '../../mocks'
 
 const TIPOS_PROCESSO = [
@@ -13,6 +15,10 @@ const TIPOS_PROCESSO = [
 
 /** "+ Novo" → cadastro de processo. Campos conforme o modal real do SollAI. */
 export function NovoProcessoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [legislacao, setLegislacao] = useState('')
+  const [tipo, setTipo] = useState('')
+  const [lote, setLote] = useState('')
+
   if (!open) return null
 
   return (
@@ -48,9 +54,25 @@ export function NovoProcessoModal({ open, onClose }: { open: boolean; onClose: (
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="NÚMERO DO PROCESSO" placeholder="Digite o número do processo" />
-          <Select label="LEGISLAÇÃO" placeholder="Selecione uma Legislação" options={ARTEFATO_LEGISLACOES} />
-          <Select label="TIPO DE PROCESSO" placeholder="Selecione um Tipo" options={TIPOS_PROCESSO} />
-          <Select label="LOTE ÚNICO" placeholder="Selecione:" options={['Sim', 'Não']} />
+          <Labelled label="LEGISLAÇÃO">
+            <Combo
+              value={legislacao}
+              onChange={setLegislacao}
+              options={ARTEFATO_LEGISLACOES}
+              placeholder="Selecione uma Legislação"
+            />
+          </Labelled>
+          <Labelled label="TIPO DE PROCESSO">
+            <Combo
+              value={tipo}
+              onChange={setTipo}
+              options={TIPOS_PROCESSO}
+              placeholder="Selecione um Tipo"
+            />
+          </Labelled>
+          <Labelled label="LOTE ÚNICO">
+            <Combo value={lote} onChange={setLote} options={['Sim', 'Não']} placeholder="Selecione:" />
+          </Labelled>
           <div className="sm:col-span-2">
             <Field label="NOME DO PROCESSO" placeholder="Digite o nome do processo" />
           </div>
@@ -78,6 +100,15 @@ export function NovoProcessoModal({ open, onClose }: { open: boolean; onClose: (
   )
 }
 
+function Labelled({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
+      {label}
+      {children}
+    </div>
+  )
+}
+
 function Field({
   label,
   ...rest
@@ -86,33 +117,6 @@ function Field({
     <label className="flex min-w-0 flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
       {label}
       <input className="gt-input min-w-0 font-normal normal-case" {...rest} />
-    </label>
-  )
-}
-
-function Select({
-  label,
-  placeholder,
-  options,
-}: {
-  label: string
-  placeholder: string
-  options: string[]
-}) {
-  return (
-    <label className="flex min-w-0 flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
-      {label}
-      <select
-        className="gt-input min-w-0 truncate font-normal normal-case"
-        defaultValue=""
-      >
-        <option value="" disabled>
-          {placeholder}
-        </option>
-        {options.map((o) => (
-          <option key={o}>{o}</option>
-        ))}
-      </select>
     </label>
   )
 }
