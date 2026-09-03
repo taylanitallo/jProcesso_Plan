@@ -222,21 +222,21 @@ export const PROCESSOS = [
   },
 ]
 
+/** Fluxos de Processos — dados reais do SollAI (/ProcessosWorkflow). */
 export const WORKFLOWS = [
+  { id: 'w1', tipo: 'Obras', legislacao: '14.133', inclusao: '22/12/2025', ativo: true },
   {
-    id: 'w1',
-    nome: 'Obras e Serviços de Engenharia',
-    etapas: 9,
-    artefatos: 'DFD, ETP, Projeto Básico, Matriz de Riscos, Edital, Contrato',
-    atualizado: '12/12/2025',
+    id: 'w2',
+    tipo: 'Contratação Direta - inexigibilidade',
+    legislacao: '14.133',
+    inclusao: '23/12/2025',
     ativo: true,
   },
   {
-    id: 'w2',
-    nome: 'Contratação Direta (Dispensa / Inexigibilidade)',
-    etapas: 6,
-    artefatos: 'DFD, ETP simplificado, TR, Pesquisa de Preços, Parecer Jurídico, Contrato',
-    atualizado: '05/12/2025',
+    id: 'w3',
+    tipo: 'Pregão - Bens e Serviços',
+    legislacao: '14.133',
+    inclusao: '03/09/2026',
     ativo: true,
   },
 ]
