@@ -1,93 +1,141 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, FileSearch, Lock, MessagesSquare, Workflow } from 'lucide-react'
+import {
+  BookOpen,
+  Boxes,
+  ClipboardList,
+  FileSearch,
+  FolderKanban,
+  Lock,
+  MessagesSquare,
+  Scale,
+  Search,
+  Users,
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { useAuth } from '../../store/auth'
 
-interface HomeCard {
+interface CardDef {
   title: string
   description: string
   icon: LucideIcon
   to?: string
+  drill?: 'chat' | 'processos'
   locked?: boolean
 }
 
-const CARDS: HomeCard[] = [
+const ROOT: CardDef[] = [
   {
     title: 'SollAI Chat',
-    description: 'Consulta, geração de artefatos, research e chat livre com a IA.',
+    description:
+      'Consultas inteligentes, geração automática de documentos e analisadores especializados para ganhar tempo e decidir com segurança.',
     icon: MessagesSquare,
-    to: '/chat/consulta',
-  },
-  {
-    title: 'Processos Inteligentes',
-    description: 'Dashboard, 27 artefatos, fluxos de trabalho e modelos personalizados.',
-    icon: Workflow,
-    to: '/processos',
-  },
-  {
-    title: 'SollAI Academy',
-    description: 'Trilhas de capacitação em compras e contratações públicas.',
-    icon: BookOpen,
-    to: '/academy',
-  },
-  {
-    title: 'Analisadores de Processos',
-    description: 'Análise automatizada de peças processuais por função.',
-    icon: FileSearch,
-    to: '/analisadores',
+    drill: 'chat',
   },
   {
     title: 'Orientação Técnica',
-    description: 'Disponível no seu plano em breve.',
-    icon: Lock,
+    description: 'IA potencializada pela inteligência humana do nosso corpo técnico especializado.',
+    icon: Users,
     locked: true,
+  },
+  {
+    title: 'SollAI Academy',
+    description: 'Trilhas personalizadas com IA para acelerar seu domínio nas compras públicas.',
+    icon: BookOpen,
+    to: '/SollAcademy',
+  },
+  {
+    title: 'Processos Inteligentes',
+    description:
+      'Mais controle e eficiência na gestão dos seus processos de licitação, com IA, modelos próprios e fluxos de trabalho automatizados',
+    icon: FolderKanban,
+    drill: 'processos',
+  },
+]
+
+const CHAT: CardDef[] = [
+  { title: 'Consulta Inteligente', description: '', icon: Scale, to: '/Consulta' },
+  { title: 'Artefato', description: '', icon: BookOpen, to: '/Artefato' },
+  { title: 'Research', description: '', icon: Search, to: '/Research' },
+]
+
+const PROCESSOS: CardDef[] = [
+  {
+    title: 'Catálogo de Itens',
+    description: 'Gerencie seus itens ligados ao CatMat/CatSer.',
+    icon: Boxes,
+    to: '/CatalogoItens',
+  },
+  {
+    title: 'Registro de Necessidades',
+    description: 'Registre demandas do setor para contratação.',
+    icon: ClipboardList,
+    to: '/RegistroNecessidade',
+  },
+  {
+    title: 'Analisadores de Processos',
+    description: 'Analise processos de licitação com analisadores especializados em IA.',
+    icon: FileSearch,
+    to: '/AnalisadoresProcesso',
+  },
+  {
+    title: 'Processos Inteligentes',
+    description:
+      'Mais controle e eficiência na gestão dos seus processos de licitação, com IA, modelos próprios e fluxos de trabalho automatizados',
+    icon: FolderKanban,
+    to: '/processosinteligentes',
   },
 ]
 
 export function HomePage() {
   const navigate = useNavigate()
-  const user = useAuth((s) => s.user)
-  const firstName = user?.name.split(' ')[0] ?? ''
+  const [view, setView] = useState<'root' | 'chat' | 'processos'>('root')
+  const cards = view === 'chat' ? CHAT : view === 'processos' ? PROCESSOS : ROOT
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-display text-2xl font-extrabold text-[#183263]">
-          Olá, {firstName}
-        </h1>
-        <p className="text-sm text-[var(--color-muted)]">
-          Escolha um módulo para começar.
-        </p>
-      </div>
+    <div className="mx-auto flex max-w-4xl flex-col items-center py-6">
+      <span className="mb-4 grid h-14 w-14 place-items-center rounded-full bg-[linear-gradient(135deg,#22b8a6_0%,#3b5bd0_60%,#7b3ff0_100%)] text-white">
+        ✦
+      </span>
+      <h1 className="font-display text-3xl font-extrabold text-[#183263]">Bem vindo à SollAI!</h1>
+      <p className="mt-1 text-sm text-[var(--color-muted)]">
+        {view === 'root' ? 'O que deseja fazer hoje?' : (
+          <button
+            onClick={() => setView('root')}
+            className="font-semibold text-[var(--color-primary)] hover:underline"
+          >
+            ← Voltar
+          </button>
+        )}
+      </p>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {CARDS.map(({ title, description, icon: Icon, to, locked }) => (
+      <div className="mt-8 grid w-full gap-4 sm:grid-cols-2">
+        {cards.map(({ title, description, icon: Icon, to, drill, locked }) => (
           <button
             key={title}
             disabled={locked}
-            onClick={() => to && navigate(to)}
-            className={`group flex flex-col items-start gap-3 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[var(--color-surface)] p-5 text-left shadow-[var(--shadow-card)] transition ${
+            onClick={() => (drill ? setView(drill) : to && navigate(to))}
+            className={`group flex flex-col items-center gap-3 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white px-6 py-8 text-center shadow-[var(--shadow-card)] transition ${
               locked
-                ? 'cursor-not-allowed opacity-60'
+                ? 'cursor-not-allowed opacity-55'
                 : 'hover:-translate-y-0.5 hover:border-[#c9d6ea] hover:shadow-[var(--shadow-pop)]'
             }`}
           >
             <span
-              className={`grid h-11 w-11 place-items-center rounded-[12px] ${
+              className={`grid h-12 w-12 place-items-center rounded-[12px] ${
                 locked
                   ? 'bg-[#eef1f7] text-[var(--color-muted)]'
                   : 'bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)]'
               }`}
             >
-              <Icon size={22} />
+              <Icon size={24} />
             </span>
-            <div>
-              <h2 className="flex items-center gap-2 font-display text-base font-bold text-[#183263]">
-                {title}
-                {locked && <Lock size={13} className="text-[var(--color-muted)]" />}
-              </h2>
-              <p className="mt-1 text-sm text-[var(--color-muted)]">{description}</p>
-            </div>
+            <span className="flex items-center gap-2 font-display text-lg font-bold text-[#183263]">
+              {title}
+              {locked && <Lock size={13} className="text-[var(--color-muted)]" />}
+            </span>
+            {description && (
+              <span className="text-sm text-[var(--color-muted)]">{description}</span>
+            )}
           </button>
         ))}
       </div>

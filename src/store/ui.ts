@@ -26,12 +26,26 @@ const SEED_NOTIFICATIONS: AppNotification[] = [
   },
 ]
 
+export interface ModuleLink {
+  key: string
+  label: string
+  to: string
+  /** lucide icon name resolved by TopBar */
+  icon: string
+}
+
 interface UiState {
   theme: 'light' | 'dark'
   toggleTheme: () => void
   notifications: AppNotification[]
   markAllRead: () => void
   unreadCount: () => number
+  /** context icons shown in the TopBar for the active module */
+  moduleLinks: ModuleLink[]
+  setModuleLinks: (links: ModuleLink[]) => void
+  /** which user-menu modal is open */
+  userModal: null | 'perfil' | 'instituicao' | 'senha' | 'metodo'
+  setUserModal: (m: UiState['userModal']) => void
 }
 
 export const useUi = create<UiState>()(
@@ -43,7 +57,14 @@ export const useUi = create<UiState>()(
       markAllRead: () =>
         set((s) => ({ notifications: s.notifications.map((n) => ({ ...n, read: true })) })),
       unreadCount: () => get().notifications.filter((n) => !n.read).length,
+      moduleLinks: [],
+      setModuleLinks: (links) => set({ moduleLinks: links }),
+      userModal: null,
+      setUserModal: (m) => set({ userModal: m }),
     }),
-    { name: 'sollai-ui' },
+    {
+      name: 'sollai-ui',
+      partialize: (s) => ({ theme: s.theme, notifications: s.notifications }),
+    },
   ),
 )

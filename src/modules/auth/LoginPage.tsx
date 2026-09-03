@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Eye, EyeOff } from 'lucide-react'
 import { Button } from '../../components/common/Button'
 import { Modal } from '../../components/common/Modal'
 import { useAuth } from '../../store/auth'
@@ -9,6 +10,7 @@ export function LoginPage() {
   const login = useAuth((s) => s.login)
   const [email, setEmail] = useState('alef.sousa@negociospublicos.com.br')
   const [password, setPassword] = useState('')
+  const [showPass, setShowPass] = useState(false)
   const [error, setError] = useState('')
   const [modal, setModal] = useState<'none' | 'forgot' | 'request'>('none')
 
@@ -35,50 +37,72 @@ export function LoginPage() {
         </div>
 
         <div className="rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-6 shadow-[var(--shadow-card)]">
+          <h2 className="font-display text-xl font-bold text-[#183263]">Bem vindo!</h2>
+          <p className="mb-4 text-sm text-[var(--color-muted)]">Acesse sua conta para continuar.</p>
+
           <form onSubmit={submit} className="flex flex-col gap-4">
             <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--color-ink)]">
-              E-mail
+              Email
               <input
-                type="email"
+                type="text"
                 className="gt-input"
+                placeholder="Digite seu Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="username"
               />
             </label>
-            <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--color-ink)]">
-              Senha
-              <input
-                type="password"
-                className="gt-input"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-              />
-            </label>
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <label htmlFor="login-pass" className="text-sm font-medium text-[var(--color-ink)]">
+                  Senha
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setModal('forgot')}
+                  className="text-xs font-semibold text-[var(--color-primary)] hover:underline"
+                >
+                  esqueceu sua senha ?
+                </button>
+              </div>
+              <div className="relative">
+                <input
+                  id="login-pass"
+                  type={showPass ? 'text' : 'password'}
+                  className="gt-input pr-10"
+                  placeholder="Digite sua Senha"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPass((v) => !v)}
+                  aria-label={showPass ? 'Ocultar senha' : 'Mostrar senha'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+                >
+                  {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
 
             {error && <p className="text-xs font-medium text-[var(--color-danger)]">{error}</p>}
 
-            <Button type="submit" fullWidth>
+            <Button type="submit" fullWidth className="mt-2">
               Entrar
             </Button>
           </form>
-
-          <div className="mt-4 flex items-center justify-between text-xs">
-            <button
-              onClick={() => setModal('forgot')}
-              className="font-semibold text-[var(--color-primary)] hover:underline"
-            >
-              Esqueceu a senha?
-            </button>
-            <button
-              onClick={() => setModal('request')}
-              className="font-semibold text-[var(--color-primary)] hover:underline"
-            >
-              Solicitar conta
-            </button>
-          </div>
         </div>
+
+        <p className="mt-5 text-center text-sm text-[var(--color-muted)]">
+          Se você ainda não possui uma conta, por favor, solicite uma agora.{' '}
+          <button
+            onClick={() => setModal('request')}
+            className="font-semibold text-[var(--color-primary)] hover:underline"
+          >
+            Solicite!
+          </button>
+        </p>
       </div>
 
       <Modal open={modal === 'forgot'} onClose={() => setModal('none')} title="Recuperar senha">
@@ -91,17 +115,19 @@ export function LoginPage() {
         </Button>
       </Modal>
 
-      <Modal open={modal === 'request'} onClose={() => setModal('none')} title="Solicitar conta">
+      <Modal open={modal === 'request'} onClose={() => setModal('none')} title="Solicitar acesso">
         <p className="text-sm text-[var(--color-muted)]">
-          Preencha os dados e um administrador liberará seu acesso.
+          Preencha os dados e nossa equipe entrará em contato.
         </p>
         <div className="mt-3 flex flex-col gap-3">
-          <input className="gt-input" placeholder="Nome completo" />
-          <input className="gt-input" placeholder="E-mail institucional" />
-          <input className="gt-input" placeholder="Órgão / Instituição" />
+          <input className="gt-input" placeholder="Nome Completo" />
+          <input className="gt-input" placeholder="Empresa/Instituição" />
+          <input className="gt-input" placeholder="CNPJ" />
+          <input className="gt-input" placeholder="Telefone" />
+          <input className="gt-input" placeholder="Email" />
         </div>
         <Button className="mt-4" fullWidth onClick={() => setModal('none')}>
-          Enviar solicitação
+          Enviar
         </Button>
       </Modal>
     </div>
