@@ -36,10 +36,10 @@ export function Modal({ open, onClose, title, size = 'md', children }: ModalProp
       onClick={onClose}
     >
       <div
-        className={`my-auto w-full ${sizes[size]} overflow-hidden rounded-[20px] bg-white shadow-[var(--shadow-pop)]`}
+        className={`my-auto flex max-h-[92vh] w-full ${sizes[size]} flex-col overflow-hidden rounded-[20px] bg-white shadow-[var(--shadow-pop)]`}
         onClick={(e) => e.stopPropagation()}
       >
-        <header className="flex items-center justify-between border-b border-[var(--color-line)] bg-[linear-gradient(180deg,#ffffff_0%,#fbfcff_100%)] px-5 py-4">
+        <header className="flex shrink-0 items-center justify-between border-b border-[var(--color-line)] bg-[linear-gradient(180deg,#ffffff_0%,#fbfcff_100%)] px-5 py-4">
           <h3 className="text-[0.98rem] font-bold text-[#183263]">{title}</h3>
           <button
             onClick={onClose}
@@ -49,7 +49,7 @@ export function Modal({ open, onClose, title, size = 'md', children }: ModalProp
             <X size={18} />
           </button>
         </header>
-        <div className="px-5 py-5">{children}</div>
+        <div className="overflow-y-auto px-5 py-5">{children}</div>
       </div>
     </div>
   )

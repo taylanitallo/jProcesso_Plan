@@ -17,42 +17,43 @@ export function NovoProcessoModal({ open, onClose }: { open: boolean; onClose: (
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[rgba(9,21,44,0.6)] p-4 backdrop-blur-sm sm:p-10"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[rgba(9,21,44,0.6)] p-3 backdrop-blur-sm sm:p-8"
       onClick={onClose}
     >
       <div
-        className="relative mt-6 w-full max-w-3xl rounded-[20px] bg-white p-6 shadow-[var(--shadow-pop)]"
+        className="relative my-4 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[20px] bg-white p-5 shadow-[var(--shadow-pop)] sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
           aria-label="Fechar"
-          className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-white text-[var(--color-muted)] shadow"
+          className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white text-[var(--color-muted)] shadow"
         >
           <X size={16} />
         </button>
 
-        <div className="mb-5 flex items-start gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-[12px] bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)]">
+        <div className="mb-5 flex items-start gap-3 pr-8">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[12px] bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)]">
             <Plus size={22} />
           </span>
-          <div>
-            <h3 className="font-display text-xl font-extrabold text-[#183263]">Novo Processo</h3>
+          <div className="min-w-0">
+            <h3 className="font-display text-lg font-extrabold text-[#183263] sm:text-xl">
+              Novo Processo
+            </h3>
             <p className="text-sm text-[var(--color-muted)]">
               Complete os campos para cadastrar um novo Processo Inteligente.
             </p>
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           <Field label="NÚMERO DO PROCESSO" placeholder="Digite o número do processo" />
           <Select label="LEGISLAÇÃO" placeholder="Selecione uma Legislação" options={ARTEFATO_LEGISLACOES} />
           <Select label="TIPO DE PROCESSO" placeholder="Selecione um Tipo" options={TIPOS_PROCESSO} />
-        </div>
-
-        <div className="mt-4 grid gap-4 sm:grid-cols-[2fr_1fr]">
-          <Field label="NOME DO PROCESSO" placeholder="Digite o nome do processo" />
           <Select label="LOTE ÚNICO" placeholder="Selecione:" options={['Sim', 'Não']} />
+          <div className="sm:col-span-2">
+            <Field label="NOME DO PROCESSO" placeholder="Digite o nome do processo" />
+          </div>
         </div>
 
         <label className="mt-4 flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
@@ -82,9 +83,9 @@ function Field({
   ...rest
 }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
-    <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
+    <label className="flex min-w-0 flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
       {label}
-      <input className="gt-input font-normal normal-case" {...rest} />
+      <input className="gt-input min-w-0 font-normal normal-case" {...rest} />
     </label>
   )
 }
@@ -99,9 +100,12 @@ function Select({
   options: string[]
 }) {
   return (
-    <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
+    <label className="flex min-w-0 flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
       {label}
-      <select className="gt-input font-normal normal-case" defaultValue="">
+      <select
+        className="gt-input min-w-0 truncate font-normal normal-case"
+        defaultValue=""
+      >
         <option value="" disabled>
           {placeholder}
         </option>
