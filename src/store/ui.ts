@@ -2,29 +2,33 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { AppNotification } from '../types'
 
-const SEED_NOTIFICATIONS: AppNotification[] = [
-  {
-    id: 'n-1',
-    title: 'SollAI',
-    body: 'Consulta inteligente concluída',
-    time: '03/09/2026 às 01:34',
-    read: false,
-  },
-  {
-    id: 'n-2',
-    title: 'SollAI',
-    body: 'Consulta inteligente concluída',
-    time: '23/12/2025 às 4:51',
-    read: false,
-  },
-  {
-    id: 'n-3',
-    title: 'SollAI',
-    body: 'Chat concluído',
-    time: '22/12/2025 às 08:13',
-    read: false,
-  },
+const NOTIF_BODIES = [
+  'Consulta inteligente concluída',
+  'Artefato gerado com sucesso',
+  'Análise de documento concluída',
+  'Chat concluído',
+  'Research concluída',
 ]
+const NOTIF_TIMES = [
+  '03/09/2026 às 01:34',
+  '02/09/2026 às 18:07',
+  '01/09/2026 às 01:33',
+  '29/08/2026 às 09:42',
+  '27/08/2026 às 14:15',
+  '23/12/2025 às 04:51',
+  '22/12/2025 às 08:13',
+  '20/12/2025 às 16:28',
+  '18/12/2025 às 11:03',
+]
+
+/** 18 não lidas — reproduz o contador fixo do SollAI. */
+const SEED_NOTIFICATIONS: AppNotification[] = Array.from({ length: 18 }, (_, i) => ({
+  id: `n-${i + 1}`,
+  title: 'SollAI',
+  body: NOTIF_BODIES[i % NOTIF_BODIES.length],
+  time: NOTIF_TIMES[i % NOTIF_TIMES.length],
+  read: false,
+}))
 
 export interface ModuleLink {
   key: string

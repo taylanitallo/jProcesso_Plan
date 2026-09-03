@@ -12,7 +12,7 @@ export function AnalisadoresPage() {
       itemIcon={FileSearch}
       showTabs={false}
     >
-      <Wizard steps={RESEARCH_STEPS} finishLabel="Analisar" />
+      <Wizard steps={RESEARCH_STEPS} finishLabel="Analisar" resultKind="analise" />
     </ChatShell>
   )
 }

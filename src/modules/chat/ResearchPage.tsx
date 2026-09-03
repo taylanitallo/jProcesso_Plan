@@ -12,7 +12,7 @@ export function ResearchPage() {
       history={RESEARCH_HISTORY}
       itemIcon={Search}
     >
-      <Wizard steps={RESEARCH_STEPS} finishLabel="Analisar" />
+      <Wizard steps={RESEARCH_STEPS} finishLabel="Analisar" resultKind="analise" />
     </ChatShell>
   )
 }

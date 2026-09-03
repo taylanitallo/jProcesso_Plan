@@ -12,7 +12,7 @@ export function ArtefatoPage() {
       history={ARTEFATO_HISTORY}
       itemIcon={BookText}
     >
-      <Wizard steps={ARTEFATO_STEPS} finishLabel="Gerar Artefato" />
+      <Wizard steps={ARTEFATO_STEPS} finishLabel="Gerar Artefato" resultKind="artefato" />
     </ChatShell>
   )
 }
