@@ -16,15 +16,16 @@ import { Badge } from '../../components/common/Badge'
 import { DataTable, Pagination, type Column } from '../../components/common/DataTable'
 import { AgendaModal } from './AgendaModal'
 import { PendingModal } from './PendingModal'
+import { NovoProcessoModal } from './NovoProcessoModal'
 import { PROCESSOS } from '../../mocks'
 
 type Row = (typeof PROCESSOS)[number]
 
 export function ProcessosInteligentesPage() {
   const navigate = useNavigate()
-  const [modal, setModal] = useState<'none' | 'agenda' | 'revisoes' | 'aprovacoes' | 'assinaturas'>(
-    'none',
-  )
+  const [modal, setModal] = useState<
+    'none' | 'agenda' | 'revisoes' | 'aprovacoes' | 'assinaturas' | 'novo'
+  >('none')
 
   const columns: Column<Row>[] = [
     { key: 'id', header: 'ID', render: (r) => <Pill>{r.id}</Pill> },
@@ -105,7 +106,10 @@ export function ProcessosInteligentesPage() {
       </button>
 
       <div className="mb-4 flex flex-wrap items-center gap-3 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-4 shadow-[var(--shadow-card)]">
-        <button className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-4 py-2.5 text-sm font-semibold text-white">
+        <button
+          onClick={() => setModal('novo')}
+          className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-4 py-2.5 text-sm font-semibold text-white"
+        >
           <Plus size={16} /> Novo <ChevronDown size={14} />
         </button>
         <input placeholder="Buscar por Nome" className="gt-input min-w-40 flex-1" />
@@ -145,6 +149,7 @@ export function ProcessosInteligentesPage() {
         title="Assinaturas pendentes"
         icon={<FileSignature size={20} />}
       />
+      <NovoProcessoModal open={modal === 'novo'} onClose={() => setModal('none')} />
     </div>
   )
 }

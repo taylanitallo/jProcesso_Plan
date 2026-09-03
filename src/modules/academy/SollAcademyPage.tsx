@@ -1,5 +1,6 @@
+import { Link } from 'react-router-dom'
 import { ChevronRight } from 'lucide-react'
-import { ACADEMY_RAILS } from '../../mocks'
+import { ACADEMY_RAILS, courseSlug } from '../../mocks'
 
 const THUMBS = [
   'linear-gradient(135deg,#22b8a6,#1f6fd0)',
@@ -41,9 +42,10 @@ export function SollAcademyPage() {
           </div>
           <div className="flex gap-4 overflow-x-auto pb-2">
             {rail.courses.map((c, ci) => (
-              <article
+              <Link
                 key={c.title}
-                className="flex w-72 shrink-0 flex-col overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white shadow-[var(--shadow-card)]"
+                to={`/SollAcademy/${courseSlug(c.title)}`}
+                className="flex w-72 shrink-0 flex-col overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-pop)]"
               >
                 <div
                   className="flex h-32 items-end p-3 text-sm font-bold text-white"
@@ -56,7 +58,7 @@ export function SollAcademyPage() {
                   <p className="line-clamp-3 text-xs text-[var(--color-muted)]">{c.desc}</p>
                   <p className="mt-auto text-[11px] text-[var(--color-muted)]">Autor: Negócios Públicos</p>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         </section>

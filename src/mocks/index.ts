@@ -66,6 +66,37 @@ export const ARTEFATO_LEGISLACOES = [
   'Sistema S',
 ]
 
+/** 27 artefatos típicos do fluxo da Lei 14.133/2021. */
+export const ARTEFATO_TIPOS = [
+  'Documento de Formalização da Demanda (DFD)',
+  'Estudo Técnico Preliminar (ETP)',
+  'Mapa de Riscos',
+  'Termo de Referência (TR)',
+  'Projeto Básico',
+  'Projeto Executivo',
+  'Pesquisa de Preços',
+  'Mapa Comparativo de Preços',
+  'Justificativa de Preço',
+  'Anteprojeto',
+  'Matriz de Riscos Contratual',
+  'Edital de Licitação',
+  'Minuta de Contrato',
+  'Minuta de Ata de Registro de Preços',
+  'Parecer Jurídico',
+  'Parecer Técnico',
+  'Despacho de Autorização',
+  'Autorização da Autoridade Competente',
+  'Portaria de Designação de Fiscal',
+  'Nota Técnica',
+  'Relatório de Fiscalização',
+  'Termo de Recebimento Provisório',
+  'Termo de Recebimento Definitivo',
+  'Ordem de Serviço / Fornecimento',
+  'Ata de Reunião',
+  'Checklist de Instrução Processual',
+  'Relatório Final da Contratação',
+]
+
 export const RESEARCH_FUNCOES = [
   'Análise Comparativa e Crítica',
   'Analisador de Impugnações de Edital',
@@ -214,6 +245,91 @@ export const ACADEMY_RAILS: { title: string; courses: { title: string; desc: str
       },
     ],
   },
+]
+
+export interface ConsultaAnswer {
+  questionId: string
+  data: string
+  formato: string
+  legislacao: string
+  referencias: string[]
+  doutrina: string[]
+  body: string
+}
+
+export const CONSULTA_ANSWERS: ConsultaAnswer[] = [
+  {
+    questionId: 'c1',
+    data: '01/09/2026 às 01:33',
+    formato: 'Parecer técnico',
+    legislacao: '14.133',
+    referencias: [
+      'INSTRUÇÃO NORMATIVA SEGES MGI Nº 12, DE 31 DE MARÇO DE 2023 — dispõe sobre licitação pelo critério de julgamento por melhor técnica ou conteúdo artístico.',
+      'Lei nº 14.133/2021 — Nova Lei de Licitações e Contratos Administrativos, especialmente os dispositivos sobre critérios de seleção, concurso e premiação.',
+      'Lei nº 13.204, de 14 de dezembro de 2015 — dispõe sobre parcerias com organizações da sociedade civil, incluindo premiação em projetos.',
+      'Acórdãos do Tribunal de Contas da União (ex.: 1370/2024 Plenário, 5131/2024 1ª Câmara, 1334/2024 Plenário).',
+      'Decreto nº 12.955, de 29 de abril de 2026 — redução de alíquotas para produções artísticas e culturais nacionais.',
+      'Plano Diretor de Logística Sustentável — importância do uso do poder de compra do Estado para fomento à cultura.',
+    ],
+    doutrina: [
+      'Licitações e Contratos Administrativos na Lei 14.133/21.pdf',
+      'Governança das Contratações.pdf',
+      'Caderno de Pesquisa de Preços - MGI.pdf',
+      'Instrumento de Padronização - AGU.pdf',
+      'Instrumento de Padronização de TI - AGU.pdf',
+      'Perguntas Frequentes em Contratações - AGU.pdf',
+      'Referencial básico gestão riscos.pdf',
+    ],
+    body: `Desenvolvimento:
+
+A. Pressupostos fáticos
+O caso em análise refere-se à intenção de premiar, com valor em dinheiro, o melhor maestro participante das comemorações de 7 de setembro, no âmbito de um projeto cultural ou comemorativo. A dúvida central reside em saber se a previsão da premiação em dinheiro no próprio projeto é suficiente para legitimar o pagamento, ou se seria imprescindível a existência de ato normativo específico, como decreto ou lei, que autorize tal premiação.
+
+B. Subsídios normativos (priorizando normas locais)
+Não localizada norma local (lei ou decreto municipal) que discipline especificamente a concessão de prêmios em dinheiro em projetos culturais. No plano federal, a IN SEGES MGI nº 12/2023 e a Lei nº 14.133/2021 (arts. 6º e 30) admitem o concurso como modalidade para escolha de trabalho técnico, científico ou artístico, mediante prêmio, exigindo previsão em edital e observância dos princípios da Administração.
+
+C. Interpretação sistemática
+A análise sistemática indica que a premiação pode ser viabilizada por meio de procedimento administrativo regular, com previsão expressa no edital ou no regulamento do certame, desde que haja dotação orçamentária e observância dos princípios da legalidade, impessoalidade, moralidade, publicidade e eficiência.
+
+D. Argumentos favoráveis
+A ausência de exigência expressa de lei ou decreto específico para cada premiação sugere que o procedimento administrativo, com previsão em edital, é suficiente. A Lei nº 13.204/2015 e o Decreto nº 12.955/2026 reforçam a tese de que a previsão em regulamento/edital é bastante.
+
+E. Argumentos contrários
+Em respeito ao princípio da legalidade estrita e à criação de despesas, pode-se sustentar que a premiação em dinheiro deveria estar prevista em lei formal, especialmente por envolver recursos públicos e criação de obrigação pecuniária.
+
+F. Riscos e recomendações mitigadoras
+A adoção da solução baseada apenas na previsão em projeto ou edital, sem respaldo em lei ou decreto específico, pode ensejar questionamentos dos órgãos de controle interno e externo. Recomenda-se: (i) previsão orçamentária específica; (ii) previsão em edital/regulamento; (iii) motivação robusta; e (iv) consulta prévia à Procuradoria Jurídica.
+
+Conclusão:
+Conclui-se que a premiação em dinheiro pode ser legitimada por procedimento administrativo regular, com previsão no projeto/edital, dotação orçamentária e motivação adequada. A edição de norma local específica não é imprescindível, mas é recomendável como medida de cautela para mitigar riscos de questionamento.
+
+Nota: Essa é uma resposta gerada por uma inteligência artificial e deve ser utilizada como orientação e auxílio para elaborar seu parecer final.`,
+  },
+]
+
+export function courseSlug(title: string) {
+  return title
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
+
+export function findCourse(slug: string) {
+  for (const rail of ACADEMY_RAILS) {
+    const c = rail.courses.find((x) => courseSlug(x.title) === slug)
+    if (c) return { ...c, rail: rail.title }
+  }
+  return null
+}
+
+export const TRILHA_MODULOS = [
+  { titulo: 'Introdução e objetivos da trilha', aulas: 3, duracao: '18 min' },
+  { titulo: 'Fundamentos legais', aulas: 5, duracao: '42 min' },
+  { titulo: 'Aplicação prática e estudos de caso', aulas: 6, duracao: '1 h 05 min' },
+  { titulo: 'Erros comuns e como evitá-los', aulas: 4, duracao: '31 min' },
+  { titulo: 'Encerramento e avaliação', aulas: 2, duracao: '12 min' },
 ]
 
 export const RELATORIO_CONSULTAS = [

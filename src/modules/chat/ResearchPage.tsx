@@ -1,7 +1,8 @@
 import { Search } from 'lucide-react'
 import { ChatShell } from './ChatShell'
-import { WizardChoice } from './WizardChoice'
-import { RESEARCH_HISTORY, RESEARCH_FUNCOES } from '../../mocks'
+import { Wizard } from './Wizard'
+import { RESEARCH_STEPS } from './chatConstants'
+import { RESEARCH_HISTORY } from '../../mocks'
 
 export function ResearchPage() {
   return (
@@ -11,15 +12,7 @@ export function ResearchPage() {
       history={RESEARCH_HISTORY}
       itemIcon={Search}
     >
-      <WizardChoice
-        prompt={
-          <>
-            <strong>O que deseja fazer hoje?</strong> Selecione uma função na qual eu possa atuar
-            para você.
-          </>
-        }
-        options={RESEARCH_FUNCOES}
-      />
+      <Wizard steps={RESEARCH_STEPS} finishLabel="Analisar" />
     </ChatShell>
   )
 }

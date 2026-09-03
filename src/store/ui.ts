@@ -5,24 +5,24 @@ import type { AppNotification } from '../types'
 const SEED_NOTIFICATIONS: AppNotification[] = [
   {
     id: 'n-1',
-    title: 'Artefato concluído',
-    body: 'O Termo de Referência do processo 2026/00123 foi gerado.',
-    time: 'há 2 h',
+    title: 'SollAI',
+    body: 'Consulta inteligente concluída',
+    time: '03/09/2026 às 01:34',
     read: false,
   },
   {
     id: 'n-2',
-    title: 'Revisão pendente',
-    body: 'Você foi designado para revisar o ETP do processo 2026/00098.',
-    time: 'há 1 dia',
+    title: 'SollAI',
+    body: 'Consulta inteligente concluída',
+    time: '23/12/2025 às 4:51',
     read: false,
   },
   {
     id: 'n-3',
-    title: 'Nova trilha no Academy',
-    body: 'Trilha "Nova Lei de Licitações na prática" disponível.',
-    time: 'há 3 dias',
-    read: true,
+    title: 'SollAI',
+    body: 'Chat concluído',
+    time: '22/12/2025 às 08:13',
+    read: false,
   },
 ]
 
