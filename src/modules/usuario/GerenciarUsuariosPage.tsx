@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CheckCircle2, Crown, Info, Pencil, Plus, ScrollText, Users } from 'lucide-react'
+import { CheckCircle2, Crown, FileSignature, Info, Pencil, Plus, ScrollText, Users } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { EmptyState } from '../../components/common/EmptyState'
 import { useAuth } from '../../store/auth'
@@ -98,7 +98,29 @@ export function GerenciarUsuariosPage() {
           <EmptyState icon={Users} title="Nenhum usuário encontrado!" />
         </>
       ) : (
-        <EmptyState icon={ScrollText} title="Assinatura Eletrônica" subtitle="Configure os certificados e responsáveis por assinatura." />
+        <div className="rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-5 shadow-[var(--shadow-card)]">
+          <div className="flex items-center justify-between border-b border-[var(--color-line)] pb-4">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-[12px] bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)]">
+                <FileSignature size={20} />
+              </span>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                  Assinatura Eletrônica
+                </p>
+                <p className="font-display text-lg font-bold text-[#183263]">Pessoas para Assinatura</p>
+              </div>
+            </div>
+            <button className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-4 py-2 text-sm font-semibold text-white">
+              <Plus size={15} /> Nova Pessoa
+            </button>
+          </div>
+          <EmptyState
+            icon={FileSignature}
+            title="Nenhum assinante externo cadastrado"
+            subtitle="Registre certificados ao contrato para os fluxos de assinatura."
+          />
+        </div>
       )}
     </div>
   )

@@ -1,6 +1,7 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
 import { ChevronRight } from 'lucide-react'
-import { ACADEMY_RAILS, courseSlug } from '../../mocks'
+import { ACADEMY_RAILS } from '../../mocks'
+import { TrilhaModal } from './TrilhaModal'
 
 const THUMBS = [
   'linear-gradient(135deg,#22b8a6,#1f6fd0)',
@@ -11,6 +12,8 @@ const THUMBS = [
 ]
 
 export function SollAcademyPage() {
+  const [trilha, setTrilha] = useState<{ title: string; desc: string; thumb: string } | null>(null)
+
   return (
     <div className="flex flex-col gap-8">
       <header className="overflow-hidden rounded-[var(--radius-card)] bg-[linear-gradient(135deg,#12203f_0%,#1b2f57_100%)] p-8 text-white">
@@ -41,25 +44,30 @@ export function SollAcademyPage() {
             </button>
           </div>
           <div className="flex gap-4 overflow-x-auto pb-2">
-            {rail.courses.map((c, ci) => (
-              <Link
-                key={c.title}
-                to={`/SollAcademy/${courseSlug(c.title)}`}
-                className="flex w-72 shrink-0 flex-col overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-pop)]"
-              >
-                <div
-                  className="flex h-32 items-end p-3 text-sm font-bold text-white"
-                  style={{ background: THUMBS[(ri + ci) % THUMBS.length] }}
+            {rail.courses.map((c, ci) => {
+              const thumb = THUMBS[(ri + ci) % THUMBS.length]
+              return (
+                <button
+                  key={c.title}
+                  onClick={() => setTrilha({ title: c.title, desc: c.desc, thumb })}
+                  className="flex w-72 shrink-0 flex-col overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white text-left shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-pop)]"
                 >
-                  {c.title}
-                </div>
-                <div className="flex flex-1 flex-col gap-2 p-4">
-                  <h3 className="text-sm font-bold text-[#183263]">{c.title}</h3>
-                  <p className="line-clamp-3 text-xs text-[var(--color-muted)]">{c.desc}</p>
-                  <p className="mt-auto text-[11px] text-[var(--color-muted)]">Autor: Negócios Públicos</p>
-                </div>
-              </Link>
-            ))}
+                  <div
+                    className="flex h-32 items-end p-3 text-sm font-bold text-white"
+                    style={{ background: thumb }}
+                  >
+                    {c.title}
+                  </div>
+                  <div className="flex flex-1 flex-col gap-2 p-4">
+                    <h3 className="text-sm font-bold text-[#183263]">{c.title}</h3>
+                    <p className="line-clamp-3 text-xs text-[var(--color-muted)]">{c.desc}</p>
+                    <p className="mt-auto text-[11px] text-[var(--color-muted)]">
+                      Autor: Negócios Públicos
+                    </p>
+                  </div>
+                </button>
+              )
+            })}
           </div>
         </section>
       ))}
@@ -70,6 +78,14 @@ export function SollAcademyPage() {
           Transforme seu conhecimento e alcance novos patamares na sua carreira
         </p>
       </footer>
+
+      <TrilhaModal
+        open={!!trilha}
+        onClose={() => setTrilha(null)}
+        title={trilha?.title ?? ''}
+        desc={trilha?.desc ?? ''}
+        thumb={trilha?.thumb ?? THUMBS[0]}
+      />
     </div>
   )
 }

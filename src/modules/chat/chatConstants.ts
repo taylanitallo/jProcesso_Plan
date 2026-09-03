@@ -1,11 +1,16 @@
 import type { ReactNode } from 'react'
 import type { ModuleLink } from '../../store/ui'
-import { ARTEFATO_LEGISLACOES, ARTEFATO_TIPOS, RESEARCH_FUNCOES } from '../../mocks'
+import { ARTEFATO_GRUPOS, ARTEFATO_LEGISLACOES, RESEARCH_FUNCOES } from '../../mocks'
 
 export type Step =
   | { kind: 'choice'; prompt: ReactNode; options: string[] }
+  | { kind: 'group'; prompt: ReactNode; groups: { grupo: string; itens: string[] }[] }
   | { kind: 'text'; prompt: ReactNode; placeholder?: string; optional?: boolean }
-  | { kind: 'upload'; prompt: ReactNode }
+  | {
+      kind: 'upload'
+      prompt: ReactNode
+      warning?: { title: string; bullets: string[]; note?: ReactNode }
+    }
 
 export const CHAT_MODULE_LINKS: ModuleLink[] = [
   { key: 'consulta', label: 'Consulta Inteligente', to: '/Consulta', icon: 'scale' },
@@ -20,12 +25,10 @@ export const ARTEFATO_STEPS: Step[] = [
     prompt: 'Escolha a legislação: (Baseado em qual lei deseja a resposta).',
     options: ARTEFATO_LEGISLACOES,
   },
-  { kind: 'choice', prompt: 'Qual artefato você deseja gerar?', options: ARTEFATO_TIPOS },
   {
-    kind: 'text',
-    prompt:
-      'Descreva o contexto do processo — objeto, valores, unidade requisitante e demais informações relevantes.',
-    placeholder: 'Cole aqui os dados do processo...',
+    kind: 'group',
+    prompt: 'Escolha seus Artefatos: Selecione artefatos específicos que deseja produzir.',
+    groups: ARTEFATO_GRUPOS,
   },
 ]
 
@@ -35,11 +38,17 @@ export const RESEARCH_STEPS: Step[] = [
     prompt: 'O que deseja fazer hoje? Selecione uma função na qual eu possa atuar para você.',
     options: RESEARCH_FUNCOES,
   },
-  { kind: 'upload', prompt: 'Envie o documento que deseja analisar.' },
   {
-    kind: 'text',
-    optional: true,
-    prompt: 'Contexto adicional (opcional) — informe pontos de atenção para a análise.',
-    placeholder: 'Ex.: verificar prazos, fundamentação e vícios formais...',
+    kind: 'upload',
+    prompt: 'Qual documento você deseja que eu trabalhe para você hoje?',
+    warning: {
+      title: 'Aviso sobre envio de documentos',
+      bullets: [
+        'Digitalizados (em formato de imagem/PDF escaneado)',
+        'Bloqueados para cópia ou edição',
+        'Com imagens muito grandes que possam comprometer o processamento',
+      ],
+      note: 'Dê preferência a arquivos em formato .docx, .pdf editável.',
+    },
   },
 ]

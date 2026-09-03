@@ -13,7 +13,6 @@ import { ProcessosInteligentesPage } from '../modules/processos/ProcessosIntelig
 import { DashboardProcessoPage } from '../modules/processos/DashboardProcessoPage'
 import { StatusArtefatosPage } from '../modules/processos/StatusArtefatosPage'
 import { SollAcademyPage } from '../modules/academy/SollAcademyPage'
-import { TrilhaDetailPage } from '../modules/academy/TrilhaDetailPage'
 import { NormativaPage } from '../modules/normativa/NormativaPage'
 import { GerenciarUsuariosPage } from '../modules/usuario/GerenciarUsuariosPage'
 import { TipoEnvolvidoAssinaturaPage } from '../modules/usuario/TipoEnvolvidoAssinaturaPage'
@@ -45,7 +44,6 @@ export const router = createBrowserRouter([
       { path: 'StatusArtefatos', element: <StatusArtefatosPage /> },
 
       { path: 'SollAcademy', element: <SollAcademyPage /> },
-      { path: 'SollAcademy/:slug', element: <TrilhaDetailPage /> },
       { path: 'Normativa', element: <NormativaPage /> },
 
       { path: 'GerenciarUsuarios', element: <GerenciarUsuariosPage /> },

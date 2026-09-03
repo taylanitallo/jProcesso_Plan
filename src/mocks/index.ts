@@ -97,6 +97,81 @@ export const ARTEFATO_TIPOS = [
   'Relatório Final da Contratação',
 ]
 
+/** "Escolha seus Artefatos" — passo 2 do wizard de Artefato, agrupado por fase (lista real). */
+export const ARTEFATO_GRUPOS: { grupo: string; itens: string[] }[] = [
+  {
+    grupo: 'Fase de planejamento',
+    itens: [
+      'Checklist Inicial',
+      'Documento de Formalização de Demanda (DFD) – Serviços',
+      'Documento de Formalização de Demanda (DFD) – Bens',
+      'Documento de Formalização de Demanda (DFD) – Contratação Direta',
+      'Documento de Formalização de Demanda (DFD) – TIC Requisitante',
+      'Documento de Formalização de Demanda (DFD) – TIC Técnico',
+      'Anteprojeto',
+      'Matriz de Risco',
+      'Estudo Técnico Preliminar (ETP)',
+      'Estudo Técnico Preliminar (ETP) – TIC',
+      'Projeto Básico',
+      'Termo de Referência (2023)',
+      'Termo de Referência de Aquisições (2026)',
+      'Termo de Referência de Aquisições (2026) – Bens',
+      'Termo de Referência de Aquisições (2026) – Serviços',
+      'Termo de Referência de Aquisições (2026) com art.95',
+      'Termo de Referência de Concorrência',
+      'Termo de Referência – serviços comuns de engenharia',
+      'Termo de Referência – serviços com dedicação exclusiva de mão de obra - pregão',
+      'Termo de Referência – Dispensa Eletrônica',
+      'Termo de Referência – Dispensa Eletrônica – Bens',
+      'Termo de Referência – Dispensa Eletrônica – Serviços',
+      'Termo de Referência – Dispensa',
+      'Termo de Referência – Dispensa – Bens',
+      'Termo de Referência – Dispensa – Serviços',
+      'Termo de Referência – Dispensa com Disputa',
+      'Termo de Referência – TIC',
+      'Termo de Referência – serviços sem dedicação exclusiva de mão de obra',
+      'Termo de Referência – Inexigibilidade',
+      'Termo de Referência Simplificado – Contratação Direta',
+      'Relatório de Pesquisa de Preços',
+    ],
+  },
+  {
+    grupo: 'Fase externa',
+    itens: [
+      'Ata de Registro de Preços',
+      'Edital de Credenciamento',
+      'Edital de Concorrência',
+      'Edital de Concorrência – Registro de Preço',
+      'Edital de Pregão Eletrônico (AGU)',
+      'Edital de Pregão Eletrônico com Anexo',
+      'Edital de Pregão Eletrônico com Anexo (Serviços)',
+      'Edital de Pregão Eletrônico - Registro de Preço – Com Anexo',
+      'Edital TIC',
+      'Aviso de Dispensa Eletrônica',
+      'Aviso de Dispensa Eletrônica – Registro de Preços',
+      'Parecer Parametrizado - compras e serviços',
+    ],
+  },
+  {
+    grupo: 'Contratos',
+    itens: [
+      'Termo de Apostilamento',
+      'Termo de Contrato – TIC',
+      'Termo de Contrato – Aquisições – Contratação Direta',
+      'Termo de Contrato – Serviços COM dedicação exclusiva de mão de obra',
+      'Termo de Contrato – Serviços – SEM Dedicação Exclusiva de Mão de Obra',
+      'Termo de Contrato – Aquisições – Licitação',
+      'Termo de Contrato – Serviços comuns de engenharia – Licitação',
+      'Termo de doações de bens sem encargos',
+      'Termo de doações de bens com encargos',
+      'Termo aditivo de alteração contratual',
+      'Termo aditivo de prorrogação',
+      'Termo aditivo de acréscimo e supressão',
+      'Checklist de Gestão e Fiscalização de Contrato',
+    ],
+  },
+]
+
 export const RESEARCH_FUNCOES = [
   'Análise Comparativa e Crítica',
   'Analisador de Impugnações de Edital',
@@ -107,7 +182,7 @@ export const RESEARCH_FUNCOES = [
   'Analisador de Contrarrazões',
 ]
 
-/** 23 signer categories (page 1 captured; remainder are representative). */
+/** 23 categorias de assinantes — lista real do SollAI. */
 export const CATEGORIAS_ASSINANTES = [
   'Agente de Contratação',
   'Agente de Planejamento da Contratação',
@@ -116,22 +191,22 @@ export const CATEGORIAS_ASSINANTES = [
   'Comissão de Ética ou Integridade',
   'Corregedoria',
   'Equipe de Apoio',
-  'Fiscal de Contrato',
-  'Fiscal Técnico',
-  'Fiscal Administrativo',
-  'Gestor de Contrato',
-  'Ordenador de Despesa',
+  'Fiscal Administrativo do Contrato',
+  'Fiscal Requisitante',
+  'Fiscal Técnico do Contrato',
+  'Gestor do Contrato',
+  'Gestor do Plano de Contratações Anual (PCA)',
+  'Membros da Comissão de Contratação',
+  'Ouvidoria',
   'Pregoeiro',
-  'Procurador Jurídico',
+  'Presidente da Comissão de Contratação',
   'Requisitante da Contratação',
-  'Responsável pela Cotação',
-  'Responsável Técnico',
-  'Secretário Municipal',
-  'Setor de Compras',
-  'Setor de Contabilidade',
-  'Setor de Licitações',
-  'Controle Interno',
-  'Autoridade Assessorada',
+  'Setor de Compras ou Suprimentos',
+  'Setor de Controle Interno',
+  'Setor de Orçamento/Financeiro',
+  'Unidade de Auditoria Interna',
+  'Unidade de Comunicação',
+  'Unidade de Tecnologia da Informação (TI)',
 ]
 
 export const PROCESSOS = [
@@ -307,30 +382,33 @@ Nota: Essa é uma resposta gerada por uma inteligência artificial e deve ser ut
   },
 ]
 
-export function courseSlug(title: string) {
-  return title
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
+export interface TrilhaMeta {
+  duracaoTotal: string
+  sessoes: number
+  aulas: { titulo: string; aulas: number; minutos: number }[]
 }
 
-export function findCourse(slug: string) {
-  for (const rail of ACADEMY_RAILS) {
-    const c = rail.courses.find((x) => courseSlug(x.title) === slug)
-    if (c) return { ...c, rail: rail.title }
-  }
-  return null
+/** Conteúdo real da trilha "A fase preparatória"; demais trilhas reusam este modelo. */
+export const TRILHA_FASE_PREPARATORIA: TrilhaMeta = {
+  duracaoTotal: '11.67 Horas',
+  sessoes: 6,
+  aulas: [
+    { titulo: 'A importante etapa do planejamento de compras', aulas: 1, minutos: 52 },
+    {
+      titulo: 'Identificação de falhas prático-operacionais na fase interna das Licitações',
+      aulas: 1,
+      minutos: 57,
+    },
+    { titulo: 'Elaboração do Termo de Referência e do Projeto Básico', aulas: 2, minutos: 222 },
+    { titulo: 'A importância do ETP e seus reflexos nas compras públicas', aulas: 1, minutos: 92 },
+    {
+      titulo: 'Uso de inteligência artificial na elaboração do ETP e do TR na prática',
+      aulas: 2,
+      minutos: 219,
+    },
+    { titulo: 'A importância das compras públicas', aulas: 1, minutos: 35 },
+  ],
 }
-
-export const TRILHA_MODULOS = [
-  { titulo: 'Introdução e objetivos da trilha', aulas: 3, duracao: '18 min' },
-  { titulo: 'Fundamentos legais', aulas: 5, duracao: '42 min' },
-  { titulo: 'Aplicação prática e estudos de caso', aulas: 6, duracao: '1 h 05 min' },
-  { titulo: 'Erros comuns e como evitá-los', aulas: 4, duracao: '31 min' },
-  { titulo: 'Encerramento e avaliação', aulas: 2, duracao: '12 min' },
-]
 
 export const RELATORIO_CONSULTAS = [
   {
