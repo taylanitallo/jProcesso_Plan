@@ -6,7 +6,8 @@ import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 import { ControleGeralModal } from './ControleGeralModal'
 import { NodeConfigModal } from './NodeConfigModal'
 import { AdicionarArtefatoModal } from './AdicionarArtefatoModal'
-import { WORKFLOW_NODES, WORKFLOW_NODE_CHIPS, WORKFLOWS } from '../../mocks'
+import { PrimeiraVezModal } from './PrimeiraVezModal'
+import { WORKFLOW_NODES, WORKFLOW_NODE_CHIPS, WORKFLOW_NODE_DEPS, WORKFLOWS } from '../../mocks'
 
 const NODE_W = 280
 const COL_GAP = 320
@@ -38,6 +39,12 @@ export function WorkflowDetailPage() {
   const [controle, setControle] = useState(false)
   const [configNode, setConfigNode] = useState<string | null>(null)
   const [addOpen, setAddOpen] = useState(false)
+  const [primeiraVez, setPrimeiraVez] = useState(true)
+
+  // modo "Organizar ordem"
+  const [ordenando, setOrdenando] = useState(false)
+  const [dirty, setDirty] = useState(false)
+  const snapshot = useRef<Record<string, Pos>>({})
 
   const drag = useRef<{
     node: string
@@ -54,7 +61,10 @@ export function WorkflowDetailPage() {
     if (!d) return
     const dx = (e.clientX - d.startX) / scale
     const dy = (e.clientY - d.startY) / scale
-    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) d.moved = true
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+      d.moved = true
+      if (ordenando) setDirty(true)
+    }
     setPositions((prev) => ({
       ...prev,
       [d.node]: { x: Math.max(0, d.origX + dx), y: Math.max(0, d.origY + dy) },
@@ -64,7 +74,7 @@ export function WorkflowDetailPage() {
     const d = drag.current
     window.removeEventListener('pointermove', onPointerMove)
     window.removeEventListener('pointerup', onPointerUp)
-    if (d && !d.moved) setConfigNode(d.node)
+    if (d && !d.moved && !ordenando) setConfigNode(d.node)
     drag.current = null
   }
   const onPointerDown = (e: React.PointerEvent, node: string) => {
@@ -76,7 +86,21 @@ export function WorkflowDetailPage() {
     window.addEventListener('pointerup', onPointerUp)
   }
 
-  const organizar = () => setPositions(gridFor(nodes))
+  const iniciarOrganizar = () => {
+    snapshot.current = positions
+    setDirty(false)
+    setOrdenando(true)
+  }
+  const cancelarOrganizar = () => {
+    setPositions(snapshot.current)
+    setDirty(false)
+    setOrdenando(false)
+  }
+  const salvarOrdem = () => {
+    setPositions(gridFor(nodes))
+    setDirty(false)
+    setOrdenando(false)
+  }
 
   const addArtefato = (nome: string, afterIndex: number) => {
     setNodes((prev) => {
@@ -115,7 +139,10 @@ export function WorkflowDetailPage() {
 
         <div className="flex flex-wrap items-center gap-3 border-b border-[var(--color-line)] px-5 py-2 text-xs text-[var(--color-muted)]">
           <span className="inline-flex items-center gap-1.5">
-            <Move size={13} /> {nodes.length} nós • 0 conexões
+            <Move size={13} />{' '}
+            {ordenando
+              ? `Arraste os cards para reorganizar${dirty ? ' • alterações não salvas' : ''}`
+              : `${nodes.length} nós • 0 conexões`}
           </span>
           <label className="flex items-center gap-2">
             <span className="sr-only">Nome do fluxo</span>
@@ -132,9 +159,25 @@ export function WorkflowDetailPage() {
           >
             Salvar nome
           </button>
-          <button onClick={organizar} className="font-semibold text-[var(--color-primary)]">
-            Organizar ordem
-          </button>
+
+          {ordenando ? (
+            <>
+              <button onClick={cancelarOrganizar} className="font-semibold text-[var(--color-muted)]">
+                Cancelar
+              </button>
+              <button
+                onClick={salvarOrdem}
+                className="rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-3 py-1.5 font-semibold text-white"
+              >
+                Salvar ordem
+              </button>
+            </>
+          ) : (
+            <button onClick={iniciarOrganizar} className="font-semibold text-[var(--color-primary)]">
+              Organizar ordem
+            </button>
+          )}
+
           <button
             onClick={() => setAddOpen(true)}
             className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-3 py-1.5 font-semibold text-white"
@@ -169,6 +212,7 @@ export function WorkflowDetailPage() {
             <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
               {nodes.map((node, i) => {
                 const p = positions[node] ?? { x: 24, y: 24 }
+                const deps = WORKFLOW_NODE_DEPS[node]
                 return (
                   <div
                     key={node}
@@ -193,6 +237,29 @@ export function WorkflowDetailPage() {
                           {chip}
                         </span>
                       ))}
+                      {deps ? (
+                        <span
+                          data-chip
+                          className="group relative rounded-[var(--radius-pill)] border border-[#a7dcc4] bg-[#e4f4ec] px-2.5 py-1 text-[11px] font-semibold text-[var(--color-success)]"
+                        >
+                          Dependências
+                          <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-1 hidden w-52 -translate-x-1/2 rounded-[10px] bg-[var(--color-primary)] p-3 text-left text-[11px] font-normal text-white shadow-[var(--shadow-pop)] group-hover:block">
+                            <span className="font-bold">Depende de:</span>
+                            <ul className="mt-1 list-disc space-y-0.5 pl-4">
+                              {deps.map((d) => (
+                                <li key={d}>{d}</li>
+                              ))}
+                            </ul>
+                          </span>
+                        </span>
+                      ) : (
+                        <span
+                          data-chip
+                          className="rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-white px-2.5 py-1 text-[11px] font-semibold text-[var(--color-muted)]"
+                        >
+                          Independente
+                        </span>
+                      )}
                     </div>
                     <span className="absolute bottom-2 right-2 grid h-5 w-5 place-items-center rounded-full bg-[#e4f4ec] text-[var(--color-success)]">
                       <Check size={12} />
@@ -205,6 +272,9 @@ export function WorkflowDetailPage() {
         </div>
       </div>
 
+      {primeiraVez && (
+        <PrimeiraVezModal total={nodes.length} onDone={() => setPrimeiraVez(false)} />
+      )}
       <ControleGeralModal open={controle} onClose={() => setControle(false)} />
       <NodeConfigModal node={configNode} onClose={() => setConfigNode(null)} />
       <AdicionarArtefatoModal

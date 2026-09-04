@@ -317,7 +317,15 @@ export const WORKFLOW_NODES = [
   'Autorização do Ordenador de Despesas',
 ]
 
-export const WORKFLOW_NODE_CHIPS = ['Sem prazo', 'Revisão', 'Aprovação', 'Assinatura', 'Independente']
+/** Chips base de cada nó (as 4 regras). O 5º chip é "Independente" ou "Dependências". */
+export const WORKFLOW_NODE_CHIPS = ['Sem prazo', 'Revisão', 'Aprovação', 'Assinatura']
+
+/** Nós que dependem do envio prévio de outros modelos (mostra chip "Dependências" + tooltip). */
+export const WORKFLOW_NODE_DEPS: Record<string, string[]> = {
+  'Mapa de Risco': ['Anteprojeto', 'Projeto Básico'],
+  'Termo de Referência': ['Mapa de Risco'],
+  Edital: ['Termo de Referência', 'Pesquisa de Preços'],
+}
 
 export const MODELOS_PERSONALIZADOS = [
   {
