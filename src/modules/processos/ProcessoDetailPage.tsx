@@ -1,15 +1,6 @@
 import { useState } from 'react'
-import {
-  Check,
-  Clock,
-  MessageSquare,
-  MoreVertical,
-  Package,
-  SendHorizontal,
-  UserRound,
-  X,
-} from 'lucide-react'
-import { ChatShell, AiBubble } from '../chat/ChatShell'
+import { Check, Clock, MoreVertical, Package, SendHorizontal, UserRound, X } from 'lucide-react'
+import { AiBubble } from '../chat/ChatShell'
 import { useModuleLinks } from '../../components/shell/useModuleLinks'
 import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 import { ArtefatoDetalheModal } from './ArtefatoDetalheModal'
@@ -107,14 +98,7 @@ export function ProcessoDetailPage() {
           </div>
         </div>
 
-        <ChatShell
-          counterLabel="Total Consultas"
-          counterValue={0}
-          history={[]}
-          itemIcon={MessageSquare}
-          showTabs={false}
-          searchPlaceholder="Pesquisar no histórico..."
-        >
+        <div className="flex min-h-[calc(100vh-14rem)] flex-col overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-[#eef3fb] shadow-[var(--shadow-card)]">
           <div className="flex-1 overflow-y-auto p-6">
             <AiBubble>Como posso ajudá-lo hoje?</AiBubble>
           </div>
@@ -138,7 +122,7 @@ export function ProcessoDetailPage() {
               </div>
             </div>
           </div>
-        </ChatShell>
+        </div>
       </div>
 
       <ArtefatoDetalheModal artefato={artefato} onClose={() => setArtefato(null)} />
