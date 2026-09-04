@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import {
+  AlertTriangle,
   Download,
   FileText,
   History,
   ListChecks,
   Save,
   Upload,
+  UploadCloud,
   X,
 } from 'lucide-react'
 import { Combo } from '../../components/common/Combo'
@@ -18,11 +20,13 @@ const ACOES = [
   'Preencher Informações',
   'Gerar Artefato com IA',
   'Gerar por Arquivo',
-]
+] as const
+
+type Sub = null | 'form' | 'solicitar' | 'arquivo' | 'gerar'
 
 /**
  * "Ver Detalhes" de um artefato — espelha o modal "Artefato" do SollAI
- * (seções Artefato / Histórico / Status).
+ * (seções Artefato / Histórico / Status) e as ações do lado esquerdo.
  */
 export function ArtefatoDetalheModal({
   artefato,
@@ -32,9 +36,17 @@ export function ArtefatoDetalheModal({
   onClose: () => void
 }) {
   const [responsavel, setResponsavel] = useState('')
-  const [formOpen, setFormOpen] = useState(false)
+  const [sub, setSub] = useState<Sub>(null)
+  const [email, setEmail] = useState('')
 
   if (!artefato) return null
+
+  const acaoClick: Record<string, () => void> = {
+    'Preencher Informações': () => setSub('form'),
+    'Solicitar envio': () => setSub('solicitar'),
+    'Gerar Artefato com IA': () => setSub('gerar'),
+    'Gerar por Arquivo': () => setSub('arquivo'),
+  }
 
   return (
     <div
@@ -90,7 +102,7 @@ export function ArtefatoDetalheModal({
             {ACOES.map((a) => (
               <button
                 key={a}
-                onClick={a === 'Preencher Informações' ? () => setFormOpen(true) : undefined}
+                onClick={acaoClick[a]}
                 className="rounded-[var(--radius-control)] border border-[var(--color-line)] px-3 py-2.5 text-sm font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-primary-soft)]"
               >
                 {a === 'Upload' ? (
@@ -126,7 +138,134 @@ export function ArtefatoDetalheModal({
         </div>
       </div>
 
-      <FormularioModal artefato={formOpen ? artefato : null} onClose={() => setFormOpen(false)} />
+      <FormularioModal artefato={sub === 'form' ? artefato : null} onClose={() => setSub(null)} />
+
+      {sub === 'solicitar' && (
+        <MiniDialog onClose={() => setSub(null)}>
+          <p className="text-center font-display text-lg font-bold text-[#183263]">
+            Qual o email que deseja enviar a solicitação?
+          </p>
+          <input
+            autoFocus
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="gt-input mt-4 w-full font-normal normal-case"
+          />
+          <div className="mt-4 flex justify-center gap-2">
+            <button
+              onClick={() => setSub(null)}
+              className="rounded-[var(--radius-control)] bg-[#e6e9ef] px-4 py-2 text-sm font-semibold text-[var(--color-ink)]"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => setSub(null)}
+              className="rounded-[var(--radius-control)] bg-[var(--color-primary)] px-5 py-2 text-sm font-semibold text-white"
+            >
+              Enviar
+            </button>
+          </div>
+        </MiniDialog>
+      )}
+
+      {sub === 'gerar' && (
+        <MiniDialog onClose={() => setSub(null)}>
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border-2 border-[#f0c26b] text-[#d39a16]">
+            <AlertTriangle size={24} />
+          </span>
+          <p className="mt-3 text-center font-display text-lg font-bold text-[#183263]">
+            Gerar Artefato?
+          </p>
+          <p className="mt-2 text-center text-sm text-[var(--color-muted)]">
+            Antes de prosseguir, <strong>recomendamos que você confira se o dados do formulário
+            estão corretamente preenchidos.</strong>
+          </p>
+          <p className="mt-2 text-center text-sm text-[var(--color-muted)]">
+            Essa ação iniciará o processamento do seu Artefato.
+          </p>
+          <p className="mt-2 text-center text-sm text-[var(--color-muted)]">Deseja continuar?</p>
+          <div className="mt-4 flex justify-center gap-2">
+            <button
+              onClick={() => setSub(null)}
+              className="rounded-[var(--radius-control)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
+            >
+              Sim, Gerar Artefato
+            </button>
+            <button
+              onClick={() => setSub(null)}
+              className="rounded-[var(--radius-control)] bg-[#e6e9ef] px-4 py-2 text-sm font-semibold text-[var(--color-ink)]"
+            >
+              Cancelar
+            </button>
+          </div>
+        </MiniDialog>
+      )}
+
+      {sub === 'arquivo' && (
+        <MiniDialog wide onClose={() => setSub(null)}>
+          <h3 className="flex items-center gap-2 font-display text-lg font-extrabold text-[#183263]">
+            <UploadCloud size={20} className="text-[var(--color-primary-strong)]" /> Envio de Arquivos
+            para Processamento
+          </h3>
+          <p className="mt-1 text-xs text-[var(--color-muted)]">
+            Envie até 15 arquivos para Processamento
+          </p>
+
+          <div className="mt-3 rounded-[var(--radius-control)] border border-[#f0d79a] bg-[#fdf6e3] p-4 text-[13px] text-[#8a6d1a]">
+            <p className="flex items-center gap-2 font-bold">
+              <AlertTriangle size={15} /> Aviso sobre envio de documentos
+            </p>
+            <p className="mt-1">Para melhor funcionamento da análise na SollAI, não envie documentos:</p>
+            <ul className="mt-1 list-disc space-y-0.5 pl-5">
+              <li>Digitalizados (em formato de imagem/PDF escaneado)</li>
+              <li>Bloqueados para cópia ou edição</li>
+              <li>Com imagens muito grandes que possam comprometer o processamento</li>
+            </ul>
+            <p className="mt-1 font-semibold">Dê preferência a arquivos em formato .docx, .pdf editável.</p>
+          </div>
+
+          <label className="mx-auto mt-4 flex w-fit cursor-pointer items-center gap-2 rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#1f9d55_0%,#198754_100%)] px-4 py-2.5 text-sm font-semibold text-white">
+            <UploadCloud size={16} /> Selecionar Arquivos
+            <input type="file" multiple className="hidden" />
+          </label>
+          <p className="mt-2 text-center text-xs text-[var(--color-muted)]">
+            (Formatos aceitos: .pdf,.doc ou .docx - Tamanho máximo: 800MB por arquivo - até 15
+            arquivos)
+          </p>
+
+          <button
+            onClick={() => setSub(null)}
+            className="mt-4 w-full rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] py-2.5 text-sm font-bold text-white"
+          >
+            Enviar
+          </button>
+        </MiniDialog>
+      )}
+    </div>
+  )
+}
+
+function MiniDialog({
+  children,
+  onClose,
+  wide,
+}: {
+  children: React.ReactNode
+  onClose: () => void
+  wide?: boolean
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div className="absolute inset-0 bg-[rgba(9,21,44,0.35)]" />
+      <div
+        className={`relative w-full ${wide ? 'max-w-2xl' : 'max-w-md'} rounded-[16px] bg-white p-6 shadow-[var(--shadow-pop)]`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {children}
+      </div>
     </div>
   )
 }
