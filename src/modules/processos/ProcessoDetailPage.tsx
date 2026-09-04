@@ -13,6 +13,7 @@ import { AiBubble } from '../chat/ChatShell'
 import { useModuleLinks } from '../../components/shell/useModuleLinks'
 import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 import { ArtefatoDetalheModal } from './ArtefatoDetalheModal'
+import { MapaRiscoModal } from './MapaRiscoModal'
 import { PROCESSO_ARTEFATOS, PROCESSOS } from '../../mocks'
 
 export function ProcessoDetailPage() {
@@ -20,7 +21,13 @@ export function ProcessoDetailPage() {
   const proc = PROCESSOS[0]
   const [value, setValue] = useState('')
   const [artefato, setArtefato] = useState<string | null>(null)
+  const [mapaRisco, setMapaRisco] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
+
+  const abrirArtefato = (a: (typeof PROCESSO_ARTEFATOS)[number]) => {
+    if (a.nome === 'Mapa de Risco') setMapaRisco(true)
+    else setArtefato(a.completo)
+  }
 
   const total = PROCESSO_ARTEFATOS.length
   const feitos = PROCESSO_ARTEFATOS.filter((a) => a.enviado).length
@@ -88,7 +95,7 @@ export function ProcessoDetailPage() {
                 {a.enviado ? <Check size={14} /> : <X size={14} />}
               </span>
               <button
-                onClick={() => setArtefato(a.completo)}
+                onClick={() => abrirArtefato(a)}
                 title={a.completo}
                 className="w-full rounded-[var(--radius-control)] px-2 py-1 text-left transition hover:bg-[var(--color-primary-soft)]"
               >
@@ -108,6 +115,7 @@ export function ProcessoDetailPage() {
       </div>
 
       <ArtefatoDetalheModal artefato={artefato} onClose={() => setArtefato(null)} />
+      <MapaRiscoModal open={mapaRisco} onClose={() => setMapaRisco(false)} />
 
       {/* Drawer de análise com IA */}
       {chatOpen && (

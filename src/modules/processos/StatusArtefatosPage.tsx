@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { Filter, Search } from 'lucide-react'
+import { Filter, Plus, Search } from 'lucide-react'
 import { Badge } from '../../components/common/Badge'
 import { DataTable, Pagination, type Column } from '../../components/common/DataTable'
+import { EmptyState } from '../../components/common/EmptyState'
 import { useModuleLinks } from '../../components/shell/useModuleLinks'
 import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 import { ArtefatoDetalheModal } from './ArtefatoDetalheModal'
+import { MapaRiscoModal } from './MapaRiscoModal'
 
 /** Artefatos do fluxo 14.133 — ordem e rótulos conforme o SollAI real. */
 const ARTEFATOS = [
@@ -40,28 +42,41 @@ const ARTEFATOS = [
   'Termo de Homologação',
 ]
 
+/** Só os primeiros artefatos (fluxo principal) têm processos gerais associados. */
+const COM_PROCESSOS = 14
+
 type LinhaProcesso = {
   numero: string
   nome: string
   responsavel: string
   prazo: string
-  status: string
+  status: 'ENVIADO' | 'NÃO ENVIADO' | 'NÃO INICIADO'
 }
 
 const LINHAS: LinhaProcesso[] = [
-  {
-    numero: '1',
-    nome: 'PERMANENTE',
-    responsavel: 'Não definido',
-    prazo: 'Sem prazo',
-    status: 'ENVIADO',
-  },
+  { numero: '1', nome: 'PERMANENTE', responsavel: 'Não definido', prazo: 'Sem prazo', status: 'NÃO ENVIADO' },
+  { numero: 'teste', nome: 'OBRA 33', responsavel: 'Não definido', prazo: 'Sem prazo', status: 'NÃO INICIADO' },
 ]
+
+const STATUS_TONE = {
+  ENVIADO: 'success',
+  'NÃO ENVIADO': 'info',
+  'NÃO INICIADO': 'neutral',
+} as const
 
 export function StatusArtefatosPage() {
   useModuleLinks(PROCESSOS_MODULE_LINKS)
   const [sel, setSel] = useState(0)
   const [detalhe, setDetalhe] = useState<string | null>(null)
+  const [mapaRisco, setMapaRisco] = useState(false)
+
+  const artefatoSel = ARTEFATOS[sel]
+  const linhas = sel < COM_PROCESSOS ? LINHAS : []
+
+  const abrir = () => {
+    if (artefatoSel === 'Mapa de Risco') setMapaRisco(true)
+    else setDetalhe(artefatoSel)
+  }
 
   const cols: Column<LinhaProcesso>[] = [
     { key: 'numero', header: 'Número do Processo', align: 'center' },
@@ -78,7 +93,7 @@ export function StatusArtefatosPage() {
       key: 'status',
       header: 'Status Atual',
       align: 'center',
-      render: (r) => <Badge tone="success">{r.status}</Badge>,
+      render: (r) => <Badge tone={STATUS_TONE[r.status]}>{r.status}</Badge>,
     },
     {
       key: 'acoes',
@@ -87,7 +102,7 @@ export function StatusArtefatosPage() {
       render: () => (
         <div className="flex justify-end">
           <button
-            onClick={() => setDetalhe(ARTEFATOS[sel])}
+            onClick={abrir}
             className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-success)] px-3 py-1.5 text-xs font-semibold text-white"
           >
             <Search size={13} /> Detalhes
@@ -125,7 +140,7 @@ export function StatusArtefatosPage() {
       <div className="flex items-start justify-between gap-3 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white px-5 py-4 shadow-[var(--shadow-card)]">
         <div>
           <h3 className="font-display text-base font-bold text-[#183263]">Processos gerais</h3>
-          <p className="text-xs text-[var(--color-muted)]">{ARTEFATOS[sel]}</p>
+          <p className="text-xs text-[var(--color-muted)]">{artefatoSel}</p>
         </div>
         <button
           aria-label="Filtrar resultados"
@@ -137,17 +152,25 @@ export function StatusArtefatosPage() {
 
       <DataTable<LinhaProcesso>
         columns={cols}
-        rows={LINHAS}
+        rows={linhas}
         rowKey={(r) => r.numero}
+        empty={
+          <EmptyState
+            icon={Plus}
+            title="Nenhum processo encontrado"
+            subtitle="Não há processos gerais registrados para este modelo."
+          />
+        }
         footer={
           <>
             <Pagination />
-            <span>Registros encontrados: {LINHAS.length}</span>
+            <span>Registros encontrados: {linhas.length}</span>
           </>
         }
       />
 
       <ArtefatoDetalheModal artefato={detalhe} onClose={() => setDetalhe(null)} />
+      <MapaRiscoModal open={mapaRisco} onClose={() => setMapaRisco(false)} />
     </div>
   )
 }

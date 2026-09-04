@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { Combo } from '../../components/common/Combo'
 import { FormularioModal } from './FormularioModal'
+import { ControleArtefatoModal } from './ControleArtefatoModal'
 import { USUARIOS_NOMES } from '../../mocks'
 
 const ACOES = [
@@ -38,6 +39,7 @@ export function ArtefatoDetalheModal({
   const [responsavel, setResponsavel] = useState('')
   const [sub, setSub] = useState<Sub>(null)
   const [email, setEmail] = useState('')
+  const [verDoc, setVerDoc] = useState(false)
 
   if (!artefato) return null
 
@@ -92,9 +94,21 @@ export function ArtefatoDetalheModal({
         </div>
 
         <div className="mb-4 rounded-[var(--radius-control)] bg-[#eef3fb] p-4">
-          <button className="mx-auto flex w-full max-w-md items-center justify-center gap-2 rounded-[var(--radius-control)] bg-[var(--color-success)] py-2.5 text-sm font-semibold text-white">
-            <Download size={15} /> Download Documento Original
-          </button>
+          <div className="flex flex-wrap justify-center gap-3">
+            <button className="inline-flex items-center justify-center gap-2 rounded-[var(--radius-control)] bg-[var(--color-success)] px-5 py-2.5 text-sm font-semibold text-white">
+              <Download size={15} /> Download Documento Original
+            </button>
+            <button
+              onClick={() => setVerDoc(true)}
+              className="inline-flex items-center justify-center gap-2 rounded-[var(--radius-control)] bg-[var(--color-primary)] px-5 py-2.5 text-sm font-semibold text-white"
+            >
+              <FileText size={15} /> Ver Documento
+            </button>
+          </div>
+          <p className="mt-2 text-center text-xs text-[var(--color-muted)]">
+            Clique em "Ver Documento" para acessar o documento e dar continuidade ao fluxo configurado
+            no fluxo de trabalho.
+          </p>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
@@ -139,6 +153,7 @@ export function ArtefatoDetalheModal({
       </div>
 
       <FormularioModal artefato={sub === 'form' ? artefato : null} onClose={() => setSub(null)} />
+      <ControleArtefatoModal artefato={verDoc ? artefato : null} onClose={() => setVerDoc(false)} />
 
       {sub === 'solicitar' && (
         <MiniDialog onClose={() => setSub(null)}>
