@@ -339,6 +339,46 @@ export const MODELOS_PERSONALIZADOS = [
   },
 ]
 
+/** Tags disponíveis no editor de modelo (painel "TERMOS SOLLAI"). */
+export const MODELO_TERMOS = [
+  { tag: 'objeto', descricao: 'Objeto da contratação de bens ou serviços' },
+  { tag: 'descricao', descricao: 'Descrição do objeto com especificações' },
+  { tag: 'justificativacontratacao', descricao: 'Justificativa da contratação' },
+  { tag: 'solucaotodo', descricao: 'Solução como um todo' },
+  { tag: 'requisitosgarantia', descricao: 'Requisitos de garantia' },
+  { tag: 'prazo', descricao: 'Descrição dos prazos de execução' },
+  { tag: 'fiscalizacao', descricao: 'Modelo de gestão e fiscalização do contrato' },
+  { tag: 'pagamento', descricao: 'Condições e prazos de pagamento' },
+  { tag: 'dotacaoorcamentaria', descricao: 'Dotação orçamentária' },
+  { tag: 'sancoes', descricao: 'Sanções administrativas aplicáveis' },
+]
+
+/** Blocos do modelo padrão de Termo de Referência (14.133/2021). */
+export const MODELO_TEMPLATE: { tipo: 'h1' | 'h2' | 'p' | 'tag'; texto: string }[] = [
+  { tipo: 'h1', texto: 'TERMO DE REFERÊNCIA' },
+  { tipo: 'p', texto: 'Lei nº 14.133, de 1º de abril de 2021' },
+  { tipo: 'p', texto: 'ÓRGÃO OU ENTIDADE PÚBLICA' },
+  { tipo: 'p', texto: '(Processo Administrativo n° xxxxx.xxxxx/xxxx-xx)' },
+  { tipo: 'h2', texto: '1. CONDIÇÕES GERAIS DA CONTRATAÇÃO' },
+  { tipo: 'tag', texto: 'objeto' },
+  { tipo: 'tag', texto: 'descricao' },
+  { tipo: 'h2', texto: '2. FUNDAMENTAÇÃO E DESCRIÇÃO DA NECESSIDADE DA CONTRATAÇÃO' },
+  { tipo: 'tag', texto: 'justificativacontratacao' },
+  {
+    tipo: 'h2',
+    texto:
+      '3. DESCRIÇÃO DA SOLUÇÃO COMO UM TODO CONSIDERADO O CICLO DE VIDA DO OBJETO E ESPECIFICAÇÃO DO PRODUTO',
+  },
+  { tipo: 'tag', texto: 'solucaotodo' },
+  { tipo: 'h2', texto: '4. REQUISITOS DA CONTRATAÇÃO' },
+  { tipo: 'tag', texto: 'requisitosgarantia' },
+  { tipo: 'h2', texto: '5. MODELO DE EXECUÇÃO DO OBJETO' },
+  { tipo: 'p', texto: '5.1. Condições de Entrega' },
+  { tipo: 'tag', texto: 'prazo' },
+  { tipo: 'h2', texto: '6. MODELO DE GESTÃO DO CONTRATO' },
+  { tipo: 'tag', texto: 'fiscalizacao' },
+]
+
 export const NORMATIVAS = [
   { id: 'n1', nome: 'DECRETO_120_2023_0000001.pdf', status: 'PROCESSADO' },
   { id: 'n2', nome: 'INSTRUÇÃO NORMATIVA TCE-CE Nº 01.2025 - PCS.pdf', status: 'PROCESSADO' },
