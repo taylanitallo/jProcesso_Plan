@@ -3,21 +3,24 @@ import { Check, MessageSquare, MoreVertical, Package, SendHorizontal, X } from '
 import { ChatShell, AiBubble } from '../chat/ChatShell'
 import { useModuleLinks } from '../../components/shell/useModuleLinks'
 import { PROCESSOS_MODULE_LINKS } from './processosLinks'
+import { ArtefatoDetalheModal } from './ArtefatoDetalheModal'
 import { PROCESSO_ARTEFATOS, PROCESSOS } from '../../mocks'
 
 export function ProcessoDetailPage() {
   useModuleLinks(PROCESSOS_MODULE_LINKS)
   const proc = PROCESSOS[0]
   const [value, setValue] = useState('')
+  const [artefato, setArtefato] = useState<string | null>(null)
 
   return (
     <div className="flex flex-col gap-4">
       {/* Trilha de artefatos do processo */}
       <div className="flex gap-2 overflow-x-auto pb-2">
         {PROCESSO_ARTEFATOS.map((a) => (
-          <div
+          <button
             key={a.nome}
-            className={`relative flex min-w-[190px] max-w-[190px] shrink-0 flex-col gap-1 rounded-[var(--radius-card)] border px-3 py-3 text-xs ${
+            onClick={() => setArtefato(a.completo)}
+            className={`relative flex min-w-[190px] max-w-[190px] shrink-0 flex-col gap-1 rounded-[var(--radius-card)] border px-3 py-3 text-left text-xs transition hover:shadow-[var(--shadow-pop)] ${
               a.enviado
                 ? 'border-[#a7dcc4] bg-[#e4f4ec]'
                 : 'border-[#f2d59a] bg-[#fdf4e0]'
@@ -42,7 +45,7 @@ export function ProcessoDetailPage() {
             >
               {a.enviado ? <Check size={12} /> : <X size={12} />}
             </span>
-          </div>
+          </button>
         ))}
       </div>
 
@@ -109,6 +112,8 @@ export function ProcessoDetailPage() {
           </div>
         </ChatShell>
       </div>
+
+      <ArtefatoDetalheModal artefato={artefato} onClose={() => setArtefato(null)} />
     </div>
   )
 }

@@ -9,6 +9,7 @@ import {
   X,
 } from 'lucide-react'
 import { Combo } from '../../components/common/Combo'
+import { FormularioModal } from './FormularioModal'
 import { USUARIOS_NOMES } from '../../mocks'
 
 const ACOES = [
@@ -31,6 +32,7 @@ export function ArtefatoDetalheModal({
   onClose: () => void
 }) {
   const [responsavel, setResponsavel] = useState('')
+  const [formOpen, setFormOpen] = useState(false)
 
   if (!artefato) return null
 
@@ -88,6 +90,7 @@ export function ArtefatoDetalheModal({
             {ACOES.map((a) => (
               <button
                 key={a}
+                onClick={a === 'Preencher Informações' ? () => setFormOpen(true) : undefined}
                 className="rounded-[var(--radius-control)] border border-[var(--color-line)] px-3 py-2.5 text-sm font-semibold text-[var(--color-ink)] transition hover:bg-[var(--color-primary-soft)]"
               >
                 {a === 'Upload' ? (
@@ -122,6 +125,8 @@ export function ArtefatoDetalheModal({
           </Secao>
         </div>
       </div>
+
+      <FormularioModal artefato={formOpen ? artefato : null} onClose={() => setFormOpen(false)} />
     </div>
   )
 }

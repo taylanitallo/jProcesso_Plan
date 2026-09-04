@@ -92,20 +92,28 @@ export const PROCESSO_TIPOS = [
  * SollAI real (apenas o DFD já foi enviado; os demais seguem pendentes).
  */
 export const PROCESSO_ARTEFATOS = [
-  { nome: 'DFD', enviado: true },
-  { nome: 'ETP', enviado: false },
-  { nome: 'Mapa de Risco', enviado: false },
-  { nome: 'Termo de Referência', enviado: false },
-  { nome: 'Pesquisa de Preços', enviado: false },
-  { nome: 'Disponibilidade Orçamentária', enviado: false },
-  { nome: 'Edital', enviado: false },
-  { nome: 'Minuta do Contrato', enviado: false },
-  { nome: 'Parecer de Adequação da Modalidade', enviado: false },
-  { nome: 'Parecer de Controle Interno', enviado: false },
-  { nome: 'Parecer Parametrizado', enviado: false },
-  { nome: 'Proposta Vencedora', enviado: false },
-  { nome: 'Termo de Homologação', enviado: false },
-  { nome: 'Autorização do Ordenador de Despesas', enviado: false },
+  { nome: 'DFD', completo: 'Documento de Formalização de Demanda (DFD)', enviado: true },
+  { nome: 'ETP', completo: 'Estudo Técnico Preliminar (ETP)', enviado: false },
+  { nome: 'Mapa de Risco', completo: 'Mapa de Risco', enviado: false },
+  { nome: 'Termo de Referência', completo: 'Termo de Referência', enviado: false },
+  { nome: 'Pesquisa de Preços', completo: 'Pesquisa de Preços', enviado: false },
+  { nome: 'Disponibilidade Orçamentária', completo: 'Disponibilidade Orçamentária', enviado: false },
+  { nome: 'Edital', completo: 'Edital', enviado: false },
+  { nome: 'Minuta do Contrato', completo: 'Minuta do Contrato', enviado: false },
+  {
+    nome: 'Parecer de Adequação da Modalidade',
+    completo: 'Parecer de Adequação da Modalidade',
+    enviado: false,
+  },
+  { nome: 'Parecer de Controle Interno', completo: 'Parecer de Controle Interno', enviado: false },
+  { nome: 'Parecer Parametrizado', completo: 'Parecer Parametrizado', enviado: false },
+  { nome: 'Proposta Vencedora', completo: 'Proposta Vencedora', enviado: false },
+  { nome: 'Termo de Homologação', completo: 'Termo de Homologação', enviado: false },
+  {
+    nome: 'Autorização do Ordenador de Despesas',
+    completo: 'Autorização do Ordenador de Despesas',
+    enviado: false,
+  },
 ]
 
 /** 27 artefatos típicos do fluxo da Lei 14.133/2021. */
