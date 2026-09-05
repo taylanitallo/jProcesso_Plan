@@ -1,15 +1,12 @@
-import { lazy, Suspense, useState } from 'react'
+import { useState } from 'react'
 import { Download, FilePenLine, Plus, Trash2 } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { Button } from '../../components/common/Button'
 import { DataTable, Pagination, type Column } from '../../components/common/DataTable'
 import { useModuleLinks } from '../../components/shell/useModuleLinks'
 import { PROCESSOS_MODULE_LINKS } from './processosLinks'
+import { ModeloEditorModal } from './ModeloEditorModal'
 import { MODELOS_PERSONALIZADOS } from '../../mocks'
-
-const ModeloEditorModal = lazy(() =>
-  import('./ModeloEditorModal').then((m) => ({ default: m.ModeloEditorModal })),
-)
 
 type Row = (typeof MODELOS_PERSONALIZADOS)[number]
 
@@ -98,11 +95,7 @@ export function ModeloPersonalizadoPage() {
         }
       />
 
-      {editando && (
-        <Suspense fallback={null}>
-          <ModeloEditorModal modelo={editando} onClose={() => setEditando(null)} />
-        </Suspense>
-      )}
+      <ModeloEditorModal modelo={editando} onClose={() => setEditando(null)} />
     </div>
   )
 }
