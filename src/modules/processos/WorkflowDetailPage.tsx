@@ -10,6 +10,7 @@ import { PrimeiraVezModal } from './PrimeiraVezModal'
 import { WORKFLOW_NODES, WORKFLOW_NODE_CHIPS, WORKFLOW_NODE_DEPS, WORKFLOWS } from '../../mocks'
 
 const NODE_W = 280
+const NODE_H = 160
 const COL_GAP = 320
 const ROW_GAP = 230
 const COLS = 4
@@ -22,6 +23,24 @@ const gridFor = (list: string[]): Record<string, Pos> => {
     map[n] = { x: 24 + (i % COLS) * COL_GAP, y: 24 + Math.floor(i / COLS) * ROW_GAP }
   })
   return map
+}
+
+/** Índice do slot da grade mais próximo de uma posição solta em modo "Organizar ordem". */
+const slotIndexFor = (pos: Pos, count: number) => {
+  const col = Math.round((pos.x - 24) / COL_GAP)
+  const row = Math.round((pos.y - 24) / ROW_GAP)
+  const idx = row * COLS + col
+  return Math.max(0, Math.min(count - 1, idx))
+}
+
+/** Caminho em cotovelo (com seta) do rodapé do nó-dependência até o rodapé do nó dependente. */
+const elbowPath = (src: Pos, dst: Pos) => {
+  const sx = src.x + NODE_W / 2
+  const sy = src.y + NODE_H
+  const tx = dst.x + NODE_W / 2
+  const ty = dst.y + NODE_H
+  const midY = Math.max(sy, ty) + 20
+  return `M ${sx} ${sy} L ${sx} ${midY} L ${tx} ${midY} L ${tx} ${ty}`
 }
 
 export function WorkflowDetailPage() {
@@ -44,7 +63,10 @@ export function WorkflowDetailPage() {
   // modo "Organizar ordem"
   const [ordenando, setOrdenando] = useState(false)
   const [dirty, setDirty] = useState(false)
-  const snapshot = useRef<Record<string, Pos>>({})
+  const snapshot = useRef<{ positions: Record<string, Pos>; nodes: string[] }>({
+    positions: {},
+    nodes: [],
+  })
 
   const drag = useRef<{
     node: string
@@ -52,6 +74,8 @@ export function WorkflowDetailPage() {
     startY: number
     origX: number
     origY: number
+    curX: number
+    curY: number
     moved: boolean
   } | null>(null)
   const scale = zoom / 100
@@ -65,34 +89,61 @@ export function WorkflowDetailPage() {
       d.moved = true
       if (ordenando) setDirty(true)
     }
-    setPositions((prev) => ({
-      ...prev,
-      [d.node]: { x: Math.max(0, d.origX + dx), y: Math.max(0, d.origY + dy) },
-    }))
+    const x = Math.max(0, d.origX + dx)
+    const y = Math.max(0, d.origY + dy)
+    d.curX = x
+    d.curY = y
+    setPositions((prev) => ({ ...prev, [d.node]: { x, y } }))
   }
   const onPointerUp = () => {
     const d = drag.current
     window.removeEventListener('pointermove', onPointerMove)
     window.removeEventListener('pointerup', onPointerUp)
     if (d && !d.moved && !ordenando) setConfigNode(d.node)
+    if (d && d.moved && ordenando) {
+      const dropPos = { x: d.curX, y: d.curY }
+      setNodes((prev) => {
+        const targetIndex = slotIndexFor(dropPos, prev.length)
+        const from = prev.indexOf(d.node)
+        if (from === -1 || from === targetIndex) {
+          setPositions(gridFor(prev))
+          return prev
+        }
+        const next = [...prev]
+        next.splice(from, 1)
+        next.splice(targetIndex, 0, d.node)
+        setPositions(gridFor(next))
+        return next
+      })
+    }
     drag.current = null
   }
   const onPointerDown = (e: React.PointerEvent, node: string) => {
     if ((e.target as HTMLElement).closest('[data-chip]')) return
     e.preventDefault()
     const p = positions[node]
-    drag.current = { node, startX: e.clientX, startY: e.clientY, origX: p.x, origY: p.y, moved: false }
+    drag.current = {
+      node,
+      startX: e.clientX,
+      startY: e.clientY,
+      origX: p.x,
+      origY: p.y,
+      curX: p.x,
+      curY: p.y,
+      moved: false,
+    }
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('pointerup', onPointerUp)
   }
 
   const iniciarOrganizar = () => {
-    snapshot.current = positions
+    snapshot.current = { positions, nodes }
     setDirty(false)
     setOrdenando(true)
   }
   const cancelarOrganizar = () => {
-    setPositions(snapshot.current)
+    setPositions(snapshot.current.positions)
+    setNodes(snapshot.current.nodes)
     setDirty(false)
     setOrdenando(false)
   }
@@ -116,6 +167,21 @@ export function WorkflowDetailPage() {
     const ys = Object.values(positions).map((p) => p.y)
     return { w: Math.max(...xs, 0) + NODE_W + 40, h: Math.max(...ys, 0) + 210 }
   }, [positions])
+
+  /** Conectores (fios) desenhados entre um nó e cada dependência que ele exige. */
+  const conexoes = useMemo(() => {
+    const set = new Set(nodes)
+    const list: { key: string; d: string }[] = []
+    for (const node of nodes) {
+      const deps = WORKFLOW_NODE_DEPS[node]
+      if (!deps) continue
+      for (const dep of deps) {
+        if (!set.has(dep) || !positions[dep] || !positions[node]) continue
+        list.push({ key: `${dep}->${node}`, d: elbowPath(positions[dep], positions[node]) })
+      }
+    }
+    return list
+  }, [nodes, positions])
 
   return (
     <div className="flex flex-col gap-3">
@@ -142,7 +208,7 @@ export function WorkflowDetailPage() {
             <Move size={13} />{' '}
             {ordenando
               ? `Arraste os cards para reorganizar${dirty ? ' • alterações não salvas' : ''}`
-              : `${nodes.length} nós • 0 conexões`}
+              : `${nodes.length} nós • ${conexoes.length} conexões`}
           </span>
           <label className="flex items-center gap-2">
             <span className="sr-only">Nome do fluxo</span>
@@ -210,6 +276,35 @@ export function WorkflowDetailPage() {
         <div className="max-h-[70vh] min-h-[520px] overflow-auto bg-[repeating-linear-gradient(0deg,transparent,transparent_23px,#eef2f8_24px),repeating-linear-gradient(90deg,transparent,transparent_23px,#eef2f8_24px)] p-4">
           <div className="relative" style={{ width: canvasSize.w * scale, height: canvasSize.h * scale }}>
             <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+              <svg
+                className="pointer-events-none absolute left-0 top-0"
+                width={canvasSize.w}
+                height={canvasSize.h}
+              >
+                <defs>
+                  <marker
+                    id="conexao-seta"
+                    markerWidth="8"
+                    markerHeight="8"
+                    refX="4"
+                    refY="4"
+                    orient="auto-start-reverse"
+                  >
+                    <path d="M0,0 L8,4 L0,8 Z" fill="var(--color-primary)" />
+                  </marker>
+                </defs>
+                {conexoes.map((c) => (
+                  <path
+                    key={c.key}
+                    d={c.d}
+                    fill="none"
+                    stroke="var(--color-primary)"
+                    strokeWidth={2}
+                    strokeLinejoin="round"
+                    markerEnd="url(#conexao-seta)"
+                  />
+                ))}
+              </svg>
               {nodes.map((node, i) => {
                 const p = positions[node] ?? { x: 24, y: 24 }
                 const deps = WORKFLOW_NODE_DEPS[node]
