@@ -14,6 +14,7 @@ import { useModuleLinks } from '../../components/shell/useModuleLinks'
 import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 import { ArtefatoDetalheModal } from './ArtefatoDetalheModal'
 import { MapaRiscoModal } from './MapaRiscoModal'
+import { CadastroItensModal } from './CadastroItensModal'
 import { PROCESSO_ARTEFATOS, PROCESSOS } from '../../mocks'
 
 export function ProcessoDetailPage() {
@@ -22,6 +23,7 @@ export function ProcessoDetailPage() {
   const [value, setValue] = useState('')
   const [artefato, setArtefato] = useState<string | null>(null)
   const [mapaRisco, setMapaRisco] = useState(false)
+  const [itensOpen, setItensOpen] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
 
   const abrirArtefato = (a: (typeof PROCESSO_ARTEFATOS)[number]) => {
@@ -54,7 +56,10 @@ export function ProcessoDetailPage() {
           >
             <Sparkles size={13} /> Analisar com IA
           </button>
-          <button className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-primary)] px-3 py-1.5 text-xs font-semibold text-white">
+          <button
+            onClick={() => setItensOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-primary)] px-3 py-1.5 text-xs font-semibold text-white"
+          >
             <Package size={13} /> Itens
           </button>
           <button
@@ -116,6 +121,7 @@ export function ProcessoDetailPage() {
 
       <ArtefatoDetalheModal artefato={artefato} onClose={() => setArtefato(null)} />
       <MapaRiscoModal open={mapaRisco} onClose={() => setMapaRisco(false)} />
+      <CadastroItensModal open={itensOpen} onClose={() => setItensOpen(false)} />
 
       {/* Drawer de análise com IA */}
       {chatOpen && (
