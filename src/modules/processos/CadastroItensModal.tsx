@@ -332,7 +332,7 @@ export function CadastroItensModal({ open, onClose }: { open: boolean; onClose: 
       onClick={fecharTudo}
     >
       <div
-        className="relative my-4 w-full max-w-5xl rounded-[20px] bg-white p-5 shadow-[var(--shadow-pop)] sm:p-6"
+        className="relative my-4 w-full max-w-6xl rounded-[20px] bg-white p-5 shadow-[var(--shadow-pop)] sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <button
