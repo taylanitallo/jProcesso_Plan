@@ -89,29 +89,37 @@ export function ProcessoDetailPage() {
           <p className="mt-1 text-[11px] text-white/70">{pct}% concluído</p>
         </div>
 
-        <ol className="grid gap-x-6 p-4 sm:grid-cols-2 xl:grid-cols-3">
+        <ol className="flex gap-3 overflow-x-auto p-3">
           {PROCESSO_ARTEFATOS.map((a) => (
-            <li key={a.nome} className="relative border-b border-[var(--color-line)] py-3 pl-9">
-              <span
-                className={`absolute left-0 top-3 grid h-[26px] w-[26px] place-items-center rounded-full text-white ${
-                  a.enviado ? 'bg-[var(--color-success)]' : 'bg-[#d9a441]'
-                }`}
-              >
-                {a.enviado ? <Check size={14} /> : <X size={14} />}
-              </span>
+            <li key={a.nome} className="shrink-0">
               <button
                 onClick={() => abrirArtefato(a)}
                 title={a.completo}
-                className="w-full rounded-[var(--radius-control)] px-2 py-1 text-left transition hover:bg-[var(--color-primary-soft)]"
+                className={`flex w-[184px] flex-col gap-1.5 rounded-[14px] border p-3 text-left transition hover:shadow-[var(--shadow-card)] ${
+                  a.enviado ? 'border-[#a9d9c1] bg-[#eefaf3]' : 'border-[#eccb87] bg-[#fdf6e6]'
+                }`}
               >
-                <p className="font-display text-[13px] font-bold leading-tight text-[#183263]">
-                  {a.nome}
-                </p>
-                <p className="mt-1 flex items-center gap-1 text-[11px] text-[var(--color-muted)]">
-                  <UserRound size={11} /> Não designado
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-white ${
+                      a.enviado ? 'bg-[var(--color-success)]' : 'bg-[#d9a441]'
+                    }`}
+                  >
+                    {a.enviado ? <Check size={12} /> : <X size={12} />}
+                  </span>
+                  <p
+                    className={`font-display text-[12.5px] font-bold leading-tight ${
+                      a.enviado ? 'text-[var(--color-success)]' : 'text-[#a3720c]'
+                    }`}
+                  >
+                    {a.nome}
+                  </p>
+                </div>
+                <p className="flex items-center gap-1 text-[11px] text-[var(--color-muted)]">
+                  <UserRound size={10} /> Não designado
                 </p>
                 <p className="flex items-center gap-1 text-[11px] text-[var(--color-muted)]">
-                  <Clock size={11} /> Sem Prazo Definido
+                  <Clock size={10} /> Sem Prazo Definido
                 </p>
               </button>
             </li>
