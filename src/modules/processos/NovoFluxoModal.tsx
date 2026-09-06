@@ -33,7 +33,7 @@ export function NovoFluxoModal({ open, onClose }: { open: boolean; onClose: () =
             <Plus size={22} />
           </span>
           <div className="min-w-0">
-            <h3 className="font-display text-lg font-extrabold text-[#183263] sm:text-xl">Novo Fluxo</h3>
+            <h3 className="font-display text-base font-bold text-[#183263] sm:text-lg">Novo Fluxo</h3>
             <p className="text-sm text-[var(--color-muted)]">
               Complete os campos para criar um fluxo automatizado associado aos seus processos
               inteligentes.

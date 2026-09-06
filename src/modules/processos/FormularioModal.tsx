@@ -111,7 +111,7 @@ export function FormularioModal({
           <X size={16} />
         </button>
 
-        <h3 className="font-display text-lg font-extrabold text-[#183263] sm:text-xl">Formulário</h3>
+        <h3 className="font-display text-base font-bold text-[#183263] sm:text-lg">Formulário</h3>
         <p className="mt-0.5 text-sm font-semibold text-[var(--color-primary-strong)]">{artefato}</p>
         <p className="text-xs text-[var(--color-muted)]">
           Preencha os dados do formulário para melhorar minha precisão ao elaborar seu documento.

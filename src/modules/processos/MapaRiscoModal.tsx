@@ -60,8 +60,8 @@ export function MapaRiscoModal({ open, onClose }: { open: boolean; onClose: () =
         </button>
 
         <div className="mb-4 flex items-center justify-between gap-3 pr-8">
-          <h3 className="flex items-center gap-2 font-display text-lg font-extrabold text-[color:var(--color-primary)] sm:text-xl">
-            <Waypoints size={22} className="text-[var(--color-primary-strong)]" /> Mapa de Risco
+          <h3 className="flex items-center gap-2 font-display text-base font-bold text-[color:var(--color-primary)] sm:text-lg">
+            <Waypoints size={19} className="text-[var(--color-primary-strong)]" /> Mapa de Risco
           </h3>
           <button
             onClick={() => setErroIA(true)}

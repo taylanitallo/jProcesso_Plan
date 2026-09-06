@@ -69,7 +69,7 @@ export function ArtefatoDetalheModal({
 
         <div className="mb-1 flex items-center gap-2 border-l-4 border-[var(--color-success)] pl-3">
           <FileText size={20} className="text-[var(--color-primary-strong)]" />
-          <h3 className="font-display text-lg font-extrabold text-[color:var(--color-primary)] sm:text-xl">
+          <h3 className="font-display text-base font-bold text-[color:var(--color-primary)] sm:text-lg">
             Artefato
           </h3>
         </div>
@@ -111,7 +111,7 @@ export function ArtefatoDetalheModal({
           </p>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]">
           <div className="flex flex-col gap-2">
             {ACOES.map((a) => (
               <button
@@ -218,8 +218,8 @@ export function ArtefatoDetalheModal({
 
       {sub === 'arquivo' && (
         <MiniDialog wide onClose={() => setSub(null)}>
-          <h3 className="flex items-center gap-2 font-display text-lg font-extrabold text-[#183263]">
-            <UploadCloud size={20} className="text-[var(--color-primary-strong)]" /> Envio de Arquivos
+          <h3 className="flex items-center gap-2 font-display text-base font-bold text-[#183263]">
+            <UploadCloud size={18} className="text-[var(--color-primary-strong)]" /> Envio de Arquivos
             para Processamento
           </h3>
           <p className="mt-1 text-xs text-[var(--color-muted)]">

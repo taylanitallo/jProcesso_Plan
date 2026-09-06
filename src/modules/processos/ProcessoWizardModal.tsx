@@ -50,7 +50,7 @@ export function ProcessoWizardModal({
             <Plus size={22} />
           </span>
           <div className="min-w-0">
-            <h3 className="font-display text-lg font-extrabold text-[#183263] sm:text-xl">{title}</h3>
+            <h3 className="font-display text-base font-bold text-[#183263] sm:text-lg">{title}</h3>
             <p className="text-sm text-[var(--color-muted)]">{subtitle}</p>
           </div>
         </div>

@@ -111,7 +111,7 @@ export function ControleArtefatoModal({
         </div>
 
         {/* Painel de formatação */}
-        <aside className="hidden w-56 shrink-0 flex-col gap-3 border-l border-[var(--color-line)] bg-white p-3 lg:flex">
+        <aside className="hidden w-56 shrink-0 flex-col gap-3 border-l border-[var(--color-line)] bg-white p-3 sm:flex">
           <p className="text-[11px] font-bold uppercase tracking-wide text-[var(--color-muted)]">Texto</p>
           <div className="flex gap-1">
             <select className="h-7 flex-1 rounded border border-[var(--color-line)] px-1 text-xs">

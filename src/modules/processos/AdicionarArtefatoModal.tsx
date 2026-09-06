@@ -68,7 +68,7 @@ export function AdicionarArtefatoModal({
           <X size={16} />
         </button>
 
-        <h3 className="font-display text-lg font-extrabold text-[#183263] sm:text-xl">
+        <h3 className="font-display text-base font-bold text-[#183263] sm:text-lg">
           Adicionar artefato
         </h3>
         <p className="text-sm text-[var(--color-muted)]">

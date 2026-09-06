@@ -28,7 +28,7 @@ export function DashboardProcessoPage() {
       <PageHeader title="Dashboard de Processos" subtitle="Acompanhe os KPIs e métricas de desempenho" />
 
       <Section title="Visão Geral">
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-3">
             <Card>
               <div className="flex items-start gap-4">
@@ -79,7 +79,7 @@ export function DashboardProcessoPage() {
             empty={<EmptyState title="Nenhum processo encontrado" />}
           />
         </Card>
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <Card title="Distribuição por Status do Processo">
             <DonutChart labels={['Aguardando Envio']} data={[1]} colors={['#2f6fd0']} />
           </Card>
@@ -97,7 +97,7 @@ export function DashboardProcessoPage() {
       </Section>
 
       <Section title="Eficiência e Desempenho">
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <Card title="Tempo Médio por Etapa/Artefato">
             <BarChart labels={['Enviado']} datasets={[{ label: 'Tempo Médio (dias)', data: [253] }]} />
           </Card>

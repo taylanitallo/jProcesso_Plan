@@ -121,7 +121,7 @@ export function NodeConfigModal({ node, onClose }: { node: string | null; onClos
             <Settings size={22} />
           </span>
           <div className="min-w-0">
-            <h3 className="font-display text-lg font-extrabold text-[#183263] sm:text-xl">
+            <h3 className="font-display text-base font-bold text-[#183263] sm:text-lg">
               Configuração do Fluxo de Trabalho
             </h3>
             <p className="text-sm text-[var(--color-muted)]">

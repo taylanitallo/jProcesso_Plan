@@ -103,7 +103,7 @@ export function ControleGeralModal({ open, onClose }: { open: boolean; onClose: 
               <Settings size={22} />
             </span>
             <div className="min-w-0">
-              <h3 className="font-display text-lg font-extrabold text-[#183263] sm:text-xl">
+              <h3 className="font-display text-base font-bold text-[#183263] sm:text-lg">
                 Controle Geral do Fluxo
               </h3>
               <p className="text-sm text-[var(--color-muted)]">
