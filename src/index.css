@@ -30,6 +30,18 @@
 
   --shadow-card: 0 14px 38px rgba(15, 41, 87, 0.08);
   --shadow-pop: 0 18px 44px rgba(15, 41, 87, 0.14);
+
+  /* Type scale shrunk ~12% to match SollAI's more compact text sizing.
+     Overridden here (not via html{font-size}) so spacing/sizing utilities
+     that also use rem (max-w-*, p-*, gap-*, rounded-*) are NOT affected —
+     only text-* classes read these. */
+  --text-xs: 0.6875rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1rem;
+  --text-xl: 1.125rem;
+  --text-2xl: 1.3125rem;
+  --text-3xl: 1.625rem;
 }
 
 :root {
@@ -44,10 +56,6 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  /* Baseline shrunk to match SollAI's real, more compact type scale — every
-     rem-based Tailwind text utility (text-xs..text-2xl, gt-input, etc.)
-     scales down from here. */
-  font-size: 87.5%;
 }
 
 body {
@@ -78,7 +86,7 @@ h1, h2, h3, h4, h5 {
   border-radius: var(--radius-control);
   background: #fff;
   padding: 0.625rem 0.875rem;
-  font-size: 0.9rem;
+  font-size: 0.8125rem;
   color: var(--color-ink);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
