@@ -70,6 +70,13 @@ body {
   background-attachment: fixed;
 }
 
+button:not(:disabled), [role="button"]:not([aria-disabled="true"]), label:has(> input[type="checkbox"], > input[type="radio"]), select, summary {
+  cursor: pointer;
+}
+button:disabled, [aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 h1, h2, h3, h4, h5 {
   font-family: var(--font-display);
 }
