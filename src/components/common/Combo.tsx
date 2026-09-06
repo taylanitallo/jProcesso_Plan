@@ -18,7 +18,7 @@ export function Combo({
   options: string[]
   placeholder: string
   disabled?: boolean
-  /** Shows a search box atop the popup and filters options as the user types — for long lists. */
+  /** Lets the user type into the trigger itself to filter — for long lists (matches SollAI's real combo). */
   filterable?: boolean
 }) {
   const [open, setOpen] = useState(false)
@@ -41,35 +41,51 @@ export function Combo({
     ? options.filter((o) => o.toLowerCase().includes(filtro.toLowerCase()))
     : options
 
+  const escolher = (opt: string) => {
+    onChange(opt)
+    setOpen(false)
+    setFiltro('')
+  }
+
   return (
     <div ref={ref} className="relative min-w-0">
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => {
-          setOpen((o) => !o)
-          setFiltro('')
-        }}
-        className="gt-input flex w-full items-center gap-2 text-left font-normal normal-case disabled:cursor-not-allowed disabled:bg-[#f1f4f9] disabled:text-[var(--color-muted)]"
-      >
-        <span className={`min-w-0 flex-1 truncate ${value ? '' : 'text-[var(--color-muted)]'}`}>
-          {value || placeholder}
-        </span>
-        <ChevronDown size={15} className="shrink-0 text-[var(--color-muted)]" />
-      </button>
+      {filterable ? (
+        <div className="relative">
+          <input
+            disabled={disabled}
+            value={open ? filtro : value}
+            onFocus={() => {
+              setOpen(true)
+              setFiltro('')
+            }}
+            onChange={(e) => {
+              setFiltro(e.target.value)
+              setOpen(true)
+            }}
+            placeholder={placeholder}
+            className="gt-input w-full pr-8 font-normal normal-case disabled:cursor-not-allowed disabled:bg-[#f1f4f9] disabled:text-[var(--color-muted)]"
+          />
+          <ChevronDown
+            size={15}
+            className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 shrink-0 text-[var(--color-muted)]"
+          />
+        </div>
+      ) : (
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => setOpen((o) => !o)}
+          className="gt-input flex w-full items-center gap-2 text-left font-normal normal-case disabled:cursor-not-allowed disabled:bg-[#f1f4f9] disabled:text-[var(--color-muted)]"
+        >
+          <span className={`min-w-0 flex-1 truncate ${value ? '' : 'text-[var(--color-muted)]'}`}>
+            {value || placeholder}
+          </span>
+          <ChevronDown size={15} className="shrink-0 text-[var(--color-muted)]" />
+        </button>
+      )}
 
       {open && (
-        <div className="absolute left-0 right-0 z-20 mt-1 overflow-hidden rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white shadow-[var(--shadow-pop)]">
-          {filterable && (
-            <input
-              autoFocus
-              value={filtro}
-              onChange={(e) => setFiltro(e.target.value)}
-              placeholder="Digite para filtrar..."
-              className="w-full border-b border-[var(--color-line)] px-3 py-2 text-[13px] font-normal normal-case outline-none"
-            />
-          )}
-          <ul className="max-h-60 overflow-y-auto py-1">
+        <ul className="absolute left-0 right-0 z-20 mt-1 max-h-60 overflow-y-auto rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white py-1 shadow-[var(--shadow-pop)]">
           {visiveis.length === 0 && (
             <li className="px-3 py-2 text-[13px] text-[var(--color-muted)]">Nenhuma opção encontrada.</li>
           )}
@@ -77,11 +93,7 @@ export function Combo({
             <li key={opt}>
               <button
                 type="button"
-                onClick={() => {
-                  onChange(opt)
-                  setOpen(false)
-                  setFiltro('')
-                }}
+                onClick={() => escolher(opt)}
                 className="flex w-full items-start gap-2 px-3 py-2 text-left text-[13px] leading-snug hover:bg-[var(--color-primary-soft)]"
               >
                 <Check
@@ -92,8 +104,7 @@ export function Combo({
               </button>
             </li>
           ))}
-          </ul>
-        </div>
+        </ul>
       )}
     </div>
   )
