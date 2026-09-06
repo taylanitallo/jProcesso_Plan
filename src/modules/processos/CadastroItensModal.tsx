@@ -26,14 +26,98 @@ type ItemLote = {
 
 const TIPOS_ITEM = ['Material', 'Serviço']
 const UNIDADES = [
-  'Unidade (UN)',
-  'Caixa (CX)',
-  'Metro (M)',
-  'Quilograma (KG)',
+  'Unidade (Un)',
+  'Quilograma (Kg)',
+  'Metro (m)',
   'Litro (L)',
-  'Peça (PC)',
-  'Serviço (SV)',
-  'Hora (H)',
+  'Hora (h)',
+  'Metro Cúbico (m³)',
+  'Grama (g)',
+  'Dia (d)',
+  'Posto de Trabalho (PT)',
+  'AMPOLA (AM)',
+  'ANO/ANOS (ANO)',
+  'ARROBA (ARR)',
+  'BARRIL (BAR)',
+  'BALDE (BD)',
+  'BISNAGA (BIS)',
+  'BLOCO (BL)',
+  'BARRICA (BRI)',
+  'BOTIJÃO (BTJ)',
+  'CENTENA (C)',
+  'CARTUCHO (CA)',
+  'CÁPSULA (CAPS)',
+  'CILINDRADA (CC)',
+  'CHAPA (CH)',
+  'CILINDRO (CIL)',
+  'CONJUNTO (CJ)',
+  'CENTÍMETRO (CM)',
+  'CENTIMETRO QUADRADO (CM2)',
+  'CENTÍMETRO CÚBICO (CM3)',
+  'CONTEINER (CO)',
+  'COMPRIMENTO (COMP)',
+  'CÓPIA (CÓPIA)',
+  'CAIXA (CX)',
+  'DIA (DIA)',
+  'DIAS (DIAS)',
+  'DUZIA (DZ)',
+  'FARDO (FD)',
+  'FOLHA (FL)',
+  'FRASCO (FR)',
+  'FRASCO-AMPOLA (FR-AM)',
+  'GALÃO (GL)',
+  'GARRAFA (GRF)',
+  'GARRAFÃO (GRR)',
+  'HECTARE (HA)',
+  'HABITANTES (HAB)',
+  'HORA-AULA (H-AULA)',
+  'HOMEM/HORA (HOMEM/H)',
+  'JOGO (JG)',
+  'QUILOBYTE (KB)',
+  'KILOHERTZ (KHZ)',
+  'QUILOMETRO (KM)',
+  'QUILOWATT-HORA (KWH)',
+  'LIBRA (LB)',
+  'LOTE (LOTE)',
+  'LATA (LT)',
+  'METRO QUADRADO (M2)',
+  'MAÇO (MÇ)',
+  'MICROGRAMA (MCG)',
+  'MÊS/MESES (MÊS)',
+  'MILIGRAMA (MG)',
+  'MILHA (MI)',
+  'MILHEIRO (MIL)',
+  'MINUTO (MIN)',
+  'METRO KILOGRAMAFORÇA (MKGF)',
+  'MILILITRO (ML)',
+  'MILÍMETRO (MM)',
+  'MILÍMETRO QUADRADO (MM2)',
+  'MILIWATT (MW)',
+  'ONÇA (OZ)',
+  'PEÇA (PC)',
+  'PACOTE (PCT)',
+  'PÉ (PE)',
+  'PESSOA / DIA (PE/D)',
+  'PERCENTAGEM (PER)',
+  'POLEGADA (POL)',
+  'POTE (POTE)',
+  'RESMA (RES)',
+  'RENDA MÉDIA/PESSOA (RM/PESS)',
+  'ROLO (RO)',
+  'SACO (SC)',
+  'TONELADA (T)',
+  'TONELADA/KM² (T/KM²)',
+  'TONELADA/PESSOA (T/PESS)',
+  'VEÍCULO/DIA (VEIC/D)',
+  'VEÍCULO/HORA (VEIC/H)',
+  'VEÍCULO/MÊS (VEIC/M)',
+  'VEÍCULO (VEÍCULO)',
+  'POSTO (POSTO)',
+  'PROFISSIONAL (PROFISSIONAL)',
+  'EQUIPE (EQUIPE)',
+  'SERVIÇO (SERVIÇO)',
+  'CHAMADO (CHAMADO)',
+  'ORDEM DE SERVIÇO (ORDEM DE SERVIÇO)',
 ]
 
 /** Catálogo de referência para a aba "Catálogo" do formulário de novo item. */
@@ -58,9 +142,23 @@ export function CadastroItensModal({ open, onClose }: { open: boolean; onClose: 
   const [buscaCatalogo, setBuscaCatalogo] = useState('')
   const [arquivo, setArquivo] = useState<File | null>(null)
   const [erroImport, setErroImport] = useState('')
+  const [unidadesExtra, setUnidadesExtra] = useState<string[]>([])
+  const [novaUnidadeAberta, setNovaUnidadeAberta] = useState(false)
+  const [novaUnidadeNome, setNovaUnidadeNome] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
   if (!open) return null
+
+  const unidadesDisponiveis = [...UNIDADES, ...unidadesExtra]
+
+  const cadastrarUnidade = () => {
+    const nome = novaUnidadeNome.trim()
+    if (!nome) return
+    if (!unidadesDisponiveis.includes(nome)) setUnidadesExtra((prev) => [...prev, nome])
+    setForm((f) => ({ ...f, unidade: nome }))
+    setNovaUnidadeNome('')
+    setNovaUnidadeAberta(false)
+  }
 
   const totalLote = itens.reduce((s, i) => s + i.total, 0)
   const totalForm = (Number(form.qtd) || 0) * (Number(form.unitario) || 0)
@@ -420,12 +518,46 @@ export function CadastroItensModal({ open, onClose }: { open: boolean; onClose: 
                     <Combo value={form.tipo} onChange={(v) => setForm((f) => ({ ...f, tipo: v }))} options={TIPOS_ITEM} placeholder="Selecione" />
                   </Labelled>
                   <Labelled label="Unidade de medida">
-                    <Combo
-                      value={form.unidade}
-                      onChange={(v) => setForm((f) => ({ ...f, unidade: v }))}
-                      options={UNIDADES}
-                      placeholder="Selecione ou digite para filtrar"
-                    />
+                    <div className="flex items-start gap-2">
+                      <div className="min-w-0 flex-1">
+                        <Combo
+                          value={form.unidade}
+                          onChange={(v) => setForm((f) => ({ ...f, unidade: v }))}
+                          options={unidadesDisponiveis}
+                          placeholder="Selecione ou digite para filtrar"
+                          filterable
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setNovaUnidadeAberta((o) => !o)}
+                        aria-label="Cadastrar nova unidade"
+                        title="Cadastrar nova unidade"
+                        className="grid h-[42px] w-[42px] shrink-0 place-items-center rounded-[var(--radius-control)] border border-[var(--color-line)] text-[var(--color-primary-strong)] hover:bg-[var(--color-primary-soft)]"
+                      >
+                        <Plus size={16} />
+                      </button>
+                    </div>
+                    {novaUnidadeAberta && (
+                      <div className="mt-2 flex items-center gap-2 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-[#f8fafd] p-2">
+                        <input
+                          autoFocus
+                          value={novaUnidadeNome}
+                          onChange={(e) => setNovaUnidadeNome(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && cadastrarUnidade()}
+                          placeholder="Ex: Rolo (RO)"
+                          className="gt-input min-w-0 flex-1 font-normal normal-case"
+                        />
+                        <button
+                          type="button"
+                          onClick={cadastrarUnidade}
+                          disabled={!novaUnidadeNome.trim()}
+                          className="shrink-0 rounded-[var(--radius-control)] bg-[var(--color-primary)] px-3 py-2 text-xs font-bold uppercase text-white disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Adicionar
+                        </button>
+                      </div>
+                    )}
                   </Labelled>
                   <Field
                     label="Quantidade"
