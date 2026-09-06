@@ -380,40 +380,6 @@ export function CadastroItensModal({ open, onClose }: { open: boolean; onClose: 
           </div>
         </div>
 
-        {view === 'lista' && (
-          <>
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h4 className="font-display text-sm font-bold text-[#183263]">Itens cadastrados</h4>
-                <p className="text-xs text-[var(--color-muted)]">
-                  Gerencie os itens existentes. Utilize os botões de ação para editá-los ou removê-los.
-                </p>
-              </div>
-              <div className="rounded-[var(--radius-control)] border border-[#bcd0ee] bg-[var(--color-primary-soft)] px-5 py-2 text-center">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
-                  Total do Lote
-                </p>
-                <p className="text-lg font-extrabold text-[#183263]">R$ {fmtBRL(totalLote)}</p>
-              </div>
-            </div>
-
-            <DataTable<ItemLote>
-              columns={cols}
-              rows={itens}
-              rowKey={(r) => r.codigo}
-              empty={
-                <button onClick={abrirNovo} className="w-full">
-                  <EmptyState
-                    title="Nenhum item registrado"
-                    subtitle="Inclua um item manualmente ou importe uma planilha para começar."
-                  />
-                </button>
-              }
-              footer={<span>Registros encontrados: {itens.length}</span>}
-            />
-          </>
-        )}
-
         {view === 'form' && (
           <div>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-[#f8fafd] p-4">
@@ -649,6 +615,40 @@ export function CadastroItensModal({ open, onClose }: { open: boolean; onClose: 
                 Importar
               </button>
             </div>
+          </div>
+        )}
+
+        {view !== 'importar' && (
+          <div className={view === 'form' ? 'mt-6 border-t border-[var(--color-line)] pt-5' : ''}>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h4 className="font-display text-sm font-bold text-[#183263]">Itens cadastrados</h4>
+                <p className="text-xs text-[var(--color-muted)]">
+                  Gerencie os itens existentes. Utilize os botões de ação para editá-los ou removê-los.
+                </p>
+              </div>
+              <div className="rounded-[var(--radius-control)] border border-[#bcd0ee] bg-[var(--color-primary-soft)] px-5 py-2 text-center">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                  Total do Lote
+                </p>
+                <p className="text-lg font-extrabold text-[#183263]">R$ {fmtBRL(totalLote)}</p>
+              </div>
+            </div>
+
+            <DataTable<ItemLote>
+              columns={cols}
+              rows={itens}
+              rowKey={(r) => r.codigo}
+              empty={
+                <button onClick={abrirNovo} className="w-full">
+                  <EmptyState
+                    title="Nenhum item registrado"
+                    subtitle="Inclua um item manualmente ou importe uma planilha para começar."
+                  />
+                </button>
+              }
+              footer={<span>Registros encontrados: {itens.length}</span>}
+            />
           </div>
         )}
       </div>
