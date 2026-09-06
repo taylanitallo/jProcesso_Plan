@@ -44,6 +44,10 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* Baseline shrunk to match SollAI's real, more compact type scale — every
+     rem-based Tailwind text utility (text-xs..text-2xl, gt-input, etc.)
+     scales down from here. */
+  font-size: 87.5%;
 }
 
 body {
