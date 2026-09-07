@@ -1,14 +1,16 @@
 import { useEffect, useRef } from 'react'
-import { registerLicense } from '@syncfusion/ej2-base'
+import { L10n, registerLicense } from '@syncfusion/ej2-base'
 import {
   DocumentEditorContainerComponent,
   Toolbar,
 } from '@syncfusion/ej2-react-documenteditor'
+import ptBR from '@syncfusion/ej2-locale/src/pt-BR.json'
 // bundle completo (todos os componentes + fontes de ícones) — sem isso o
 // editor renderiza com os ícones quebrados e o layout bugado.
 import '@syncfusion/ej2/tailwind.css'
 
 DocumentEditorContainerComponent.Inject(Toolbar)
+L10n.load(ptBR)
 
 // Chave de licença do Syncfusion (opcional). Sem ela o editor funciona,
 // mas mostra o aviso de versão trial. Defina VITE_SYNCFUSION_LICENSE no .env.
@@ -74,6 +76,7 @@ export default function SyncfusionEditor({
         ref={(r: DocumentEditorContainerComponent | null) => {
           containerRef.current = r
         }}
+        locale="pt-BR"
         height="100%"
         enableToolbar
         serviceUrl=""
