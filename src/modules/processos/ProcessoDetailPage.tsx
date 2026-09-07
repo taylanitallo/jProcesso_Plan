@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
   Check,
   Clock,
@@ -23,11 +22,11 @@ import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 import { ArtefatoDetalheModal } from './ArtefatoDetalheModal'
 import { MapaRiscoModal } from './MapaRiscoModal'
 import { CadastroItensModal } from './CadastroItensModal'
+import { NormativasProcessoModal } from './NormativasProcessoModal'
 import { PROCESSO_ARTEFATOS, PROCESSOS, USUARIOS_NOMES } from '../../mocks'
 
 export function ProcessoDetailPage() {
   useModuleLinks(PROCESSOS_MODULE_LINKS)
-  const navigate = useNavigate()
   const proc = PROCESSOS[0]
   const [value, setValue] = useState('')
   const [artefato, setArtefato] = useState<string | null>(null)
@@ -45,6 +44,7 @@ export function ProcessoDetailPage() {
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
+  const [normativasOpen, setNormativasOpen] = useState(false)
   const [permOpen, setPermOpen] = useState(false)
   const [pdfConfirm, setPdfConfirm] = useState(false)
   const [finalizarConfirm, setFinalizarConfirm] = useState(false)
@@ -106,7 +106,7 @@ export function ProcessoDetailPage() {
       icon: <Database size={16} />,
       onClick: () => {
         setMenuOpen(false)
-        navigate('/Normativa')
+        setNormativasOpen(true)
       },
     },
     {
@@ -338,6 +338,14 @@ export function ProcessoDetailPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Normativas do processo */}
+      {normativasOpen && (
+        <NormativasProcessoModal
+          onClose={() => setNormativasOpen(false)}
+          onSave={() => showToast('Normativas salvas com sucesso.')}
+        />
       )}
 
       {/* Permissões */}
