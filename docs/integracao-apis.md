@@ -16,13 +16,27 @@ e usa os **nomes de campo canônicos** das APIs do governo.
 
 ### `catalogoService.ts`  (CATMAT / CATSER)
 
-Mock hoje. Endpoints reais (Dados Abertos):
+**Leitura já é REAL** — Dados Abertos compras.gov.br via proxy `/compras-api`
+(dev: `vite.config.ts`; produção: backend/edge equivalente). Fallback: amostra
+local só quando o proxy/rede falha.
 
-- Material: `/modulo-material/1_consultarGrupoMaterial`, `2_consultarClasseMaterial`,
-  `3_consultarPdmMaterial`, `4_consultarItemMaterial`,
-  `6_consultarMaterialUnidadeFornecimento`
-- Serviço: `/modulo-servico/1_consultarSecaoServico` … `5_consultarSubClasseServico`,
-  `6_consultarItemServico`, `7_consultarUndMedidaServico`
+- Material (Grupo → Classe → PDM → Item):
+  `/modulo-material/1_consultarGrupoMaterial`, `2_consultarClasseMaterial?codigoGrupo`,
+  `3_consultarPdmMaterial?codigoGrupo&codigoClasse`,
+  `4_consultarItemMaterial?codigoGrupo|codigoClasse|codigoPdm|codigoItem`,
+  `6_consultarMaterialUnidadeFornecimento?codigoPdm` (unidade é por PDM, não por item).
+- Serviço (usamos os 3 primeiros níveis de Seção → Divisão → Grupo → Classe →
+  Subclasse; o endpoint de itens aceita qualquer combinação de códigos):
+  `/modulo-servico/1_consultarSecaoServico`, `2_consultarDivisaoServico?codigoSecao`,
+  `3_consultarGrupoServico?codigoDivisao`,
+  `6_consultarItemServico?codigoSecao|codigoDivisao|codigoGrupo|codigoServico`.
+  Unidade não é buscada por item (custaria 1 req/item) — fica `"SERVIÇO"` fixo.
+- `descricaoItem`/`descricaoServico` **não** aceitam busca por substring (só
+  igualdade); por isso "Código específico" busca por `codigoItem`/`codigoServico`
+  exato, não por texto livre.
+- Não existe endpoint de "base inteira" (teria centenas de milhares de linhas);
+  a opção "Base inteira" no modal usa uma amostra curada só de exemplo.
+- `tamanhoPagina` mínimo aceito pela API é 10.
 
 Mapa de campos (`CatalogoItemRef` ↔ API ↔ store `useCatalogo`):
 
@@ -32,8 +46,8 @@ Mapa de campos (`CatalogoItemRef` ↔ API ↔ store `useCatalogo`):
 | `descricaoItem` | `descricaoItem` / `nomeServico` | `nome` |
 | `materialOuServico` | módulo (material/servico) | `tipo` (`Material`/`Serviço`) |
 | `grupo` / `classe` / `pdm` | `nomeGrupo` / `nomeClasse` / `nomePdm` | — |
-| `secao` / `divisao` / `subclasse` | idem serviço | — |
-| `unidadeFornecimento` | `siglaUnidadeFornecimento` / `siglaUnidadeMedida` | `unidade` |
+| `secao` / `divisao` | `nomeSecao` / `nomeDivisao` | — |
+| `unidadeFornecimento` | `nomeUnidadeFornecimento` (material, por PDM) | `unidade` |
 | `informacaoComplementar` | descrição detalhada | `especificacao` |
 
 ### `pcaService.ts`  (Plano de Contratação Anual)
