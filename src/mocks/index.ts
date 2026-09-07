@@ -92,27 +92,49 @@ export const PROCESSO_TIPOS = [
  * SollAI real (apenas o DFD já foi enviado; os demais seguem pendentes).
  */
 export const PROCESSO_ARTEFATOS = [
-  { nome: 'DFD', completo: 'Documento de Formalização de Demanda (DFD)', enviado: true },
-  { nome: 'ETP', completo: 'Estudo Técnico Preliminar (ETP)', enviado: false },
-  { nome: 'Mapa de Risco', completo: 'Mapa de Risco', enviado: false },
-  { nome: 'Termo de Referência', completo: 'Termo de Referência', enviado: false },
-  { nome: 'Pesquisa de Preços', completo: 'Pesquisa de Preços', enviado: false },
-  { nome: 'Disponibilidade Orçamentária', completo: 'Disponibilidade Orçamentária', enviado: false },
-  { nome: 'Edital', completo: 'Edital', enviado: false },
-  { nome: 'Minuta do Contrato', completo: 'Minuta do Contrato', enviado: false },
+  {
+    nome: 'DFD',
+    completo: 'Documento de Formalização de Demanda (DFD)',
+    enviado: true,
+    revisao: true,
+  },
+  { nome: 'ETP', completo: 'Estudo Técnico Preliminar (ETP)', enviado: false, revisao: true },
+  { nome: 'Mapa de Risco', completo: 'Mapa de Risco', enviado: false, revisao: false },
+  { nome: 'Termo de Referência', completo: 'Termo de Referência', enviado: false, revisao: true },
+  { nome: 'Pesquisa de Preços', completo: 'Pesquisa de Preços', enviado: false, revisao: false },
+  {
+    nome: 'Disponibilidade Orçamentária',
+    completo: 'Disponibilidade Orçamentária',
+    enviado: false,
+    revisao: false,
+  },
+  { nome: 'Edital', completo: 'Edital', enviado: false, revisao: true },
+  { nome: 'Minuta do Contrato', completo: 'Minuta do Contrato', enviado: false, revisao: true },
   {
     nome: 'Parecer de Adequação da Modalidade',
     completo: 'Parecer de Adequação da Modalidade',
     enviado: false,
+    revisao: false,
   },
-  { nome: 'Parecer de Controle Interno', completo: 'Parecer de Controle Interno', enviado: false },
-  { nome: 'Parecer Parametrizado', completo: 'Parecer Parametrizado', enviado: false },
-  { nome: 'Proposta Vencedora', completo: 'Proposta Vencedora', enviado: false },
-  { nome: 'Termo de Homologação', completo: 'Termo de Homologação', enviado: false },
+  {
+    nome: 'Parecer de Controle Interno',
+    completo: 'Parecer de Controle Interno',
+    enviado: false,
+    revisao: false,
+  },
+  {
+    nome: 'Parecer Parametrizado',
+    completo: 'Parecer Parametrizado',
+    enviado: false,
+    revisao: false,
+  },
+  { nome: 'Proposta Vencedora', completo: 'Proposta Vencedora', enviado: false, revisao: false },
+  { nome: 'Termo de Homologação', completo: 'Termo de Homologação', enviado: false, revisao: false },
   {
     nome: 'Autorização do Ordenador de Despesas',
     completo: 'Autorização do Ordenador de Despesas',
     enviado: false,
+    revisao: false,
   },
 ]
 

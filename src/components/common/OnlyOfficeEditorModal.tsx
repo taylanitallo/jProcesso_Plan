@@ -129,10 +129,13 @@ const OnlyOfficeEditor = memo(function OnlyOfficeEditor({
 export function OnlyOfficeEditorModal({
   titulo,
   docUrl = DOC_EXEMPLO_URL,
+  painel,
   onClose,
 }: {
   titulo: string | null
   docUrl?: string
+  /** Painel lateral direito opcional (status do artefato, botões, etc.). */
+  painel?: React.ReactNode
   onClose: () => void
 }) {
   const [status, setStatus] = useState<'loading' | 'ready' | 'erro'>('loading')
@@ -158,40 +161,50 @@ export function OnlyOfficeEditorModal({
         </button>
       </div>
 
-      <div className="relative min-h-0 flex-1">
-        <div
-          className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-[#f1f3f7] p-8 text-center"
-          style={{ display: status === 'ready' ? 'none' : 'flex' }}
-        >
-          {status === 'loading' ? (
-            <>
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-line)] border-t-[var(--color-primary)]" />
-              <p className="text-sm text-[var(--color-muted)]">Carregando o editor de documentos…</p>
-            </>
-          ) : (
-            <>
-              <AlertTriangle size={28} className="text-[var(--color-warning)]" />
-              <p className="font-display text-sm font-bold text-[#183263]">
-                Document Server indisponível
-              </p>
-              <p className="max-w-sm text-xs text-[var(--color-muted)]">
-                Não foi possível conectar ao ONLYOFFICE Document Server em{' '}
-                <code className="rounded bg-[#e6e9ef] px-1">{ONLYOFFICE_SERVER_URL}</code>. Suba o
-                servidor local (ver{' '}
-                <code className="rounded bg-[#e6e9ef] px-1">docs/onlyoffice.md</code>) e reabra o
-                documento.
-              </p>
-            </>
-          )}
+      <div className="flex min-h-0 flex-1">
+        <div className="relative min-w-0 flex-1">
+          <div
+            className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-[#f1f3f7] p-8 text-center"
+            style={{ display: status === 'ready' ? 'none' : 'flex' }}
+          >
+            {status === 'loading' ? (
+              <>
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--color-line)] border-t-[var(--color-primary)]" />
+                <p className="text-sm text-[var(--color-muted)]">
+                  Carregando o editor de documentos…
+                </p>
+              </>
+            ) : (
+              <>
+                <AlertTriangle size={28} className="text-[var(--color-warning)]" />
+                <p className="font-display text-sm font-bold text-[#183263]">
+                  Document Server indisponível
+                </p>
+                <p className="max-w-sm text-xs text-[var(--color-muted)]">
+                  Não foi possível conectar ao ONLYOFFICE Document Server em{' '}
+                  <code className="rounded bg-[#e6e9ef] px-1">{ONLYOFFICE_SERVER_URL}</code>. Suba o
+                  servidor local (ver{' '}
+                  <code className="rounded bg-[#e6e9ef] px-1">docs/onlyoffice.md</code>) e reabra o
+                  documento.
+                </p>
+              </>
+            )}
+          </div>
+
+          <OnlyOfficeEditor
+            titulo={titulo}
+            docUrl={docUrl}
+            containerId={containerId}
+            onReady={onReady}
+            onError={onError}
+          />
         </div>
 
-        <OnlyOfficeEditor
-          titulo={titulo}
-          docUrl={docUrl}
-          containerId={containerId}
-          onReady={onReady}
-          onError={onError}
-        />
+        {painel && (
+          <aside className="w-80 shrink-0 overflow-y-auto border-l border-[var(--color-line)] bg-white">
+            {painel}
+          </aside>
+        )}
       </div>
     </div>
   )
