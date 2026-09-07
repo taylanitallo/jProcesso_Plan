@@ -5,19 +5,42 @@ import { useModelos } from '../../store/modelos'
 import { PROCESSO_LEGISLACOES } from '../../mocks'
 import { MODELO_NOMES } from './modeloNomes'
 
+/** Sobe o .docx pro dev-server; devolve a URL que o OnlyOffice consegue baixar. */
+async function enviarAnexo(file: File): Promise<string | null> {
+  try {
+    const res = await fetch('/__upload', {
+      method: 'POST',
+      headers: { 'x-file-name': encodeURIComponent(file.name) },
+      body: file,
+    })
+    if (!res.ok) return null
+    const json = (await res.json()) as { url?: string }
+    return json.url ?? null
+  } catch {
+    return null
+  }
+}
+
 export function NovoModeloModal({ onClose }: { onClose: () => void }) {
   const adicionar = useModelos((s) => s.adicionar)
 
   const [legislacao, setLegislacao] = useState('14.133')
   const [modelo, setModelo] = useState('')
   const [origem, setOrigem] = useState<'SollAI' | 'Word'>('SollAI')
-  const [arquivo, setArquivo] = useState('')
+  const [arquivo, setArquivo] = useState<File | null>(null)
+  const [salvando, setSalvando] = useState(false)
 
-  const podeSalvar = Boolean(modelo) && (origem === 'SollAI' || arquivo)
+  const podeSalvar = Boolean(modelo) && (origem === 'SollAI' || arquivo) && !salvando
 
-  const salvar = () => {
+  const salvar = async () => {
     if (!podeSalvar) return
-    adicionar({ nome: modelo, legislacao, origem, arquivo })
+    setSalvando(true)
+    let arquivoUrl = ''
+    if (origem === 'Word' && arquivo) {
+      arquivoUrl = (await enviarAnexo(arquivo)) ?? ''
+    }
+    adicionar({ nome: modelo, legislacao, origem, arquivo: arquivo?.name ?? '', arquivoUrl })
+    setSalvando(false)
     onClose()
   }
 
@@ -104,17 +127,17 @@ export function NovoModeloModal({ onClose }: { onClose: () => void }) {
                 type="file"
                 accept=".doc,.docx"
                 className="hidden"
-                onChange={(e) => setArquivo(e.target.files?.[0]?.name ?? '')}
+                onChange={(e) => setArquivo(e.target.files?.[0] ?? null)}
               />
             </label>
             {arquivo && (
               <div className="mt-3 flex items-center justify-between gap-3 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white px-3 py-2">
                 <span className="flex min-w-0 items-center gap-2 text-sm text-[var(--color-ink)]">
                   <FileText size={16} className="shrink-0 text-[var(--color-success)]" />
-                  <span className="truncate">{arquivo}</span>
+                  <span className="truncate">{arquivo.name}</span>
                 </span>
                 <button
-                  onClick={() => setArquivo('')}
+                  onClick={() => setArquivo(null)}
                   className="inline-flex shrink-0 items-center gap-1.5 rounded-[var(--radius-control)] bg-[#5b6472] px-3 py-1.5 text-xs font-semibold text-white"
                 >
                   <Trash2 size={13} /> Excluir
@@ -134,7 +157,7 @@ export function NovoModeloModal({ onClose }: { onClose: () => void }) {
           disabled={!podeSalvar}
           className="mt-4 w-full rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] py-2.5 text-sm font-bold uppercase tracking-wide text-white disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Salvar modelo
+          {salvando ? 'Enviando arquivo…' : 'Salvar modelo'}
         </button>
       </div>
     </div>

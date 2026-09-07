@@ -1,13 +1,15 @@
 import { memo, useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { AlertTriangle, FileText, Search, Tag, X } from 'lucide-react'
 import { MODELO_TERMOS } from '../../mocks'
+import type { Modelo } from '../../store/modelos'
 
 /**
  * Mesmo editor do SollAI: ONLYOFFICE Docs, carregado de um Document Server
  * próprio (self-hosted). Ver docs/onlyoffice.md para subir o servidor.
  */
 const ONLYOFFICE_SERVER_URL = 'http://localhost:8082'
-const DOC_URL = 'http://host.docker.internal:5175/modelos/termo-referencia.docx'
+/** Fallback: modelos de origem SollAI não têm arquivo enviado. */
+const DOC_EXEMPLO_URL = 'http://host.docker.internal:5175/modelos/termo-referencia.docx'
 
 type DocsApi = {
   DocEditor: new (
@@ -56,12 +58,14 @@ function useStableCallback<A extends unknown[]>(fn: (...args: A) => void) {
  * congelado (nunca re-renderiza) enquanto `modelo` não mudar.
  */
 const OnlyOfficeEditor = memo(function OnlyOfficeEditor({
-  modelo,
+  titulo,
+  docUrl,
   containerId,
   onReady,
   onError,
 }: {
-  modelo: string
+  titulo: string
+  docUrl: string
   containerId: string
   onReady: () => void
   onError: () => void
@@ -70,6 +74,9 @@ const OnlyOfficeEditor = memo(function OnlyOfficeEditor({
     let cancelled = false
     let instance: { destroyEditor: () => void } | null = null
 
+    const ext = (docUrl.split('?')[0].split('.').pop() || 'docx').toLowerCase()
+    const fileType = ['docx', 'doc', 'odt', 'rtf', 'txt'].includes(ext) ? ext : 'docx'
+
     loadOnlyOfficeScript()
       .then(() => {
         if (cancelled || !window.DocsAPI) return
@@ -77,10 +84,10 @@ const OnlyOfficeEditor = memo(function OnlyOfficeEditor({
         instance = new window.DocsAPI.DocEditor(containerId, {
           documentType: 'word',
           document: {
-            fileType: 'docx',
+            fileType,
             key,
-            title: `${modelo}.docx`,
-            url: DOC_URL,
+            title: `${titulo}.${fileType}`,
+            url: docUrl,
             permissions: { edit: true, download: true, print: true, review: true },
           },
           editorConfig: {
@@ -117,7 +124,7 @@ const OnlyOfficeEditor = memo(function OnlyOfficeEditor({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modelo, containerId])
+  }, [titulo, docUrl, containerId])
 
   return <div id={containerId} className="h-full w-full" />
 })
@@ -126,7 +133,7 @@ export function ModeloEditorModal({
   modelo,
   onClose,
 }: {
-  modelo: string | null
+  modelo: Modelo | null
   onClose: () => void
 }) {
   const [busca, setBusca] = useState('')
@@ -138,6 +145,11 @@ export function ModeloEditorModal({
 
   if (!modelo) return null
 
+  const titulo = modelo.nome
+  const docUrl = modelo.arquivoUrl
+    ? `http://host.docker.internal:5175${modelo.arquivoUrl}`
+    : DOC_EXEMPLO_URL
+
   const termos = MODELO_TERMOS.filter(
     (t) =>
       t.tag.toLowerCase().includes(busca.toLowerCase()) ||
@@ -148,7 +160,7 @@ export function ModeloEditorModal({
     <div className="fixed inset-0 z-50 flex flex-col bg-[#f1f3f7]">
       <div className="flex items-center justify-between border-b border-[var(--color-line)] bg-white px-4 py-2.5">
         <span className="inline-flex items-center gap-2 font-display text-sm font-bold text-[#183263]">
-          <FileText size={16} className="text-[var(--color-primary-strong)]" /> {modelo}
+          <FileText size={16} className="text-[var(--color-primary-strong)]" /> {titulo}
         </span>
         <button
           onClick={onClose}
@@ -187,7 +199,8 @@ export function ModeloEditorModal({
           </div>
 
           <OnlyOfficeEditor
-            modelo={modelo}
+            titulo={titulo}
+            docUrl={docUrl}
             containerId={containerId}
             onReady={onReady}
             onError={onError}
@@ -199,7 +212,7 @@ export function ModeloEditorModal({
           <div className="flex items-center gap-2 bg-[linear-gradient(135deg,#22b8a6_0%,#1f8fbf_100%)] px-4 py-4 text-white">
             <FileText size={20} />
             <span className="font-display text-sm font-extrabold uppercase leading-tight">
-              {modelo}
+              {titulo}
             </span>
           </div>
 

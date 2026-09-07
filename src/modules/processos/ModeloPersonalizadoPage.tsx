@@ -27,7 +27,7 @@ export function ModeloPersonalizadoPage() {
   const modelos = useModelos((s) => s.modelos)
   const remover = useModelos((s) => s.remover)
 
-  const [editando, setEditando] = useState<string | null>(null)
+  const [editando, setEditando] = useState<Modelo | null>(null)
   const [novoAberto, setNovoAberto] = useState(false)
   const [busca, setBusca] = useState('')
   const [confirmarId, setConfirmarId] = useState<string | null>(null)
@@ -35,17 +35,25 @@ export function ModeloPersonalizadoPage() {
   const filtrados = modelos.filter((m) => m.nome.toLowerCase().includes(busca.toLowerCase()))
   const itemConfirmar = modelos.find((m) => m.id === confirmarId) ?? null
 
-  const baixar = (m: Modelo) => {
-    const conteudo = `Modelo: ${m.nome}\nLegislação: ${m.legislacao}\nIdentificador: ${m.identificador}\nOrigem: ${m.origem === 'Word' ? `Arquivo Word (${m.arquivo})` : 'Estrutura SollAI'}\n`
-    const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${m.nome.replace(/[\\/]/g, '-')}.txt`
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    URL.revokeObjectURL(url)
+  const baixar = async (m: Modelo) => {
+    // arquivo real que está no sistema: o .docx enviado, ou o modelo-base SollAI
+    const origem = m.arquivoUrl || '/modelos/termo-referencia.docx'
+    const ext = origem.split('?')[0].split('.').pop() || 'docx'
+    const nomeArquivo = m.arquivo || `${m.nome.replace(/[\\/]/g, '-')}.${ext}`
+    try {
+      const resp = await fetch(origem)
+      const blob = await resp.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = nomeArquivo
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } catch {
+      /* dev-server fora do ar */
+    }
   }
 
   const cols: Column<Modelo>[] = [
@@ -78,7 +86,7 @@ export function ModeloPersonalizadoPage() {
             <Download size={13} /> Download
           </button>
           <button
-            onClick={() => setEditando(r.nome)}
+            onClick={() => setEditando(r)}
             className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-primary)] px-3 py-1.5 text-xs font-semibold text-white"
           >
             <FilePenLine size={13} /> Editar

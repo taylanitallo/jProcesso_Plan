@@ -9,6 +9,8 @@ export type Modelo = {
   legislacao: string
   origem: 'SollAI' | 'Word'
   arquivo: string
+  /** URL do .docx enviado (via /__upload). Vazio = usa a estrutura SollAI. */
+  arquivoUrl: string
   inclusao: string
   inclusaoPor: string
   ultimaEdicao: string
@@ -20,6 +22,7 @@ type Novo = {
   legislacao: string
   origem: 'SollAI' | 'Word'
   arquivo?: string
+  arquivoUrl?: string
 }
 
 type State = {
@@ -40,6 +43,7 @@ const SEED: Modelo[] = MODELOS_PERSONALIZADOS.map((m) => ({
   legislacao: '14.133',
   origem: 'SollAI' as const,
   arquivo: '',
+  arquivoUrl: '',
 }))
 
 export const useModelos = create<State>()(
@@ -59,6 +63,7 @@ export const useModelos = create<State>()(
                 legislacao: m.legislacao,
                 origem: m.origem,
                 arquivo: m.arquivo ?? '',
+                arquivoUrl: m.arquivoUrl ?? '',
                 inclusao: agora(),
                 inclusaoPor: 'AM',
                 ultimaEdicao: agora(),
