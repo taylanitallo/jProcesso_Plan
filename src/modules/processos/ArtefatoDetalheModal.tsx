@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import { Combo } from '../../components/common/Combo'
 import { FormularioModal } from './FormularioModal'
-import { SyncfusionEditorModal } from '../../components/common/SyncfusionEditorModal'
+import { OnlyOfficeEditorModal } from '../../components/common/OnlyOfficeEditorModal'
 import { PROCESSO_ARTEFATOS, PROCESSOS, USUARIOS_NOMES } from '../../mocks'
 
 const ACOES = [
@@ -311,9 +311,9 @@ export function ArtefatoDetalheModal({
           registrar('Artefato atualizado', 'Preenchimento manual', 'Formulário preenchido')
         }
       />
-      <SyncfusionEditorModal
+      <OnlyOfficeEditorModal
         titulo={verDoc ? artefato : null}
-        docUrl={docUrl || undefined}
+        docUrl={docUrl ? `http://host.docker.internal:5175${docUrl}` : undefined}
         painel={painel}
         onClose={() => setVerDoc(false)}
       />

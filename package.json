@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@syncfusion/ej2-react-documenteditor": "^34.2.6",
     "chart.js": "^4.5.1",
     "jspdf": "^4.2.1",
     "jszip": "^3.10.1",
