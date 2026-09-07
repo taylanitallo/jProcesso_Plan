@@ -483,17 +483,17 @@ export function CadastroItensModal({ open, onClose }: { open: boolean; onClose: 
                 </p>
 
                 <div className="grid gap-4 sm:grid-cols-3">
-                  <TextAreaField
-                    label="Nome do item"
-                    placeholder="Ex: NOTEBOOK AVANÇADO"
-                    value={form.nome}
-                    onChange={(v) => setForm((f) => ({ ...f, nome: v }))}
-                  />
                   <Field
                     label="Código"
                     placeholder="Informe o código único do item"
                     value={form.codigo}
                     onChange={(v) => setForm((f) => ({ ...f, codigo: v }))}
+                  />
+                  <TextAreaField
+                    label="Nome do item"
+                    placeholder="Ex: NOTEBOOK AVANÇADO"
+                    value={form.nome}
+                    onChange={(v) => setForm((f) => ({ ...f, nome: v }))}
                   />
                   <TextAreaField
                     label="Especificações"
