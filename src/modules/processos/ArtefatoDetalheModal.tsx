@@ -24,7 +24,7 @@ const ACOES = [
   'Gerar por Arquivo',
 ] as const
 
-type Sub = null | 'form' | 'solicitar' | 'arquivo' | 'gerar'
+type Sub = null | 'form' | 'solicitar' | 'arquivo' | 'gerar' | 'upload'
 
 /**
  * "Ver Detalhes" de um artefato — espelha o modal "Artefato" do SollAI
@@ -45,6 +45,7 @@ export function ArtefatoDetalheModal({
   if (!artefato) return null
 
   const acaoClick: Record<string, () => void> = {
+    Upload: () => setSub('upload'),
     'Preencher Informações': () => setSub('form'),
     'Solicitar envio': () => setSub('solicitar'),
     'Gerar Artefato com IA': () => setSub('gerar'),
@@ -258,7 +259,52 @@ export function ArtefatoDetalheModal({
           </button>
         </MiniDialog>
       )}
+
+      {sub === 'upload' && <UploadArtefatoDialog nome={artefato} onClose={() => setSub(null)} />}
     </div>
+  )
+}
+
+function UploadArtefatoDialog({ nome, onClose }: { nome: string; onClose: () => void }) {
+  const [arquivo, setArquivo] = useState<File | null>(null)
+
+  return (
+    <MiniDialog onClose={onClose}>
+      <h3 className="flex items-center gap-2 font-display text-base font-bold text-[#183263]">
+        <Upload size={18} className="text-[var(--color-primary-strong)]" /> Upload do Artefato
+      </h3>
+      <p className="mt-1 text-xs text-[var(--color-muted)]">{nome}</p>
+
+      <label className="mt-4 flex cursor-pointer flex-col items-center gap-2 rounded-[var(--radius-control)] border-2 border-dashed border-[#c9d6ea] bg-[#f7f9fc] px-4 py-10 text-center">
+        <UploadCloud size={28} className="text-[var(--color-muted)]" />
+        <span className="text-sm font-semibold text-[var(--color-primary-strong)]">
+          {arquivo ? arquivo.name : 'Clique para selecionar o arquivo'}
+        </span>
+        <span className="text-xs text-[var(--color-muted)]">.pdf, .doc ou .docx — até 800MB.</span>
+        <input
+          type="file"
+          accept=".pdf,.doc,.docx"
+          className="hidden"
+          onChange={(e) => setArquivo(e.target.files?.[0] ?? null)}
+        />
+      </label>
+
+      <div className="mt-4 flex justify-end gap-2">
+        <button
+          onClick={onClose}
+          className="rounded-[var(--radius-control)] px-4 py-2 text-sm font-semibold text-[var(--color-muted)]"
+        >
+          Cancelar
+        </button>
+        <button
+          onClick={onClose}
+          disabled={!arquivo}
+          className="rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-6 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Enviar
+        </button>
+      </div>
+    </MiniDialog>
   )
 }
 
