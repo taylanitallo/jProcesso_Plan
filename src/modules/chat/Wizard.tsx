@@ -5,6 +5,16 @@ import type { Step } from './chatConstants'
 
 export type { Step }
 
+/**
+ * Analisadores que precisam do Edital + um documento específico no passo de
+ * upload. Chave = função escolhida no 1º passo; valor = rótulo do 2º arquivo.
+ */
+const DOC_COM_EDITAL: Record<string, string> = {
+  'Analisador de Impugnações de Edital': 'Impugnação',
+  'Analisador de Pedidos de Esclarecimento': 'Esclarecimentos',
+  'Analisador de Recursos': 'Recurso',
+}
+
 export function Wizard({
   steps,
   finishLabel,
@@ -46,9 +56,15 @@ export function Wizard({
               step={s}
               stepIndex={i}
               selected={answers[i] ?? []}
+              funcao={answers[0]?.[0]}
               onSingle={(v) => setSingle(i, v)}
               onText={(v) => setAnswers((a) => ({ ...a, [i]: [v] }))}
-              onUpload={() => setAnswers((a) => ({ ...a, [i]: ['(arquivo enviado)'] }))}
+              onUpload={(label) =>
+                setAnswers((a) => ({
+                  ...a,
+                  [i]: Array.from(new Set([...(a[i] ?? []), label])),
+                }))
+              }
             />
           </div>
         ))}
@@ -116,6 +132,7 @@ function StepBubble({
   step,
   stepIndex,
   selected,
+  funcao,
   onSingle,
   onText,
   onUpload,
@@ -123,9 +140,10 @@ function StepBubble({
   step: Step
   stepIndex: number
   selected: string[]
+  funcao?: string
   onSingle: (v: string) => void
   onText: (v: string) => void
-  onUpload: () => void
+  onUpload: (label: string) => void
 }) {
   return (
     <AiBubble>
@@ -203,13 +221,37 @@ function StepBubble({
             <span className="rounded bg-[#eef1f7] px-1.5 py-0.5 font-semibold">word</span> ou{' '}
             <span className="rounded bg-[#eef1f7] px-1.5 py-0.5 font-semibold">pdf</span>.
           </p>
-          <label className="inline-flex cursor-pointer items-center gap-2 rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#1f6fd0_0%,#1f8f6a_100%)] px-4 py-2.5 text-sm font-semibold text-white">
-            <UploadCloud size={16} /> Selecionar Arquivos
-            <input type="file" className="hidden" onChange={onUpload} />
-          </label>
+          {(() => {
+            const secundario = funcao ? DOC_COM_EDITAL[funcao] : undefined
+            const botoes = secundario
+              ? [
+                  { label: 'Edital', texto: 'Selecionar Edital' },
+                  { label: secundario, texto: `Selecionar ${secundario}` },
+                ]
+              : [{ label: '(arquivo enviado)', texto: 'Selecionar Arquivos' }]
+            return (
+              <div className="flex flex-wrap gap-3">
+                {botoes.map((b) => (
+                  <label
+                    key={b.label}
+                    className={`inline-flex cursor-pointer items-center gap-2 rounded-[var(--radius-control)] px-4 py-2.5 text-sm font-semibold text-white ${
+                      selected.includes(b.label)
+                        ? 'bg-[var(--color-success)]'
+                        : 'bg-[linear-gradient(180deg,#1f6fd0_0%,#1f8f6a_100%)]'
+                    }`}
+                  >
+                    <UploadCloud size={16} /> {b.texto}
+                    <input type="file" className="hidden" onChange={() => onUpload(b.label)} />
+                  </label>
+                ))}
+              </div>
+            )
+          })()}
           <p className="mt-2 text-xs text-[var(--color-muted)]">Limite de arquivos até 800 MB.</p>
-          {selected[0] && (
-            <p className="mt-1 text-xs font-semibold text-[var(--color-success)]">Arquivo pronto para envio.</p>
+          {selected.filter(Boolean).length > 0 && (
+            <p className="mt-1 text-xs font-semibold text-[var(--color-success)]">
+              {selected.filter(Boolean).join(', ')} pronto(s) para envio.
+            </p>
           )}
         </>
       )}
