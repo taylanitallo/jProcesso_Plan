@@ -26,6 +26,16 @@ const ACOES = [
 
 type Sub = null | 'form' | 'solicitar' | 'arquivo' | 'gerar' | 'upload'
 
+const USUARIO_ATUAL = 'ALEF MATHEUS TEIXEIRA DE SOUSA'
+
+type HistItem = {
+  evento: string
+  data: string
+  tipoEnvio: string
+  usuario: string
+  detalhe: string
+}
+
 /**
  * "Ver Detalhes" de um artefato — espelha o modal "Artefato" do SollAI
  * (seções Artefato / Histórico / Status) e as ações do lado esquerdo.
@@ -41,13 +51,24 @@ export function ArtefatoDetalheModal({
   const [sub, setSub] = useState<Sub>(null)
   const [email, setEmail] = useState('')
   const [verDoc, setVerDoc] = useState(false)
-  const [historico, setHistorico] = useState<string[]>(['Artefato enviado - 22/12/2025 às 00:22'])
+  const [historico, setHistorico] = useState<HistItem[]>([
+    {
+      evento: 'Artefato enviado',
+      data: '22/12/2025 às 00:22',
+      tipoEnvio: 'Upload',
+      usuario: USUARIO_ATUAL,
+      detalhe: 'Envio inicial',
+    },
+  ])
 
-  const registrar = (evento: string) => {
+  const registrar = (evento: string, tipoEnvio: string, detalhe: string) => {
     const agora = new Date()
     const data = agora.toLocaleDateString('pt-BR')
     const hora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-    setHistorico((prev) => [`${evento} - ${data} às ${hora}`, ...prev])
+    setHistorico((prev) => [
+      { evento, data: `${data} às ${hora}`, tipoEnvio, usuario: USUARIO_ATUAL, detalhe },
+      ...prev,
+    ])
   }
 
   if (!artefato) return null
@@ -144,14 +165,43 @@ export function ArtefatoDetalheModal({
           <Secao icon={<History size={15} />} titulo="Histórico">
             <ul className="flex flex-col gap-2">
               {historico.map((h, i) => (
-                <li key={`${h}-${i}`} className="flex items-center justify-between gap-2">
-                  <p className="text-xs text-[var(--color-muted)]">{h}</p>
+                <li
+                  key={`${h.evento}-${h.data}-${i}`}
+                  className="group relative flex items-center justify-between gap-2 rounded-[var(--radius-control)] px-1 py-0.5 hover:bg-[#f4f7fc]"
+                >
+                  <p className="text-xs text-[var(--color-muted)]">
+                    {h.evento} - {h.data}
+                  </p>
                   <button
                     aria-label="Baixar versão"
                     className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--color-line)] text-[var(--color-muted)]"
                   >
                     <Download size={13} />
                   </button>
+
+                  <div className="pointer-events-none absolute left-full top-0 z-20 ml-2 hidden w-64 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white text-left shadow-[var(--shadow-pop)] group-hover:block">
+                    <p className="rounded-t-[var(--radius-control)] bg-[linear-gradient(135deg,#22b8a6_0%,#1f6fd0_100%)] px-3 py-1.5 text-xs font-bold text-white">
+                      Detalhes
+                    </p>
+                    <dl className="space-y-1 p-3 text-xs">
+                      <div>
+                        <dt className="inline font-bold text-[var(--color-ink)]">Tipo Envio: </dt>
+                        <dd className="inline text-[var(--color-muted)]">{h.tipoEnvio}</dd>
+                      </div>
+                      <div>
+                        <dt className="inline font-bold text-[var(--color-ink)]">Data: </dt>
+                        <dd className="inline text-[var(--color-muted)]">{h.data}</dd>
+                      </div>
+                      <div>
+                        <dt className="inline font-bold text-[var(--color-ink)]">Usuário: </dt>
+                        <dd className="inline text-[var(--color-muted)]">{h.usuario}</dd>
+                      </div>
+                      <div>
+                        <dt className="inline font-bold text-[var(--color-ink)]">Detalhes: </dt>
+                        <dd className="inline text-[var(--color-muted)]">{h.detalhe}</dd>
+                      </div>
+                    </dl>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -168,7 +218,9 @@ export function ArtefatoDetalheModal({
       <FormularioModal
         artefato={sub === 'form' ? artefato : null}
         onClose={() => setSub(null)}
-        onSalvar={() => registrar('Preenchimento manual concluído')}
+        onSalvar={() =>
+          registrar('Artefato atualizado', 'Preenchimento manual', 'Formulário preenchido')
+        }
       />
       <OnlyOfficeEditorModal titulo={verDoc ? artefato : null} onClose={() => setVerDoc(false)} />
 
@@ -192,7 +244,7 @@ export function ArtefatoDetalheModal({
             </button>
             <button
               onClick={() => {
-                registrar('Solicitação de envio enviada')
+                registrar('Solicitação de envio', 'Solicitação', email || 'Solicitação enviada')
                 setSub(null)
               }}
               className="rounded-[var(--radius-control)] bg-[var(--color-primary)] px-5 py-2 text-sm font-semibold text-white"
@@ -222,7 +274,7 @@ export function ArtefatoDetalheModal({
           <div className="mt-4 flex justify-center gap-2">
             <button
               onClick={() => {
-                registrar('Geração por IA iniciada')
+                registrar('Geração por IA iniciada', 'Gerar com IA', 'Processamento iniciado')
                 setSub(null)
               }}
               className="rounded-[var(--radius-control)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
@@ -273,7 +325,7 @@ export function ArtefatoDetalheModal({
 
           <button
             onClick={() => {
-              registrar('Gerar por Arquivo')
+              registrar('Artefato atualizado', 'Gerar por Arquivo', 'Arquivo registrado')
               setSub(null)
             }}
             className="mt-4 w-full rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] py-2.5 text-sm font-bold text-white"
@@ -287,7 +339,7 @@ export function ArtefatoDetalheModal({
         <UploadArtefatoDialog
           nome={artefato}
           onClose={() => setSub(null)}
-          onEnviar={() => registrar('Artefato enviado')}
+          onEnviar={() => registrar('Artefato enviado', 'Upload', 'Arquivo enviado')}
         />
       )}
     </div>
