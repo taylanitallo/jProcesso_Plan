@@ -23,3 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 .mcp.json
+
+# anexos de dev (Ver Documento)
+public/uploads/

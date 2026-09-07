@@ -66,16 +66,20 @@ const OnlyOfficeEditor = memo(function OnlyOfficeEditor({
     let cancelled = false
     let instance: { destroyEditor: () => void } | null = null
 
+    const ext = (docUrl.split('?')[0].split('.').pop() || 'docx').toLowerCase()
+    const fileType = ['docx', 'doc', 'pdf', 'odt', 'rtf', 'txt'].includes(ext) ? ext : 'docx'
+    const documentType = fileType === 'pdf' ? 'pdf' : 'word'
+
     loadOnlyOfficeScript()
       .then(() => {
         if (cancelled || !window.DocsAPI) return
         const key = `${titulo}-${Date.now()}`.replace(/[^\w-]/g, '').slice(0, 40)
         instance = new window.DocsAPI.DocEditor(containerId, {
-          documentType: 'word',
+          documentType,
           document: {
-            fileType: 'docx',
+            fileType,
             key,
-            title: `${titulo}.docx`,
+            title: `${titulo}.${fileType}`,
             url: docUrl,
             permissions: { edit: true, download: true, print: true, review: true },
           },

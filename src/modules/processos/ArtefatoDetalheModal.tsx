@@ -28,6 +28,22 @@ type Sub = null | 'form' | 'solicitar' | 'arquivo' | 'gerar' | 'upload'
 
 const USUARIO_ATUAL = 'ALEF MATHEUS TEIXEIRA DE SOUSA'
 
+/** Sobe o anexo pro dev-server; devolve a URL que o OnlyOffice consegue baixar. */
+async function enviarAnexo(file: File): Promise<string | null> {
+  try {
+    const res = await fetch('/__upload', {
+      method: 'POST',
+      headers: { 'x-file-name': encodeURIComponent(file.name) },
+      body: file,
+    })
+    if (!res.ok) return null
+    const json = (await res.json()) as { url?: string }
+    return json.url ?? null
+  } catch {
+    return null
+  }
+}
+
 type HistItem = {
   evento: string
   data: string
@@ -51,6 +67,9 @@ export function ArtefatoDetalheModal({
   const [sub, setSub] = useState<Sub>(null)
   const [email, setEmail] = useState('')
   const [verDoc, setVerDoc] = useState(false)
+  /** URL do documento anexado (via /__upload). Vazio = usa o modelo de exemplo. */
+  const [docUrl, setDocUrl] = useState('')
+  const [arquivoGerar, setArquivoGerar] = useState<File | null>(null)
   const [historico, setHistorico] = useState<HistItem[]>([
     {
       evento: 'Artefato enviado',
@@ -222,7 +241,11 @@ export function ArtefatoDetalheModal({
           registrar('Artefato atualizado', 'Preenchimento manual', 'Formulário preenchido')
         }
       />
-      <OnlyOfficeEditorModal titulo={verDoc ? artefato : null} onClose={() => setVerDoc(false)} />
+      <OnlyOfficeEditorModal
+        titulo={verDoc ? artefato : null}
+        docUrl={docUrl ? `http://host.docker.internal:5175${docUrl}` : undefined}
+        onClose={() => setVerDoc(false)}
+      />
 
       {sub === 'solicitar' && (
         <MiniDialog onClose={() => setSub(null)}>
@@ -315,8 +338,13 @@ export function ArtefatoDetalheModal({
           </div>
 
           <label className="mx-auto mt-4 flex w-fit cursor-pointer items-center gap-2 rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#1f9d55_0%,#198754_100%)] px-4 py-2.5 text-sm font-semibold text-white">
-            <UploadCloud size={16} /> Selecionar Arquivos
-            <input type="file" multiple className="hidden" />
+            <UploadCloud size={16} /> {arquivoGerar ? arquivoGerar.name : 'Selecionar Arquivos'}
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx"
+              className="hidden"
+              onChange={(e) => setArquivoGerar(e.target.files?.[0] ?? null)}
+            />
           </label>
           <p className="mt-2 text-center text-xs text-[var(--color-muted)]">
             (Formatos aceitos: .pdf,.doc ou .docx - Tamanho máximo: 800MB por arquivo - até 15
@@ -324,11 +352,17 @@ export function ArtefatoDetalheModal({
           </p>
 
           <button
-            onClick={() => {
+            onClick={async () => {
+              if (arquivoGerar) {
+                const url = await enviarAnexo(arquivoGerar)
+                if (url) setDocUrl(url)
+              }
               registrar('Artefato atualizado', 'Gerar por Arquivo', 'Arquivo registrado')
+              setArquivoGerar(null)
               setSub(null)
             }}
-            className="mt-4 w-full rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] py-2.5 text-sm font-bold text-white"
+            disabled={!arquivoGerar}
+            className="mt-4 w-full rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             Enviar
           </button>
@@ -339,7 +373,10 @@ export function ArtefatoDetalheModal({
         <UploadArtefatoDialog
           nome={artefato}
           onClose={() => setSub(null)}
-          onEnviar={() => registrar('Artefato enviado', 'Upload', 'Arquivo enviado')}
+          onEnviar={(url) => {
+            if (url) setDocUrl(url)
+            registrar('Artefato enviado', 'Upload', 'Arquivo enviado')
+          }}
         />
       )}
     </div>
@@ -353,9 +390,10 @@ function UploadArtefatoDialog({
 }: {
   nome: string
   onClose: () => void
-  onEnviar: () => void
+  onEnviar: (url: string | null) => void
 }) {
   const [arquivo, setArquivo] = useState<File | null>(null)
+  const [enviando, setEnviando] = useState(false)
 
   return (
     <MiniDialog onClose={onClose}>
@@ -386,14 +424,18 @@ function UploadArtefatoDialog({
           Cancelar
         </button>
         <button
-          onClick={() => {
-            onEnviar()
+          onClick={async () => {
+            if (!arquivo) return
+            setEnviando(true)
+            const url = await enviarAnexo(arquivo)
+            setEnviando(false)
+            onEnviar(url)
             onClose()
           }}
-          disabled={!arquivo}
+          disabled={!arquivo || enviando}
           className="rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-6 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Enviar
+          {enviando ? 'Enviando…' : 'Enviar'}
         </button>
       </div>
     </MiniDialog>
