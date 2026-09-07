@@ -49,8 +49,14 @@ export default function SyncfusionEditor({
         if (!res.ok) throw new Error(String(res.status))
         const blob = await res.blob()
         if (cancelado) return
-        editor.documentEditor.open(blob)
+        // O open() do Syncfusion só faz o parse client-side de .docx quando
+        // recebe um File nomeado (usa a extensão pra detectar o formato) —
+        // um Blob puro abre em branco.
+        const file = new File([blob], `${titulo || 'documento'}.docx`, {
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        })
         editor.documentEditor.documentName = titulo
+        editor.documentEditor.open(file)
       } catch {
         if (!cancelado) editor.documentEditor.openBlank()
       }
