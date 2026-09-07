@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { CalendarRange, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { AlertTriangle, CalendarRange, X } from 'lucide-react'
 import { Combo } from '../../components/common/Combo'
 import { usePca } from '../../store/pca'
+import { useOrganizacao } from '../../store/organizacao'
 import { PROCESSO_LEGISLACOES } from '../../mocks'
 
 const vazio = {
@@ -9,25 +11,29 @@ const vazio = {
   anoPca: String(new Date().getFullYear()),
   cnpjOrgao: '',
   nomeOrgao: '',
-  unidade: '',
+  unidadeNome: '',
   legislacao: PROCESSO_LEGISLACOES[0],
   observacoes: '',
 }
 
 export function NovoPcaModal({ onCriado, onClose }: { onCriado: (id: string) => void; onClose: () => void }) {
   const criar = usePca((s) => s.criar)
+  const unidades = useOrganizacao((s) => s.unidades)
   const [form, setForm] = useState(vazio)
 
-  const podeSalvar = form.nome.trim() && form.cnpjOrgao.trim() && form.nomeOrgao.trim()
+  const unidadeSelecionada = unidades.find((u) => u.nome === form.unidadeNome) ?? null
+  const podeSalvar =
+    form.nome.trim() && form.cnpjOrgao.trim() && form.nomeOrgao.trim() && unidadeSelecionada
 
   const salvar = () => {
-    if (!podeSalvar) return
+    if (!podeSalvar || !unidadeSelecionada) return
     const id = criar({
       nome: form.nome,
       anoPca: Number(form.anoPca) || new Date().getFullYear(),
       cnpjOrgao: form.cnpjOrgao,
       nomeOrgao: form.nomeOrgao,
-      unidade: form.unidade,
+      unidadeId: unidadeSelecionada.id,
+      unidadeNome: unidadeSelecionada.nome,
       legislacao: form.legislacao,
       observacoes: form.observacoes,
     })
@@ -116,14 +122,32 @@ export function NovoPcaModal({ onCriado, onClose }: { onCriado: (id: string) => 
           </div>
 
           <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
-            Unidade
-            <input
-              value={form.unidade}
-              onChange={(e) => setForm((f) => ({ ...f, unidade: e.target.value }))}
-              placeholder="Ex: Secretaria de Administração"
-              className="gt-input font-normal normal-case"
+            Unidade Orçamentária
+            <Combo
+              value={form.unidadeNome}
+              onChange={(v) => setForm((f) => ({ ...f, unidadeNome: v }))}
+              options={unidades.map((u) => u.nome)}
+              placeholder={unidades.length === 0 ? 'Nenhuma unidade cadastrada' : 'Selecione a unidade'}
+              disabled={unidades.length === 0}
+              filterable
             />
+            <p className="text-[11px] font-normal normal-case text-[var(--color-muted)]">
+              Cada Unidade Orçamentária monta o seu próprio PCA.
+            </p>
           </label>
+
+          {unidades.length === 0 && (
+            <div className="flex items-start gap-2 rounded-[var(--radius-control)] border border-[#f0d79a] bg-[#fdf6e3] px-3 py-2 text-xs text-[#8a6d1a]">
+              <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+              <span>
+                Nenhuma Unidade Orçamentária cadastrada.{' '}
+                <Link to="/GerenciarUnidadeSetor" className="font-semibold underline">
+                  Cadastre em Gerenciar Unidade/Setor
+                </Link>{' '}
+                antes de criar o PCA.
+              </span>
+            </div>
+          )}
 
           <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
             Observações

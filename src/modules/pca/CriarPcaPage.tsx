@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CalendarRange, FilePenLine, Plus, Trash2 } from 'lucide-react'
+import { CalendarRange, FilePenLine, Plus, Send, Trash2 } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { Button } from '../../components/common/Button'
 import { Badge } from '../../components/common/Badge'
@@ -10,6 +10,7 @@ import { usePca, type PcaLocal } from '../../store/pca'
 import { PCA_MODULE_LINKS } from './pcaLinks'
 import { NovoPcaModal } from './NovoPcaModal'
 import { PcaItensModal } from './PcaItensModal'
+import { TransmitirPncpModal } from './TransmitirPncpModal'
 
 const fmtBRL = (v: number) =>
   `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -25,6 +26,7 @@ export function CriarPcaPage() {
   const [novoOpen, setNovoOpen] = useState(false)
   const [itensAbertoId, setItensAbertoId] = useState<string | null>(null)
   const [confirmarId, setConfirmarId] = useState<string | null>(null)
+  const [transmitirOpen, setTransmitirOpen] = useState(false)
 
   const filtrados = pcas.filter(
     (p) =>
@@ -44,6 +46,7 @@ export function CriarPcaPage() {
         </div>
       ),
     },
+    { key: 'unidadeNome', header: 'Unidade Orçamentária' },
     { key: 'anoPca', header: 'Ano', align: 'center' },
     { key: 'itens', header: 'Itens', align: 'center', render: (r) => r.itens.length },
     {
@@ -97,7 +100,7 @@ export function CriarPcaPage() {
     <div>
       <PageHeader
         title="Criar PCA"
-        subtitle="Monte Planos de Contratação Anual localmente antes de enviar ao PNCP."
+        subtitle="Cada Unidade Orçamentária monta o seu PCA. O administrador geral consolida e transmite todos ao PNCP."
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-3 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-4 shadow-[var(--shadow-card)]">
@@ -110,6 +113,12 @@ export function CriarPcaPage() {
           placeholder="Buscar por Nome / Órgão"
           className="gt-input min-w-40 flex-1"
         />
+        <button
+          onClick={() => setTransmitirOpen(true)}
+          className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[#7c3aed] px-4 py-2.5 text-sm font-semibold text-white"
+        >
+          <Send size={16} /> Transmitir ao PNCP
+        </button>
       </div>
 
       <DataTable<PcaLocal>
@@ -145,6 +154,7 @@ export function CriarPcaPage() {
       {itensAbertoId && (
         <PcaItensModal pcaId={itensAbertoId} onClose={() => setItensAbertoId(null)} />
       )}
+      {transmitirOpen && <TransmitirPncpModal onClose={() => setTransmitirOpen(false)} />}
 
       {itemConfirmar && (
         <div

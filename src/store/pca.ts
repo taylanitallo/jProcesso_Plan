@@ -38,7 +38,9 @@ export type PcaLocal = {
   anoPca: number
   cnpjOrgao: string
   nomeOrgao: string
-  unidade: string
+  /** Unidade Orçamentária dona deste PCA — cada unidade monta o seu (ver Gerenciar Unidade/Setor). */
+  unidadeId: string
+  unidadeNome: string
   legislacao: string
   observacoes: string
   status: StatusPca
@@ -52,7 +54,8 @@ type NovoPca = {
   anoPca: number
   cnpjOrgao: string
   nomeOrgao: string
-  unidade?: string
+  unidadeId: string
+  unidadeNome: string
   legislacao?: string
   observacoes?: string
 }
@@ -117,7 +120,8 @@ export const usePca = create<State>()(
               anoPca: p.anoPca,
               cnpjOrgao: p.cnpjOrgao.trim(),
               nomeOrgao: p.nomeOrgao.trim(),
-              unidade: p.unidade?.trim() ?? '',
+              unidadeId: p.unidadeId,
+              unidadeNome: p.unidadeNome,
               legislacao: p.legislacao ?? '14.133',
               observacoes: p.observacoes?.trim() ?? '',
               status: 'RASCUNHO',
@@ -188,6 +192,19 @@ export const usePca = create<State>()(
           ),
         })),
     }),
-    { name: 'sollai-pca', version: 1 },
+    {
+      name: 'sollai-pca',
+      version: 2,
+      migrate: (persisted) => {
+        const state = persisted as { pcas?: (PcaLocal & { unidade?: string })[] }
+        return {
+          pcas: (state.pcas ?? []).map((p) => ({
+            ...p,
+            unidadeId: p.unidadeId ?? '',
+            unidadeNome: p.unidadeNome ?? p.unidade ?? '',
+          })),
+        }
+      },
+    },
   ),
 )

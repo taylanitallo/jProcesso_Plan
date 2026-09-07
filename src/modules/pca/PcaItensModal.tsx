@@ -3,7 +3,6 @@ import {
   Download,
   FilePenLine,
   Info,
-  Lock,
   Package,
   Plus,
   Search,
@@ -305,7 +304,7 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
           <div className="min-w-0">
             <h3 className="font-display text-base font-bold text-[#183263] sm:text-lg">{pca.nome}</h3>
             <p className="text-sm text-[var(--color-muted)]">
-              {pca.nomeOrgao} • Ano {pca.anoPca} •{' '}
+              {pca.nomeOrgao} • {pca.unidadeNome} • Ano {pca.anoPca} •{' '}
               <Badge tone={pca.status === 'RASCUNHO' ? 'neutral' : 'info'}>
                 {pca.status === 'RASCUNHO' ? 'Rascunho' : 'Pronto para Envio'}
               </Badge>
@@ -337,22 +336,15 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
             >
               <Upload size={14} /> Importar do PNCP
             </button>
-            <span title="Publicar no PNCP exige a credencial oficial do órgão (usuário/senha ou certificado cadastrados no Portal de Compras Públicas). A SollAI ainda não está integrada a essa credencial — o PCA fica salvo localmente até essa integração existir.">
-              <button
-                disabled
-                className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-[var(--radius-control)] border border-[#c9d6ea] bg-white px-3 py-2 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)] opacity-70"
-              >
-                <Lock size={14} /> Enviar ao PNCP
-              </button>
-            </span>
           </div>
         </div>
 
         <div className="mb-4 flex items-start gap-2 rounded-[var(--radius-control)] bg-[var(--color-primary-soft)] px-3 py-2 text-xs text-[var(--color-primary-strong)]">
           <Info size={14} className="mt-0.5 shrink-0" />
           <span>
-            Este PCA é local. O envio real ao PNCP exige a credencial oficial do órgão — ainda não
-            integrada nesta versão.
+            Este PCA é da unidade <strong>{pca.unidadeNome}</strong>. Quando estiver completo, marque
+            como "Pronto para Envio" na listagem — o administrador geral do sistema transmite todos os
+            PCAs prontos ao PNCP de uma vez só.
           </span>
         </div>
 
