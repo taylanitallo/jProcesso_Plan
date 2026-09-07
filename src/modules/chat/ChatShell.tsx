@@ -1,16 +1,9 @@
 import { useState, type ReactNode } from 'react'
-import { NavLink } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { HistoryItem } from '../../types'
 import { useModuleLinks } from '../../components/shell/useModuleLinks'
 import { CHAT_MODULE_LINKS } from './chatConstants'
-
-const CHAT_TABS = [
-  { label: 'Consulta', to: '/Consulta' },
-  { label: 'Artefato', to: '/Artefato' },
-  { label: 'Research', to: '/Research' },
-]
 
 interface ShellProps {
   /** history footer counter label, e.g. "Total Consultas" */
@@ -58,27 +51,7 @@ export function ChatShell({
           </button>
         </div>
 
-        {showTabs && (
-          <div className="mx-4 mt-3 flex rounded-[var(--radius-control)] border border-[var(--color-line)] p-1">
-            {CHAT_TABS.map((t) => (
-              <NavLink
-                key={t.to}
-                to={t.to}
-                className={({ isActive }) =>
-                  `flex-1 rounded-[8px] px-2 py-1.5 text-center text-xs font-semibold transition ${
-                    isActive
-                      ? 'bg-[linear-gradient(135deg,#22b8a6_0%,#1f6fd0_100%)] text-white'
-                      : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
-                  }`
-                }
-              >
-                {t.label}
-              </NavLink>
-            ))}
-          </div>
-        )}
-
-        <div className="relative mx-4 mt-3">
+<div className="relative mx-4 mt-3">
           <Search
             size={15}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)]"

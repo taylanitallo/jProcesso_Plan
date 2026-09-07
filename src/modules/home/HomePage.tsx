@@ -8,7 +8,6 @@ import {
   FolderKanban,
   Lock,
   MessagesSquare,
-  Scale,
   Search,
   Users,
 } from 'lucide-react'
@@ -52,11 +51,7 @@ const ROOT: CardDef[] = [
   },
 ]
 
-const CHAT: CardDef[] = [
-  { title: 'Consulta Inteligente', description: '', icon: Scale, to: '/Consulta' },
-  { title: 'Artefato', description: '', icon: BookOpen, to: '/Artefato' },
-  { title: 'Research', description: '', icon: Search, to: '/Research' },
-]
+const CHAT: CardDef[] = [{ title: 'Research', description: '', icon: Search, to: '/Research' }]
 
 const PROCESSOS: CardDef[] = [
   {

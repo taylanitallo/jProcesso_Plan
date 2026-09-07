@@ -3,8 +3,6 @@ import { AppLayout } from '../components/shell/AppLayout'
 import { RequireAuth } from './RequireAuth'
 import { LoginPage } from '../modules/auth/LoginPage'
 import { HomePage } from '../modules/home/HomePage'
-import { ConsultaPage } from '../modules/chat/ConsultaPage'
-import { ArtefatoPage } from '../modules/chat/ArtefatoPage'
 import { ResearchPage } from '../modules/chat/ResearchPage'
 import { AnalisadoresPage } from '../modules/analisadores/AnalisadoresPage'
 import { CatalogoItensPage } from '../modules/catalogo/CatalogoItensPage'
@@ -36,8 +34,8 @@ export const router = createBrowserRouter([
       { index: true, element: <Navigate to="/Home" replace /> },
       { path: 'Home', element: <HomePage /> },
 
-      { path: 'Consulta', element: <ConsultaPage /> },
-      { path: 'Artefato', element: <ArtefatoPage /> },
+      { path: 'Consulta', element: <Navigate to="/Research" replace /> },
+      { path: 'Artefato', element: <Navigate to="/Research" replace /> },
       { path: 'Research', element: <ResearchPage /> },
       { path: 'AnalisadoresProcesso', element: <AnalisadoresPage /> },
 

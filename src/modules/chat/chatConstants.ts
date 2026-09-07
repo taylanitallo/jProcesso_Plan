@@ -14,8 +14,6 @@ export type Step =
     }
 
 export const CHAT_MODULE_LINKS: ModuleLink[] = [
-  { key: 'consulta', label: 'Consulta Inteligente', to: '/Consulta', icon: 'scale' },
-  { key: 'artefato', label: 'Artefato', to: '/Artefato', icon: 'book' },
   { key: 'research', label: 'Research', to: '/Research', icon: 'search' },
 ]
 
