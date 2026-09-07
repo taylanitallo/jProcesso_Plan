@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import JSZip from 'jszip'
 import {
+  AlertTriangle,
   Check,
   Clock,
   Database,
@@ -24,7 +25,8 @@ import { ArtefatoDetalheModal } from './ArtefatoDetalheModal'
 import { MapaRiscoModal } from './MapaRiscoModal'
 import { CadastroItensModal } from './CadastroItensModal'
 import { NormativasProcessoModal } from './NormativasProcessoModal'
-import { PROCESSO_ARTEFATOS, PROCESSOS, USUARIOS_NOMES } from '../../mocks'
+import { PermissoesProcessoModal } from './PermissoesProcessoModal'
+import { PROCESSO_ARTEFATOS, PROCESSOS } from '../../mocks'
 
 export function ProcessoDetailPage() {
   useModuleLinks(PROCESSOS_MODULE_LINKS)
@@ -381,7 +383,13 @@ export function ProcessoDetailPage() {
       )}
 
       {/* Permissões */}
-      {permOpen && <PermissoesModal onClose={() => setPermOpen(false)} onSave={() => showToast('Permissões salvas.')} />}
+      {permOpen && (
+        <PermissoesProcessoModal
+          nomeProcesso={nome}
+          onClose={() => setPermOpen(false)}
+          onSave={() => showToast('Permissão salva.')}
+        />
+      )}
 
       {/* Confirmações simples */}
       {pdfConfirm && (
@@ -398,17 +406,52 @@ export function ProcessoDetailPage() {
         />
       )}
       {finalizarConfirm && (
-        <ConfirmDialog
-          titulo="Finalizar Processo?"
-          descricao="Após finalizado, o processo não poderá mais ser editado."
-          confirmLabel="Sim, Finalizar"
-          onCancel={() => setFinalizarConfirm(false)}
-          onConfirm={() => {
-            setFinalizarConfirm(false)
-            setFinalizado(true)
-            showToast('Processo finalizado.')
-          }}
-        />
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-[rgba(9,21,44,0.4)] p-4"
+          onClick={() => setFinalizarConfirm(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-[16px] bg-white p-6 text-center shadow-[var(--shadow-pop)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border-2 border-[#f0c26b] text-[#d39a16]">
+              <AlertTriangle size={26} />
+            </span>
+            <p className="mt-3 font-display text-base font-bold text-[#183263]">
+              Deseja finalizar este processo?
+            </p>
+            <p className="mt-2 text-sm text-[var(--color-muted)]">
+              Ao finalizar, este processo será <strong>definitivamente encerrado</strong> e as
+              seguintes ações serão bloqueadas:
+            </p>
+            <ul className="mt-2 list-disc space-y-0.5 pl-5 text-left text-sm text-[var(--color-muted)]">
+              <li>Não será possível editar os itens do processo;</li>
+              <li>Não será permitido realizar upload ou alteração de artefatos;</li>
+            </ul>
+            <p className="mt-2 text-sm text-[var(--color-muted)]">
+              Após a finalização, o processo ficará disponível apenas para{' '}
+              <strong>visualização e download</strong>.
+            </p>
+            <div className="mt-5 flex justify-center gap-2">
+              <button
+                onClick={() => {
+                  setFinalizarConfirm(false)
+                  setFinalizado(true)
+                  showToast('Processo finalizado.')
+                }}
+                className="rounded-[var(--radius-control)] bg-[var(--color-danger)] px-4 py-2 text-sm font-semibold text-white"
+              >
+                Sim, finalizar processo
+              </button>
+              <button
+                onClick={() => setFinalizarConfirm(false)}
+                className="rounded-[var(--radius-control)] bg-[var(--color-primary)] px-5 py-2 text-sm font-semibold text-white"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {toast && (
@@ -512,54 +555,3 @@ function ConfirmDialog({
   )
 }
 
-function PermissoesModal({ onClose, onSave }: { onClose: () => void; onSave: () => void }) {
-  const [podeEditar, setPodeEditar] = useState<Record<string, boolean>>({})
-
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[rgba(9,21,44,0.4)] p-4" onClick={onClose}>
-      <div
-        className="w-full max-w-md rounded-[16px] bg-white p-6 shadow-[var(--shadow-pop)]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h3 className="flex items-center gap-2 font-display text-base font-bold text-[#183263]">
-          <Lock size={17} className="text-[var(--color-primary-strong)]" /> Permissões
-        </h3>
-        <p className="mt-1 text-xs text-[var(--color-muted)]">
-          Defina quem pode editar este processo.
-        </p>
-        <ul className="mt-4 flex max-h-72 flex-col gap-1 overflow-y-auto">
-          {USUARIOS_NOMES.map((u) => (
-            <li key={u}>
-              <label className="flex items-center justify-between gap-3 rounded-[var(--radius-control)] px-2 py-2 hover:bg-[#f8fafd]">
-                <span className="text-sm text-[var(--color-ink)]">{u}</span>
-                <input
-                  type="checkbox"
-                  checked={Boolean(podeEditar[u])}
-                  onChange={(e) => setPodeEditar((prev) => ({ ...prev, [u]: e.target.checked }))}
-                  className="h-4 w-4 accent-[var(--color-primary)]"
-                />
-              </label>
-            </li>
-          ))}
-        </ul>
-        <div className="mt-5 flex justify-end gap-2">
-          <button
-            onClick={onClose}
-            className="rounded-[var(--radius-control)] px-4 py-2 text-sm font-semibold text-[var(--color-muted)]"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={() => {
-              onSave()
-              onClose()
-            }}
-            className="rounded-[var(--radius-control)] bg-[var(--color-primary)] px-5 py-2 text-sm font-semibold text-white"
-          >
-            Salvar
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
