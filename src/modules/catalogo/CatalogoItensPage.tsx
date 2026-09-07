@@ -8,6 +8,8 @@ import { EmptyState } from '../../components/common/EmptyState'
 import { useModuleLinks } from '../../components/shell/useModuleLinks'
 import { useCatalogo, type CatalogoItem } from '../../store/catalogo'
 import { TIPOS_ITEM, UNIDADES } from './itemOpcoes'
+import { ImportarCatMatModal } from './ImportarCatMatModal'
+import { ImportarExcelModal } from './ImportarExcelModal'
 
 const vazio = { nome: '', especificacao: '', unidade: '', tipo: '', codigo: '' }
 
@@ -20,6 +22,8 @@ export function CatalogoItensPage() {
 
   const [busca, setBusca] = useState('')
   const [novoAberto, setNovoAberto] = useState(false)
+  const [catmatAberto, setCatmatAberto] = useState(false)
+  const [excelAberto, setExcelAberto] = useState(false)
   const [form, setForm] = useState(vazio)
 
   const filtrados = itens.filter(
@@ -89,7 +93,7 @@ export function CatalogoItensPage() {
         <Button onClick={() => setNovoAberto(true)}>
           <Plus size={16} /> Novo Item
         </Button>
-        <Button variant="success">
+        <Button variant="success" onClick={() => setCatmatAberto(true)}>
           <Plus size={16} /> Importar CatMat/CatSer
         </Button>
         <input
@@ -98,7 +102,10 @@ export function CatalogoItensPage() {
           placeholder="Buscar"
           className="gt-input min-w-40 flex-1"
         />
-        <button className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#8b5cf6_0%,#7c3aed_100%)] px-4 py-2.5 text-sm font-semibold text-white">
+        <button
+          onClick={() => setExcelAberto(true)}
+          className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#8b5cf6_0%,#7c3aed_100%)] px-4 py-2.5 text-sm font-semibold text-white"
+        >
           <Plus size={16} /> Importar Excel
         </button>
       </div>
@@ -121,6 +128,9 @@ export function CatalogoItensPage() {
           </>
         }
       />
+
+      {catmatAberto && <ImportarCatMatModal onClose={() => setCatmatAberto(false)} />}
+      {excelAberto && <ImportarExcelModal onClose={() => setExcelAberto(false)} />}
 
       {novoAberto && (
         <div
