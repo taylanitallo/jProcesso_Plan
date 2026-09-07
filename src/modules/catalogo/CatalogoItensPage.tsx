@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { PackageSearch, Plus, Trash2, X } from 'lucide-react'
+import { PackageSearch, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { Button } from '../../components/common/Button'
 import { Combo } from '../../components/common/Combo'
@@ -18,13 +18,27 @@ export function CatalogoItensPage() {
 
   const itens = useCatalogo((s) => s.itens)
   const adicionar = useCatalogo((s) => s.adicionar)
+  const atualizar = useCatalogo((s) => s.atualizar)
   const remover = useCatalogo((s) => s.remover)
 
   const [busca, setBusca] = useState('')
   const [novoAberto, setNovoAberto] = useState(false)
+  const [editId, setEditId] = useState<string | null>(null)
   const [catmatAberto, setCatmatAberto] = useState(false)
   const [excelAberto, setExcelAberto] = useState(false)
   const [form, setForm] = useState(vazio)
+
+  const abrirEdicao = (i: CatalogoItem) => {
+    setEditId(i.id)
+    setForm({
+      nome: i.nome,
+      especificacao: i.especificacao,
+      unidade: i.unidade,
+      tipo: i.tipo,
+      codigo: i.codigo,
+    })
+    setNovoAberto(true)
+  }
 
   const filtrados = itens.filter(
     (i) =>
@@ -34,17 +48,33 @@ export function CatalogoItensPage() {
 
   const podeSalvar = form.nome.trim() && form.tipo && form.unidade
 
+  const fecharForm = () => {
+    setNovoAberto(false)
+    setEditId(null)
+    setForm(vazio)
+  }
+
   const salvar = () => {
     if (!podeSalvar) return
-    adicionar({
-      nome: form.nome,
-      especificacao: form.especificacao,
-      unidade: form.unidade,
-      tipo: form.tipo,
-      codigo: form.codigo,
-    })
-    setForm(vazio)
-    setNovoAberto(false)
+    if (editId) {
+      const patch: Partial<Omit<CatalogoItem, 'id'>> = {
+        nome: form.nome.trim(),
+        especificacao: form.especificacao.trim(),
+        unidade: form.unidade,
+        tipo: form.tipo,
+      }
+      if (form.codigo.trim()) patch.codigo = form.codigo.trim()
+      atualizar(editId, patch)
+    } else {
+      adicionar({
+        nome: form.nome,
+        especificacao: form.especificacao,
+        unidade: form.unidade,
+        tipo: form.tipo,
+        codigo: form.codigo,
+      })
+    }
+    fecharForm()
   }
 
   const columns: Column<CatalogoItem>[] = [
@@ -71,13 +101,22 @@ export function CatalogoItensPage() {
       header: 'Ações',
       align: 'right',
       render: (r) => (
-        <button
-          onClick={() => remover(r.id)}
-          aria-label="Excluir item"
-          className="ml-auto grid h-8 w-8 place-items-center rounded-[var(--radius-control)] border border-[#f0c2c8] text-[var(--color-danger)]"
-        >
-          <Trash2 size={14} />
-        </button>
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => abrirEdicao(r)}
+            aria-label="Editar item"
+            className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+          >
+            <Pencil size={14} />
+          </button>
+          <button
+            onClick={() => remover(r.id)}
+            aria-label="Excluir item"
+            className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] border border-[#f0c2c8] text-[var(--color-danger)]"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
       ),
     },
   ]
@@ -136,12 +175,12 @@ export function CatalogoItensPage() {
         <div
           className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[rgba(9,21,44,0.6)] p-3 backdrop-blur-sm sm:p-4"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setNovoAberto(false)
+            if (e.target === e.currentTarget) fecharForm()
           }}
         >
           <div className="relative my-4 w-full max-w-2xl rounded-[20px] bg-white p-6 shadow-[var(--shadow-pop)]">
             <button
-              onClick={() => setNovoAberto(false)}
+              onClick={fecharForm}
               aria-label="Fechar"
               className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white text-[var(--color-muted)] shadow"
             >
@@ -150,12 +189,16 @@ export function CatalogoItensPage() {
 
             <div className="flex items-start gap-3 pr-8">
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[12px] bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)]">
-                <Plus size={22} />
+                {editId ? <Pencil size={20} /> : <Plus size={22} />}
               </span>
               <div>
-                <h3 className="font-display text-base font-bold text-[#183263]">Novo Item</h3>
+                <h3 className="font-display text-base font-bold text-[#183263]">
+                  {editId ? 'Editar Item' : 'Novo Item'}
+                </h3>
                 <p className="text-xs text-[var(--color-muted)]">
-                  Complete os campos para cadastrar um novo item no catálogo.
+                  {editId
+                    ? 'Atualize os dados do item do catálogo.'
+                    : 'Complete os campos para cadastrar um novo item no catálogo.'}
                 </p>
               </div>
             </div>

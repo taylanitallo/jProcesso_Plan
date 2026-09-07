@@ -19,6 +19,7 @@ type NovoCatalogoItem = Omit<CatalogoItem, 'id' | 'codigo' | 'origem'> & {
 type CatalogoState = {
   itens: CatalogoItem[]
   adicionar: (item: NovoCatalogoItem) => void
+  atualizar: (id: string, patch: Partial<Omit<CatalogoItem, 'id'>>) => void
   remover: (id: string) => void
 }
 
@@ -79,6 +80,10 @@ export const useCatalogo = create<CatalogoState>()(
               origem: item.origem ?? 'INTERNO',
             },
           ],
+        })),
+      atualizar: (id, patch) =>
+        set((s) => ({
+          itens: s.itens.map((i) => (i.id === id ? { ...i, ...patch } : i)),
         })),
       remover: (id) => set((s) => ({ itens: s.itens.filter((i) => i.id !== id) })),
     }),
