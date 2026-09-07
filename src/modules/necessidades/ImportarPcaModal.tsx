@@ -1,67 +1,58 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Building2, CalendarDays, Download, Hash, MapPin, Package, Plus, Search, X } from 'lucide-react'
 import { useNecessidades } from '../../store/necessidades'
+import { pcaService, type PcaCabecalho, type PcaItem } from '../../services'
 
-type ItemPca = {
-  numero: number
-  descricao: string
-  categoria: 'Material' | 'Serviço'
-  classificacao: string
-  qtd: number
-  unidade: string
-  valorUnit: number
-}
-
-const DESCRICOES: [string, ItemPca['categoria'], string, string][] = [
-  ['ADAPTADOR COM FLANGE 1 - 32MM.', 'Material', 'ACESSÓRIOS E FERRAGENS PARA MANGUEIRAS, CANOS E TUBOS', 'UNIDADE'],
-  ['ADAPTADOR COM FLANGE 25MM (3/4)', 'Material', 'EQUIPAMENTOS DE APOIO', 'UNIDADE'],
-  ['ADAPTADOR ELÉTRICO TÊ', 'Material', 'CONECTORES ELÉTRICOS', 'UNIDADE'],
-  ['CIMENTO PORTLAND CP-II 50KG', 'Material', 'MATERIAIS DE CONSTRUÇÃO', 'SACO'],
-  ['AREIA MÉDIA LAVADA', 'Material', 'AGREGADOS PARA CONSTRUÇÃO', 'M3'],
-  ['TINTA LÁTEX ACRÍLICA 18L', 'Material', 'TINTAS E VERNIZES', 'LATA'],
-  ['CAMINHÃO LEVE TIPO 3/4', 'Material', 'VEÍCULOS SOBRE RODAS', 'UNIDADE'],
-  ['NOTEBOOK CORE I5 16GB SSD 512GB', 'Material', 'EQUIPAMENTOS DE INFORMÁTICA', 'UNIDADE'],
-  ['APRESENTAÇÃO MUSICAL - REY VAQUEIRO', 'Serviço', 'SERVIÇOS DE ARTISTAS', 'SERVIÇO'],
-  ['SERVIÇO DE MANUTENÇÃO DE AR-CONDICIONADO', 'Serviço', 'MANUTENÇÃO PREDIAL', 'SERVIÇO'],
-  ['LOCAÇÃO DE PALCO E SONORIZAÇÃO', 'Serviço', 'LOCAÇÃO DE EQUIPAMENTOS PARA EVENTOS', 'DIÁRIA'],
-  ['CONSULTORIA TÉCNICA EM ENGENHARIA', 'Serviço', 'CONSULTORIA EM ENGENHARIA', 'HORA'],
-  ['SERVIÇO CONTINUADO DE LIMPEZA PREDIAL', 'Serviço', 'LIMPEZA E CONSERVAÇÃO', 'POSTO'],
-  ['COMBUSTÍVEL - ÓLEO DIESEL S10', 'Material', 'COMBUSTÍVEIS E LUBRIFICANTES', 'LITRO'],
-  ['PNEU 275/80 R22.5', 'Material', 'PNEUS E CÂMARAS DE AR', 'UNIDADE'],
-]
-
-function gerarItens(seed: number): ItemPca[] {
-  return Array.from({ length: 24 }, (_, i) => {
-    const [descricao, categoria, classificacao, unidade] = DESCRICOES[(seed + i) % DESCRICOES.length]
-    const qtd = 1 + ((seed * 7 + i * 3) % 40)
-    const valorUnit = Number((2 + ((seed * 13 + i * 29) % 900) + ((i * 7) % 100) / 100).toFixed(2))
-    return { numero: 9427 + seed * 100 + i, descricao, categoria, classificacao, qtd, unidade, valorUnit }
-  })
-}
-
-const brl = (v: number) => `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+const brl = (v: number) =>
+  `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
 export function ImportarPcaModal({ onClose }: { onClose: () => void }) {
   const adicionar = useNecessidades((s) => s.adicionar)
 
   const [cnpj, setCnpj] = useState('')
   const [ano, setAno] = useState(String(new Date().getFullYear()))
-  const [consultado, setConsultado] = useState(false)
-  const [pcaAtivo, setPcaAtivo] = useState(1)
+  const [pcas, setPcas] = useState<PcaCabecalho[]>([])
+  const [ativo, setAtivo] = useState<number | null>(null)
+  const [itens, setItens] = useState<PcaItem[]>([])
+  const [carregando, setCarregando] = useState(false)
   const [filtro, setFiltro] = useState('')
   const [marcados, setMarcados] = useState<Set<number>>(new Set())
 
-  const pcas = consultado ? Array.from({ length: 13 }, (_, i) => i + 1) : []
-  const itens = useMemo(() => gerarItens(pcaAtivo), [pcaAtivo])
-  const filtrados = itens.filter((i) => i.descricao.toLowerCase().includes(filtro.toLowerCase()))
-  const totalItens = itens.reduce((s, i) => s + i.qtd * i.valorUnit, 0)
+  const cab = pcas.find((p) => p.sequencial === ativo) ?? null
 
-  const consultar = () => {
+  const consultar = async () => {
     if (!cnpj.trim()) return
-    setConsultado(true)
-    setPcaAtivo(1)
+    setCarregando(true)
+    const lista = await pcaService.consultarPca(cnpj.trim(), Number(ano) || new Date().getFullYear())
+    setPcas(lista)
+    setAtivo(lista[0]?.sequencial ?? null)
     setMarcados(new Set())
+    setCarregando(false)
   }
+
+  useEffect(() => {
+    if (ativo == null) {
+      setItens([])
+      return
+    }
+    let cancelado = false
+    setCarregando(true)
+    pcaService.consultarItensPca(cnpj.trim(), Number(ano), ativo).then((r) => {
+      if (cancelado) return
+      setItens(r)
+      setMarcados(new Set())
+      setCarregando(false)
+    })
+    return () => {
+      cancelado = true
+    }
+  }, [ativo, cnpj, ano])
+
+  const filtrados = useMemo(
+    () => itens.filter((i) => i.descricao.toLowerCase().includes(filtro.toLowerCase())),
+    [itens, filtro],
+  )
+  const todos = filtrados.length > 0 && filtrados.every((i) => marcados.has(i.numeroItem))
 
   const toggle = (n: number) =>
     setMarcados((prev) => {
@@ -70,23 +61,46 @@ export function ImportarPcaModal({ onClose }: { onClose: () => void }) {
       else s.add(n)
       return s
     })
-
-  const todosMarcados = filtrados.length > 0 && filtrados.every((i) => marcados.has(i.numero))
   const marcarTodos = () =>
     setMarcados((prev) => {
       const s = new Set(prev)
-      if (todosMarcados) filtrados.forEach((i) => s.delete(i.numero))
-      else filtrados.forEach((i) => s.add(i.numero))
+      filtrados.forEach((i) => (todos ? s.delete(i.numeroItem) : s.add(i.numeroItem)))
       return s
     })
 
+  const baixarCsv = () => {
+    const linhas = [
+      ['Nº', 'Descrição', 'Categoria', 'Classificação', 'Qtd', 'Unid.', 'Valor Unit.', 'Valor Total'],
+      ...itens.map((i) => [
+        String(i.numeroItem),
+        i.descricao,
+        i.categoria,
+        i.classificacao,
+        String(i.quantidadeEstimada),
+        i.unidadeFornecimento,
+        i.valorUnitarioEstimado.toFixed(2),
+        i.valorTotalEstimado.toFixed(2),
+      ]),
+    ]
+    const csv = linhas.map((l) => l.map((c) => `"${c.replace(/"/g, '""')}"`).join(';')).join('\r\n')
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `pca-${ativo}-${ano}.csv`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  }
+
   const importar = () => {
-    if (marcados.size === 0) return
-    const escolhidos = itens.filter((i) => marcados.has(i.numero))
-    const valor = escolhidos.reduce((s, i) => s + i.qtd * i.valorUnit, 0)
+    if (marcados.size === 0 || !cab) return
+    const escolhidos = itens.filter((i) => marcados.has(i.numeroItem))
+    const valor = escolhidos.reduce((s, i) => s + i.valorTotalEstimado, 0)
     adicionar({
-      nome: `Importação PCA/PNCP ${ano} — PCA #${pcaAtivo}`,
-      descricao: `CNPJ ${cnpj} • ${escolhidos.length} item(ns) • ${brl(valor)}`,
+      nome: `Importação PCA/PNCP ${ano} — PCA #${cab.sequencial}`,
+      descricao: `${cab.nomeOrgao} (${cnpj}) • Nº controle ${cab.numeroControlePNCP} • ${escolhidos.length} item(ns) • ${brl(valor)}`,
       itens: escolhidos.length,
     })
     onClose()
@@ -139,155 +153,141 @@ export function ImportarPcaModal({ onClose }: { onClose: () => void }) {
           </label>
           <button
             onClick={consultar}
-            disabled={!cnpj.trim()}
+            disabled={!cnpj.trim() || carregando}
             className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Search size={15} /> Consultar
           </button>
         </div>
 
-        {consultado && (
+        {pcas.length > 0 && (
           <>
             <div className="mt-4 flex flex-wrap gap-2">
-              {pcas.map((n) => (
+              {pcas.map((p) => (
                 <button
-                  key={n}
-                  onClick={() => {
-                    setPcaAtivo(n)
-                    setMarcados(new Set())
-                  }}
+                  key={p.sequencial}
+                  onClick={() => setAtivo(p.sequencial)}
                   className={`rounded-[var(--radius-control)] px-3 py-1.5 text-xs font-semibold transition ${
-                    pcaAtivo === n
+                    ativo === p.sequencial
                       ? 'bg-[var(--color-primary)] text-white'
                       : 'border border-[var(--color-line)] bg-white text-[var(--color-muted)]'
                   }`}
                 >
-                  PCA #{n}
+                  PCA #{p.sequencial}
                 </button>
               ))}
             </div>
 
-            <div className="mt-4 overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)]">
-              <div className="bg-[linear-gradient(135deg,#1f56ad_0%,#2d68c4_100%)] px-4 py-3 text-white">
-                <p className="flex items-center gap-2 text-sm font-extrabold">
-                  <Building2 size={16} /> MUNICÍPIO DE IRAUÇUBA
-                </p>
-                <p className="text-xs text-white/80">CNPJ: {cnpj}</p>
-              </div>
-              <div className="grid grid-cols-2 divide-x divide-[var(--color-line)] border-b border-[var(--color-line)] text-center sm:grid-cols-5">
-                <Stat icon={<MapPin size={13} />} label="Localização" valor="Irauçuba - CE" />
-                <Stat icon={<CalendarDays size={13} />} label="Ano PCA" valor={ano} />
-                <Stat icon={<Hash size={13} />} label="Nº Controle" valor={`07683188000169-0-00000${pcaAtivo}/${ano}`} />
-                <Stat icon={<Package size={13} />} label="Total de Itens" valor={String(itens.length)} />
-                <Stat
-                  icon={<span className="text-[var(--color-success)]">$</span>}
-                  label="Valor Total"
-                  valor={brl(totalItens)}
-                  destaque
-                />
-              </div>
-              <p className="bg-[var(--color-primary-soft)] px-4 py-1.5 text-[11px] text-[var(--color-primary-strong)]">
-                Unidade: SECRETARIA DO DESENVOLVIMENTO RURAL, MEIO AMBIENTE E RECURSOS HÍDRICOS (2501)
-                • Publicado em 12/08/2025 • Fonte: SollAI
-              </p>
-
-              <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
-                <div className="relative min-w-[220px] flex-1">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)]" />
-                  <input
-                    value={filtro}
-                    onChange={(e) => setFiltro(e.target.value)}
-                    placeholder="Filtrar itens…"
-                    className="gt-input !pl-9 text-xs font-normal normal-case"
+            {cab && (
+              <div className="mt-4 overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)]">
+                <div className="bg-[linear-gradient(135deg,#1f56ad_0%,#2d68c4_100%)] px-4 py-3 text-white">
+                  <p className="flex items-center gap-2 text-sm font-extrabold">
+                    <Building2 size={16} /> {cab.nomeOrgao}
+                  </p>
+                  <p className="text-xs text-white/80">CNPJ: {cab.cnpjOrgao}</p>
+                </div>
+                <div className="grid grid-cols-2 divide-x divide-[var(--color-line)] border-b border-[var(--color-line)] text-center sm:grid-cols-5">
+                  <Stat icon={<MapPin size={13} />} label="Localização" valor={cab.localizacao} />
+                  <Stat icon={<CalendarDays size={13} />} label="Ano PCA" valor={String(cab.anoPca)} />
+                  <Stat icon={<Hash size={13} />} label="Nº Controle" valor={cab.numeroControlePNCP} />
+                  <Stat icon={<Package size={13} />} label="Total de Itens" valor={String(cab.totalItens)} />
+                  <Stat
+                    icon={<span className="text-[var(--color-success)]">$</span>}
+                    label="Valor Total"
+                    valor={brl(cab.valorTotalEstimado)}
+                    destaque
                   />
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-[var(--color-muted)]">
-                    {filtrados.length} de {itens.length} itens
-                  </span>
-                  <button
-                    onClick={() => {
-                      const linhas = [
-                        ['Nº', 'Descrição', 'Categoria', 'Classificação', 'Qtd', 'Unid.', 'Valor Unit.', 'Valor Total'],
-                        ...itens.map((i) => [
-                          String(i.numero),
-                          i.descricao,
-                          i.categoria,
-                          i.classificacao,
-                          String(i.qtd),
-                          i.unidade,
-                          i.valorUnit.toFixed(2),
-                          (i.qtd * i.valorUnit).toFixed(2),
-                        ]),
-                      ]
-                      const csv = linhas.map((l) => l.map((c) => `"${c.replace(/"/g, '""')}"`).join(';')).join('\r\n')
-                      const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
-                      const url = URL.createObjectURL(blob)
-                      const a = document.createElement('a')
-                      a.href = url
-                      a.download = `pca-${pcaAtivo}-${ano}.csv`
-                      document.body.appendChild(a)
-                      a.click()
-                      a.remove()
-                      URL.revokeObjectURL(url)
-                    }}
-                    className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-[var(--color-line)] px-3 py-1.5 text-xs font-semibold text-[var(--color-muted)]"
-                  >
-                    <Download size={13} /> CSV
-                  </button>
+                <p className="bg-[var(--color-primary-soft)] px-4 py-1.5 text-[11px] text-[var(--color-primary-strong)]">
+                  Unidade: {cab.nomeUnidade} ({cab.codigoUnidade}) • Publicado em {cab.dataPublicacao}{' '}
+                  • Fonte: dados abertos compras.gov.br
+                </p>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+                  <div className="relative min-w-[220px] flex-1">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)]" />
+                    <input
+                      value={filtro}
+                      onChange={(e) => setFiltro(e.target.value)}
+                      placeholder="Filtrar itens…"
+                      className="gt-input !pl-9 text-xs font-normal normal-case"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-[var(--color-muted)]">
+                      {filtrados.length} de {itens.length} itens
+                    </span>
+                    <button
+                      onClick={baixarCsv}
+                      className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-[var(--color-line)] px-3 py-1.5 text-xs font-semibold text-[var(--color-muted)]"
+                    >
+                      <Download size={13} /> CSV
+                    </button>
+                  </div>
+                </div>
+
+                <div className="max-h-[300px] overflow-y-auto">
+                  {carregando ? (
+                    <p className="py-10 text-center text-sm text-[var(--color-muted)]">Carregando itens…</p>
+                  ) : (
+                    <table className="w-full text-xs">
+                      <thead className="sticky top-0 bg-[#eef3fb] text-left uppercase tracking-wide text-[var(--color-muted)]">
+                        <tr>
+                          <th className="px-3 py-2">
+                            <input
+                              type="checkbox"
+                              checked={todos}
+                              onChange={marcarTodos}
+                              className="h-3.5 w-3.5 accent-[var(--color-primary)]"
+                            />
+                          </th>
+                          <th className="px-3 py-2">Nº</th>
+                          <th className="px-3 py-2">Descrição</th>
+                          <th className="px-3 py-2">Categoria</th>
+                          <th className="px-3 py-2">Classificação</th>
+                          <th className="px-3 py-2 text-center">Qtd</th>
+                          <th className="px-3 py-2">Unid.</th>
+                          <th className="px-3 py-2 text-right">Valor Unit.</th>
+                          <th className="px-3 py-2 text-right">Valor Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filtrados.map((it) => (
+                          <tr key={it.numeroItem} className="border-t border-[var(--color-line)] align-top">
+                            <td className="px-3 py-2">
+                              <input
+                                type="checkbox"
+                                checked={marcados.has(it.numeroItem)}
+                                onChange={() => toggle(it.numeroItem)}
+                                className="h-3.5 w-3.5 accent-[var(--color-primary)]"
+                              />
+                            </td>
+                            <td className="px-3 py-2 text-[var(--color-muted)]">{it.numeroItem}</td>
+                            <td className="px-3 py-2 font-semibold text-[var(--color-ink)]">{it.descricao}</td>
+                            <td className="px-3 py-2">
+                              <span
+                                className={`rounded-[var(--radius-pill)] px-2 py-0.5 text-[10px] font-bold text-white ${
+                                  it.materialOuServico === 'MATERIAL'
+                                    ? 'bg-[var(--color-primary)]'
+                                    : 'bg-[#7c3aed]'
+                                }`}
+                              >
+                                {it.categoria}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 text-[var(--color-muted)]">{it.classificacao}</td>
+                            <td className="px-3 py-2 text-center">{it.quantidadeEstimada}</td>
+                            <td className="px-3 py-2 text-[var(--color-muted)]">{it.unidadeFornecimento}</td>
+                            <td className="px-3 py-2 text-right">{brl(it.valorUnitarioEstimado)}</td>
+                            <td className="px-3 py-2 text-right font-semibold">{brl(it.valorTotalEstimado)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
               </div>
-
-              <div className="max-h-[300px] overflow-y-auto">
-                <table className="w-full text-xs">
-                  <thead className="sticky top-0 bg-[#eef3fb] text-left uppercase tracking-wide text-[var(--color-muted)]">
-                    <tr>
-                      <th className="px-3 py-2">
-                        <input type="checkbox" checked={todosMarcados} onChange={marcarTodos} className="h-3.5 w-3.5 accent-[var(--color-primary)]" />
-                      </th>
-                      <th className="px-3 py-2">Nº</th>
-                      <th className="px-3 py-2">Descrição</th>
-                      <th className="px-3 py-2">Categoria</th>
-                      <th className="px-3 py-2">Classificação</th>
-                      <th className="px-3 py-2 text-center">Qtd</th>
-                      <th className="px-3 py-2">Unid.</th>
-                      <th className="px-3 py-2 text-right">Valor Unit.</th>
-                      <th className="px-3 py-2 text-right">Valor Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtrados.map((it) => (
-                      <tr key={it.numero} className="border-t border-[var(--color-line)] align-top">
-                        <td className="px-3 py-2">
-                          <input
-                            type="checkbox"
-                            checked={marcados.has(it.numero)}
-                            onChange={() => toggle(it.numero)}
-                            className="h-3.5 w-3.5 accent-[var(--color-primary)]"
-                          />
-                        </td>
-                        <td className="px-3 py-2 text-[var(--color-muted)]">{it.numero}</td>
-                        <td className="px-3 py-2 font-semibold text-[var(--color-ink)]">{it.descricao}</td>
-                        <td className="px-3 py-2">
-                          <span
-                            className={`rounded-[var(--radius-pill)] px-2 py-0.5 text-[10px] font-bold text-white ${
-                              it.categoria === 'Material' ? 'bg-[var(--color-primary)]' : 'bg-[#7c3aed]'
-                            }`}
-                          >
-                            {it.categoria}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2 text-[var(--color-muted)]">{it.classificacao}</td>
-                        <td className="px-3 py-2 text-center">{it.qtd}</td>
-                        <td className="px-3 py-2 text-[var(--color-muted)]">{it.unidade}</td>
-                        <td className="px-3 py-2 text-right">{brl(it.valorUnit)}</td>
-                        <td className="px-3 py-2 text-right font-semibold">{brl(it.qtd * it.valorUnit)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            )}
           </>
         )}
 
