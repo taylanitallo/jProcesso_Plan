@@ -62,31 +62,55 @@ function proximoCodigo(itens: CatalogoItem[]): string {
   return String(maior + 1)
 }
 
+/** Remove duplicados por origem+código, mantendo a 1ª ocorrência. */
+function deduplicar(itens: CatalogoItem[]): CatalogoItem[] {
+  const vistos = new Set<string>()
+  return itens.filter((i) => {
+    const chave = `${i.origem}|${i.codigo}`
+    if (vistos.has(chave)) return false
+    vistos.add(chave)
+    return true
+  })
+}
+
 export const useCatalogo = create<CatalogoState>()(
   persist(
     (set) => ({
       itens: SEED,
       adicionar: (item) =>
-        set((s) => ({
-          itens: [
-            ...s.itens,
-            {
-              id: `c${Date.now().toString(36)}`,
-              codigo: item.codigo?.trim() || proximoCodigo(s.itens),
-              nome: item.nome.trim(),
-              especificacao: item.especificacao.trim(),
-              unidade: item.unidade,
-              tipo: item.tipo,
-              origem: item.origem ?? 'INTERNO',
-            },
-          ],
-        })),
+        set((s) => {
+          const origem = item.origem ?? 'INTERNO'
+          const codigo = item.codigo?.trim() || proximoCodigo(s.itens)
+          // já importado (mesma origem + código) — evita duplicar ao reimportar
+          if (s.itens.some((i) => i.origem === origem && i.codigo === codigo)) return s
+          return {
+            itens: [
+              ...s.itens,
+              {
+                id: `c${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+                codigo,
+                nome: item.nome.trim(),
+                especificacao: item.especificacao.trim(),
+                unidade: item.unidade,
+                tipo: item.tipo,
+                origem,
+              },
+            ],
+          }
+        }),
       atualizar: (id, patch) =>
         set((s) => ({
           itens: s.itens.map((i) => (i.id === id ? { ...i, ...patch } : i)),
         })),
       remover: (id) => set((s) => ({ itens: s.itens.filter((i) => i.id !== id) })),
     }),
-    { name: 'sollai-catalogo' },
+    {
+      name: 'sollai-catalogo',
+      version: 1,
+      migrate: (persisted) => {
+        const state = persisted as CatalogoState
+        return { ...state, itens: deduplicar(state.itens ?? []) }
+      },
+    },
   ),
 )
