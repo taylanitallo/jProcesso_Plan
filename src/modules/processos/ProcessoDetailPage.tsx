@@ -1,24 +1,33 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Check,
   Clock,
+  Database,
+  FileDown,
+  FileText,
+  Lock,
   MoreVertical,
   Package,
   SendHorizontal,
+  ShieldCheck,
   Sparkles,
+  SquarePen,
   UserRound,
   X,
 } from 'lucide-react'
 import { AiBubble } from '../chat/ChatShell'
+import { Combo } from '../../components/common/Combo'
 import { useModuleLinks } from '../../components/shell/useModuleLinks'
 import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 import { ArtefatoDetalheModal } from './ArtefatoDetalheModal'
 import { MapaRiscoModal } from './MapaRiscoModal'
 import { CadastroItensModal } from './CadastroItensModal'
-import { PROCESSO_ARTEFATOS, PROCESSOS } from '../../mocks'
+import { PROCESSO_ARTEFATOS, PROCESSOS, PROCESSO_TIPOS, USUARIOS_NOMES } from '../../mocks'
 
 export function ProcessoDetailPage() {
   useModuleLinks(PROCESSOS_MODULE_LINKS)
+  const navigate = useNavigate()
   const proc = PROCESSOS[0]
   const [value, setValue] = useState('')
   const [artefato, setArtefato] = useState<string | null>(null)
@@ -26,10 +35,114 @@ export function ProcessoDetailPage() {
   const [itensOpen, setItensOpen] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
 
+  const [nome, setNome] = useState(proc.nome)
+  const [tipo, setTipo] = useState(proc.tipo)
+  const [finalizado, setFinalizado] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
+
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [permOpen, setPermOpen] = useState(false)
+  const [pdfConfirm, setPdfConfirm] = useState(false)
+  const [finalizarConfirm, setFinalizarConfirm] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const onDoc = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [menuOpen])
+
+  const showToast = (msg: string) => {
+    setToast(msg)
+    setTimeout(() => setToast(null), 3000)
+  }
+
   const abrirArtefato = (a: (typeof PROCESSO_ARTEFATOS)[number]) => {
     if (a.nome === 'Mapa de Risco') setMapaRisco(true)
     else setArtefato(a.completo)
   }
+
+  const baixarDocumentos = () => {
+    const enviados = PROCESSO_ARTEFATOS.filter((a) => a.enviado)
+    if (enviados.length === 0) {
+      showToast('Nenhum documento enviado para compactar.')
+      return
+    }
+    const linhas = enviados.map((a) => `${a.nome} — ${a.completo}`).join('\n')
+    const blob = new Blob([`Documentos do Processo N.º ${proc.numero}\n\n${linhas}\n`], {
+      type: 'text/plain;charset=utf-8;',
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `processo-${proc.numero}-documentos.txt`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+    showToast('Download iniciado.')
+  }
+
+  const MAIS_OPCOES = [
+    {
+      key: 'editar',
+      label: 'Editar',
+      icon: <SquarePen size={16} />,
+      onClick: () => {
+        setMenuOpen(false)
+        setEditOpen(true)
+      },
+    },
+    {
+      key: 'normativas',
+      label: 'Normativas',
+      icon: <Database size={16} />,
+      onClick: () => {
+        setMenuOpen(false)
+        navigate('/Normativa')
+      },
+    },
+    {
+      key: 'baixar',
+      label: 'Baixar Documentos Compactados',
+      icon: <FileDown size={16} />,
+      onClick: () => {
+        setMenuOpen(false)
+        baixarDocumentos()
+      },
+    },
+    {
+      key: 'pdf',
+      label: 'Gerar Documentos em PDF',
+      icon: <FileText size={16} />,
+      onClick: () => {
+        setMenuOpen(false)
+        setPdfConfirm(true)
+      },
+    },
+    {
+      key: 'permissoes',
+      label: 'Permissões',
+      icon: <Lock size={16} />,
+      onClick: () => {
+        setMenuOpen(false)
+        setPermOpen(true)
+      },
+    },
+    {
+      key: 'finalizar',
+      label: 'Finalizar',
+      icon: <ShieldCheck size={16} />,
+      onClick: () => {
+        setMenuOpen(false)
+        setFinalizarConfirm(true)
+      },
+    },
+  ] as const
 
   const total = PROCESSO_ARTEFATOS.length
   const feitos = PROCESSO_ARTEFATOS.filter((a) => a.enviado).length
@@ -42,13 +155,18 @@ export function ProcessoDetailPage() {
         <h3 className="border-l-4 border-[var(--color-primary)] pl-2 font-display text-sm font-bold text-[#183263]">
           Processo N.º <span className="text-base">{proc.numero}</span>
         </h3>
-        <span className="text-xs font-semibold text-[var(--color-ink)]">{proc.nome}</span>
+        <span className="text-xs font-semibold text-[var(--color-ink)]">{nome}</span>
         <span className="rounded-[var(--radius-pill)] border border-[#bcd0ee] bg-[var(--color-primary-soft)] px-2 py-0.5 text-[11px] font-semibold text-[var(--color-primary-strong)]">
           14.133
         </span>
         <span className="rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-[#f1f4f9] px-2 py-0.5 text-[11px] font-semibold text-[var(--color-muted)]">
-          {proc.tipo}
+          {tipo}
         </span>
+        {finalizado && (
+          <span className="rounded-[var(--radius-pill)] border border-[#a9d9c1] bg-[#eefaf3] px-2 py-0.5 text-[11px] font-semibold text-[var(--color-success)]">
+            Finalizado
+          </span>
+        )}
         <div className="ml-auto flex items-center gap-1">
           <button
             onClick={() => setChatOpen(true)}
@@ -62,12 +180,28 @@ export function ProcessoDetailPage() {
           >
             <Package size={13} /> Itens
           </button>
-          <button
-            aria-label="Mais opções"
-            className="grid h-7 w-7 place-items-center rounded-[var(--radius-control)] border border-[var(--color-line)] text-[var(--color-muted)]"
-          >
-            <MoreVertical size={14} />
-          </button>
+          <div ref={menuRef} className="relative">
+            <button
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label="Mais opções"
+              className="grid h-7 w-7 place-items-center rounded-[var(--radius-control)] border border-[var(--color-line)] text-[var(--color-muted)]"
+            >
+              <MoreVertical size={14} />
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 top-full z-30 mt-2 w-64 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-2 shadow-[var(--shadow-pop)]">
+                {MAIS_OPCOES.map((op) => (
+                  <button
+                    key={op.key}
+                    onClick={op.onClick}
+                    className="flex w-full items-center gap-2.5 rounded-[var(--radius-control)] px-3 py-2.5 text-left text-sm font-semibold text-[var(--color-primary-strong)] transition hover:bg-[var(--color-primary-soft)]"
+                  >
+                    {op.icon} {op.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -131,6 +265,88 @@ export function ProcessoDetailPage() {
       <MapaRiscoModal open={mapaRisco} onClose={() => setMapaRisco(false)} />
       <CadastroItensModal open={itensOpen} onClose={() => setItensOpen(false)} />
 
+      {/* Editar processo */}
+      {editOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(9,21,44,0.4)] p-4"
+          onClick={() => setEditOpen(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-[16px] bg-white p-6 shadow-[var(--shadow-pop)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="font-display text-base font-bold text-[#183263]">Editar Processo</h3>
+            <div className="mt-4 flex flex-col gap-4">
+              <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
+                Nome do Processo
+                <input
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  className="gt-input font-normal normal-case"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
+                Tipo de Processo
+                <Combo value={tipo} onChange={setTipo} options={PROCESSO_TIPOS} placeholder="Selecione" />
+              </label>
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                onClick={() => setEditOpen(false)}
+                className="rounded-[var(--radius-control)] px-4 py-2 text-sm font-semibold text-[var(--color-muted)]"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  setEditOpen(false)
+                  showToast('Processo atualizado.')
+                }}
+                className="rounded-[var(--radius-control)] bg-[var(--color-primary)] px-5 py-2 text-sm font-semibold text-white"
+              >
+                Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Permissões */}
+      {permOpen && <PermissoesModal onClose={() => setPermOpen(false)} onSave={() => showToast('Permissões salvas.')} />}
+
+      {/* Confirmações simples */}
+      {pdfConfirm && (
+        <ConfirmDialog
+          titulo="Gerar Documentos em PDF?"
+          descricao="Todos os documentos enviados deste processo serão convertidos para PDF."
+          confirmLabel="Gerar Documentos"
+          onCancel={() => setPdfConfirm(false)}
+          onConfirm={() => {
+            setPdfConfirm(false)
+            showToast('Geração de PDF iniciada.')
+          }}
+        />
+      )}
+      {finalizarConfirm && (
+        <ConfirmDialog
+          titulo="Finalizar Processo?"
+          descricao="Após finalizado, o processo não poderá mais ser editado."
+          confirmLabel="Sim, Finalizar"
+          onCancel={() => setFinalizarConfirm(false)}
+          onConfirm={() => {
+            setFinalizarConfirm(false)
+            setFinalizado(true)
+            showToast('Processo finalizado.')
+          }}
+        />
+      )}
+
+      {toast && (
+        <div className="fixed bottom-5 right-5 z-[70] rounded-[var(--radius-control)] bg-[#183263] px-4 py-3 text-sm font-semibold text-white shadow-[var(--shadow-pop)]">
+          {toast}
+        </div>
+      )}
+
       {/* Drawer de análise com IA */}
       {chatOpen && (
         <div className="fixed inset-0 z-50 flex justify-end">
@@ -182,6 +398,98 @@ export function ProcessoDetailPage() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function ConfirmDialog({
+  titulo,
+  descricao,
+  confirmLabel,
+  onConfirm,
+  onCancel,
+}: {
+  titulo: string
+  descricao: string
+  confirmLabel: string
+  onConfirm: () => void
+  onCancel: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[rgba(9,21,44,0.4)] p-4" onClick={onCancel}>
+      <div
+        className="w-full max-w-md rounded-[16px] bg-white p-6 text-center shadow-[var(--shadow-pop)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p className="font-display text-base font-bold text-[#183263]">{titulo}</p>
+        <p className="mt-2 text-sm text-[var(--color-muted)]">{descricao}</p>
+        <div className="mt-5 flex justify-center gap-2">
+          <button
+            onClick={onCancel}
+            className="rounded-[var(--radius-control)] bg-[#e6e9ef] px-4 py-2 text-sm font-semibold text-[var(--color-ink)]"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            className="rounded-[var(--radius-control)] bg-[var(--color-primary)] px-5 py-2 text-sm font-semibold text-white"
+          >
+            {confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PermissoesModal({ onClose, onSave }: { onClose: () => void; onSave: () => void }) {
+  const [podeEditar, setPodeEditar] = useState<Record<string, boolean>>({})
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[rgba(9,21,44,0.4)] p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-md rounded-[16px] bg-white p-6 shadow-[var(--shadow-pop)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="flex items-center gap-2 font-display text-base font-bold text-[#183263]">
+          <Lock size={17} className="text-[var(--color-primary-strong)]" /> Permissões
+        </h3>
+        <p className="mt-1 text-xs text-[var(--color-muted)]">
+          Defina quem pode editar este processo.
+        </p>
+        <ul className="mt-4 flex max-h-72 flex-col gap-1 overflow-y-auto">
+          {USUARIOS_NOMES.map((u) => (
+            <li key={u}>
+              <label className="flex items-center justify-between gap-3 rounded-[var(--radius-control)] px-2 py-2 hover:bg-[#f8fafd]">
+                <span className="text-sm text-[var(--color-ink)]">{u}</span>
+                <input
+                  type="checkbox"
+                  checked={Boolean(podeEditar[u])}
+                  onChange={(e) => setPodeEditar((prev) => ({ ...prev, [u]: e.target.checked }))}
+                  className="h-4 w-4 accent-[var(--color-primary)]"
+                />
+              </label>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="rounded-[var(--radius-control)] px-4 py-2 text-sm font-semibold text-[var(--color-muted)]"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => {
+              onSave()
+              onClose()
+            }}
+            className="rounded-[var(--radius-control)] bg-[var(--color-primary)] px-5 py-2 text-sm font-semibold text-white"
+          >
+            Salvar
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
