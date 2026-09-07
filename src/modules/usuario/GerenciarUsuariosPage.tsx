@@ -3,6 +3,7 @@ import { CheckCircle2, Crown, FileSignature, Info, Pencil, Plus, ScrollText, Use
 import { PageHeader } from '../../components/common/PageHeader'
 import { EmptyState } from '../../components/common/EmptyState'
 import { useAuth } from '../../store/auth'
+import { GerenciarCertificadosModal } from './GerenciarCertificadosModal'
 
 const TABS = ['Gerenciamento de Usuários', 'Assinatura Eletrônica']
 
@@ -16,6 +17,7 @@ const LIMITS = [
 export function GerenciarUsuariosPage() {
   const user = useAuth((s) => s.user)
   const [tab, setTab] = useState(TABS[0])
+  const [certModal, setCertModal] = useState(false)
 
   return (
     <div>
@@ -83,7 +85,11 @@ export function GerenciarUsuariosPage() {
                   <button className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] border border-[var(--color-line)] text-[var(--color-muted)]">
                     <Pencil size={14} />
                   </button>
-                  <button className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] border border-[var(--color-line)] text-[var(--color-muted)]">
+                  <button
+                    onClick={() => setCertModal(true)}
+                    title="Gerenciar certificados"
+                    className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] border border-[var(--color-line)] text-[var(--color-muted)]"
+                  >
                     <ScrollText size={14} />
                   </button>
                 </div>
@@ -96,6 +102,15 @@ export function GerenciarUsuariosPage() {
           </div>
 
           <EmptyState icon={Users} title="Nenhum usuário encontrado!" />
+
+          {certModal && (
+            <GerenciarCertificadosModal
+              pessoaId={user?.email ?? 'me'}
+              pessoaNome={user?.name ?? ''}
+              pessoaEmail={user?.email ?? ''}
+              onClose={() => setCertModal(false)}
+            />
+          )}
         </>
       ) : (
         <div className="rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-5 shadow-[var(--shadow-card)]">
