@@ -26,11 +26,11 @@ export function AgendaModal({ open, onClose }: { open: boolean; onClose: () => v
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[rgba(9,21,44,0.6)] p-4 backdrop-blur-sm sm:p-8"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[rgba(9,21,44,0.6)] p-4 backdrop-blur-sm sm:p-4"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-6xl rounded-[20px] bg-white p-5 shadow-[var(--shadow-pop)]"
+        className="relative w-full max-w-[1320px] rounded-[20px] bg-white p-5 shadow-[var(--shadow-pop)]"
         onClick={(e) => e.stopPropagation()}
       >
         <button

@@ -328,11 +328,11 @@ export function CadastroItensModal({ open, onClose }: { open: boolean; onClose: 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[rgba(9,21,44,0.6)] p-3 backdrop-blur-sm sm:p-8"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[rgba(9,21,44,0.6)] p-3 backdrop-blur-sm sm:p-4"
       onClick={fecharTudo}
     >
       <div
-        className="relative my-4 w-full max-w-6xl rounded-[20px] bg-white p-5 shadow-[var(--shadow-pop)] sm:p-6"
+        className="relative my-4 w-full max-w-[1320px] rounded-[20px] bg-white p-5 shadow-[var(--shadow-pop)] sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <button
