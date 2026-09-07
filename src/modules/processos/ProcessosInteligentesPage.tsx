@@ -10,6 +10,7 @@ import {
   PenLine,
   Plus,
   Search,
+  X,
 } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { Badge } from '../../components/common/Badge'
@@ -20,8 +21,10 @@ import { PendingModal } from './PendingModal'
 import { NovoProcessoModal } from './NovoProcessoModal'
 import { ProcessoWizardModal } from './ProcessoWizardModal'
 import { PROCESSOS_MODULE_LINKS } from './processosLinks'
-import { PROCESSOS } from '../../mocks'
+import { PROCESSOS, PROCESSO_LEGISLACOES, PROCESSO_TIPOS } from '../../mocks'
 import { useRevisoes, revisoesPendentes } from '../../store/revisoes'
+
+const STATUS_OPCOES = ['Ativo', 'Finalizado']
 
 type Row = (typeof PROCESSOS)[number]
 
@@ -58,9 +61,31 @@ export function ProcessosInteligentesPage() {
   >('none')
   const [criarOpen, setCriarOpen] = useState(false)
   const criarRef = useRef<HTMLDivElement>(null)
+  const [filtroOpen, setFiltroOpen] = useState(false)
+  const [busca, setBusca] = useState('')
+  const [tipoFiltro, setTipoFiltro] = useState('Todos')
+  const [legislacaoFiltro, setLegislacaoFiltro] = useState('Todas')
+  const [ativoFiltro, setAtivoFiltro] = useState('Todos')
 
   const revisoes = useRevisoes((s) => s.revisoes)
   const pendentes = revisoesPendentes(revisoes)
+
+  const filtrosAtivos =
+    busca !== '' || tipoFiltro !== 'Todos' || legislacaoFiltro !== 'Todas' || ativoFiltro !== 'Todos'
+
+  const limparFiltros = () => {
+    setBusca('')
+    setTipoFiltro('Todos')
+    setLegislacaoFiltro('Todas')
+    setAtivoFiltro('Todos')
+  }
+
+  const linhas = PROCESSOS.filter(
+    (p) =>
+      (busca === '' || p.nome.toLowerCase().includes(busca.toLowerCase())) &&
+      (tipoFiltro === 'Todos' || p.tipo === tipoFiltro) &&
+      (ativoFiltro === 'Todos' || p.status === ativoFiltro),
+  )
 
   useEffect(() => {
     if (!criarOpen) return
@@ -140,7 +165,7 @@ export function ProcessosInteligentesPage() {
             Total de Processos
           </p>
           <p className="text-lg font-extrabold text-[#183263]">
-            0 <span className="text-[var(--color-success)]">/ Ilimitado</span>
+            {PROCESSOS.length} <span className="text-[var(--color-success)]">/ Ilimitado</span>
           </p>
         </div>
       </div>
@@ -182,20 +207,87 @@ export function ProcessosInteligentesPage() {
             </div>
           )}
         </div>
-        <input placeholder="Buscar por Nome" className="gt-input min-w-40 flex-1" />
-        <button className="grid h-10 w-10 place-items-center rounded-[var(--radius-control)] border border-[var(--color-line)] text-[var(--color-muted)]">
+        <input
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          placeholder="Buscar por Nome"
+          className="gt-input min-w-40 flex-1"
+        />
+        <button
+          onClick={() => setFiltroOpen((o) => !o)}
+          className={`grid h-10 w-10 place-items-center rounded-[var(--radius-control)] border transition ${
+            filtroOpen || filtrosAtivos
+              ? 'border-[var(--color-primary)] bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)]'
+              : 'border-[var(--color-line)] text-[var(--color-muted)]'
+          }`}
+        >
           <Filter size={15} />
         </button>
       </div>
 
+      {filtroOpen && (
+        <div className="mb-4 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-4 shadow-[var(--shadow-card)]">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <label className="flex flex-col gap-1.5 text-xs font-semibold text-[var(--color-muted)]">
+              Tipo de Processo
+              <select
+                value={tipoFiltro}
+                onChange={(e) => setTipoFiltro(e.target.value)}
+                className="gt-input font-normal normal-case"
+              >
+                <option>Todos</option>
+                {PROCESSO_TIPOS.map((t) => (
+                  <option key={t}>{t}</option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1.5 text-xs font-semibold text-[var(--color-muted)]">
+              Legislação
+              <select
+                value={legislacaoFiltro}
+                onChange={(e) => setLegislacaoFiltro(e.target.value)}
+                className="gt-input font-normal normal-case"
+              >
+                <option>Todas</option>
+                {PROCESSO_LEGISLACOES.map((l) => (
+                  <option key={l}>{l}</option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1.5 text-xs font-semibold text-[var(--color-muted)]">
+              Ativo
+              <select
+                value={ativoFiltro}
+                onChange={(e) => setAtivoFiltro(e.target.value)}
+                className="gt-input font-normal normal-case"
+              >
+                <option>Todos</option>
+                {STATUS_OPCOES.map((s) => (
+                  <option key={s}>{s}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="mt-3 flex justify-end">
+            <button
+              onClick={limparFiltros}
+              disabled={!filtrosAtivos}
+              className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-[var(--color-line)] px-3 py-1.5 text-xs font-semibold text-[var(--color-muted)] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <X size={13} /> Limpar
+            </button>
+          </div>
+        </div>
+      )}
+
       <DataTable<Row>
         columns={columns}
-        rows={PROCESSOS}
+        rows={linhas}
         rowKey={(r) => String(r.id)}
         footer={
           <>
             <Pagination />
-            <span>Registros encontrados: {PROCESSOS.length}</span>
+            <span>Registros encontrados: {linhas.length}</span>
           </>
         }
       />
