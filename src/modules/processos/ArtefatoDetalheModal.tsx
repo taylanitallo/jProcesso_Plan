@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import { Combo } from '../../components/common/Combo'
 import { FormularioModal } from './FormularioModal'
-import { ControleArtefatoModal } from './ControleArtefatoModal'
+import { OnlyOfficeEditorModal } from '../../components/common/OnlyOfficeEditorModal'
 import { USUARIOS_NOMES } from '../../mocks'
 
 const ACOES = [
@@ -156,7 +156,7 @@ export function ArtefatoDetalheModal({
       </div>
 
       <FormularioModal artefato={sub === 'form' ? artefato : null} onClose={() => setSub(null)} />
-      <ControleArtefatoModal artefato={verDoc ? artefato : null} onClose={() => setVerDoc(false)} />
+      <OnlyOfficeEditorModal titulo={verDoc ? artefato : null} onClose={() => setVerDoc(false)} />
 
       {sub === 'solicitar' && (
         <MiniDialog onClose={() => setSub(null)}>
