@@ -50,8 +50,8 @@ export function UserModals() {
           <UploadBox label="Logo do sistema (SollAI)" hint="PNG ou JPG, até 5MB" />
         </div>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <Field label="Nome" placeholder="Nome da instituição" />
           <Field label="CNPJ" placeholder="00.000.000/0000-00" />
-          <Field label="Razão Social" placeholder="Nome da instituição" />
         </div>
         <Button className="mt-5" onClick={close}>
           Salvar atualizações
