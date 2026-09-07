@@ -38,13 +38,22 @@ Mapa de campos (`CatalogoItemRef` ↔ API ↔ store `useCatalogo`):
 
 ### `pcaService.ts`  (Plano de Contratação Anual)
 
-Mock hoje.
+**Leitura já é REAL** — API do PNCP via proxy `/pncp-api` (dev: `vite.config.ts`;
+produção: um backend/edge equivalente). Fallback automático p/ mock quando o
+proxy não existe (build sem dev-server) ou a rede falha.
 
-- **Leitura**: Dados Abertos `/modulo-pgc/1_consultarPgcDetalhe`
-  `?orgao=<cnpj>&anoPcaProjetoCompra=<ano>&codigoUasg=<uasg>`
-  → itens com `codigoItemCatalogo`, `quantidadeItem`, `valorTotalItem`.
-  `/modulo-pgc/3_consultarPgcAgregacao?orgao&ano` → `quantidadeTotalItens`,
-  `valorTotalEstimado`.
+- Órgão:   `GET /api/pncp/v1/orgaos/{cnpj}` → `razaoSocial`.
+- Unidades: `GET /api/pncp/v1/orgaos/{cnpj}/unidades` → `codigoUnidade`,
+  `nomeUnidade`, `municipio.nome`, `municipio.uf.siglaUF`.
+- Itens:   `GET /api/pncp/v1/orgaos/{cnpj}/pca/{ano}/{sequencial}/itens`
+  `?pagina&tamanhoPagina` → array de itens (204 = sequencial vazio).
+  Campos: `descricao`, `quantidade`, `valorUnitario`, `valorTotal`,
+  `unidadeFornecimento`, `classificacaoSuperiorNome`, `categoriaItemPcaNome`,
+  `codigoUnidade`, `nomeUnidade`, `dataPublicacaoPncp`.
+- **Não há** endpoint GET de cabeçalho do PCA (só `POST`); o cabeçalho
+  (`PcaCabecalho`) é derivado dos itens do sequencial.
+- `pcaService` varre os sequenciais 1..30 em paralelo e mantém em cache
+  (`cnpj|ano`) os itens de cada PCA.
 - **Escrita** (módulo futuro "Criar PCA"): PNCP
   `POST /v1/orgaos/{cnpj}/pca/{ano}/{sequencial}/itens` (até 2000 itens/req),
   `PATCH`/`DELETE` no mesmo path.

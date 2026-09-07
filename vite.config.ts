@@ -53,5 +53,21 @@ export default defineConfig({
     // sem isso o Vite responde 403 ao Host: host.docker.internal:5175 usado
     // pelo Document Server (proteção contra DNS rebinding)
     allowedHosts: ['host.docker.internal', 'localhost'],
+    // proxy p/ as APIs públicas de compras (evita CORS no browser).
+    // Em produção usar um backend/edge equivalente.
+    proxy: {
+      '/pncp-api': {
+        target: 'https://pncp.gov.br',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (p) => p.replace(/^\/pncp-api/, ''),
+      },
+      '/compras-api': {
+        target: 'https://dadosabertos.compras.gov.br',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (p) => p.replace(/^\/compras-api/, ''),
+      },
+    },
   },
 })

@@ -199,8 +199,8 @@ export function ImportarPcaModal({ onClose }: { onClose: () => void }) {
                   />
                 </div>
                 <p className="bg-[var(--color-primary-soft)] px-4 py-1.5 text-[11px] text-[var(--color-primary-strong)]">
-                  Unidade: {cab.nomeUnidade} ({cab.codigoUnidade}) • Publicado em {cab.dataPublicacao}{' '}
-                  • Fonte: dados abertos compras.gov.br
+                  Unidade: {cab.nomeUnidade || '—'} ({cab.codigoUnidade || '—'}) • Publicado em{' '}
+                  {cab.dataPublicacao || '—'} • Fonte: PNCP / compras.gov.br
                 </p>
 
                 <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
