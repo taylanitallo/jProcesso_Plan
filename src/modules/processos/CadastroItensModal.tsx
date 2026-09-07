@@ -12,6 +12,8 @@ import {
 import { Combo } from '../../components/common/Combo'
 import { DataTable, type Column } from '../../components/common/DataTable'
 import { EmptyState } from '../../components/common/EmptyState'
+import { TIPOS_ITEM, UNIDADES } from '../catalogo/itemOpcoes'
+import { useCatalogo } from '../../store/catalogo'
 
 type ItemLote = {
   codigo: string
@@ -24,110 +26,6 @@ type ItemLote = {
   total: number
 }
 
-const TIPOS_ITEM = ['Material', 'Serviço']
-const UNIDADES = [
-  'Unidade (Un)',
-  'Quilograma (Kg)',
-  'Metro (m)',
-  'Litro (L)',
-  'Hora (h)',
-  'Metro Cúbico (m³)',
-  'Grama (g)',
-  'Dia (d)',
-  'Posto de Trabalho (PT)',
-  'AMPOLA (AM)',
-  'ANO/ANOS (ANO)',
-  'ARROBA (ARR)',
-  'BARRIL (BAR)',
-  'BALDE (BD)',
-  'BISNAGA (BIS)',
-  'BLOCO (BL)',
-  'BARRICA (BRI)',
-  'BOTIJÃO (BTJ)',
-  'CENTENA (C)',
-  'CARTUCHO (CA)',
-  'CÁPSULA (CAPS)',
-  'CILINDRADA (CC)',
-  'CHAPA (CH)',
-  'CILINDRO (CIL)',
-  'CONJUNTO (CJ)',
-  'CENTÍMETRO (CM)',
-  'CENTIMETRO QUADRADO (CM2)',
-  'CENTÍMETRO CÚBICO (CM3)',
-  'CONTEINER (CO)',
-  'COMPRIMENTO (COMP)',
-  'CÓPIA (CÓPIA)',
-  'CAIXA (CX)',
-  'DIA (DIA)',
-  'DIAS (DIAS)',
-  'DUZIA (DZ)',
-  'FARDO (FD)',
-  'FOLHA (FL)',
-  'FRASCO (FR)',
-  'FRASCO-AMPOLA (FR-AM)',
-  'GALÃO (GL)',
-  'GARRAFA (GRF)',
-  'GARRAFÃO (GRR)',
-  'HECTARE (HA)',
-  'HABITANTES (HAB)',
-  'HORA-AULA (H-AULA)',
-  'HOMEM/HORA (HOMEM/H)',
-  'JOGO (JG)',
-  'QUILOBYTE (KB)',
-  'KILOHERTZ (KHZ)',
-  'QUILOMETRO (KM)',
-  'QUILOWATT-HORA (KWH)',
-  'LIBRA (LB)',
-  'LOTE (LOTE)',
-  'LATA (LT)',
-  'METRO QUADRADO (M2)',
-  'MAÇO (MÇ)',
-  'MICROGRAMA (MCG)',
-  'MÊS/MESES (MÊS)',
-  'MILIGRAMA (MG)',
-  'MILHA (MI)',
-  'MILHEIRO (MIL)',
-  'MINUTO (MIN)',
-  'METRO KILOGRAMAFORÇA (MKGF)',
-  'MILILITRO (ML)',
-  'MILÍMETRO (MM)',
-  'MILÍMETRO QUADRADO (MM2)',
-  'MILIWATT (MW)',
-  'ONÇA (OZ)',
-  'PEÇA (PC)',
-  'PACOTE (PCT)',
-  'PÉ (PE)',
-  'PESSOA / DIA (PE/D)',
-  'PERCENTAGEM (PER)',
-  'POLEGADA (POL)',
-  'POTE (POTE)',
-  'RESMA (RES)',
-  'RENDA MÉDIA/PESSOA (RM/PESS)',
-  'ROLO (RO)',
-  'SACO (SC)',
-  'TONELADA (T)',
-  'TONELADA/KM² (T/KM²)',
-  'TONELADA/PESSOA (T/PESS)',
-  'VEÍCULO/DIA (VEIC/D)',
-  'VEÍCULO/HORA (VEIC/H)',
-  'VEÍCULO/MÊS (VEIC/M)',
-  'VEÍCULO (VEÍCULO)',
-  'POSTO (POSTO)',
-  'PROFISSIONAL (PROFISSIONAL)',
-  'EQUIPE (EQUIPE)',
-  'SERVIÇO (SERVIÇO)',
-  'CHAMADO (CHAMADO)',
-  'ORDEM DE SERVIÇO (ORDEM DE SERVIÇO)',
-]
-
-/** Catálogo de referência para a aba "Catálogo" do formulário de novo item. */
-const CATALOGO_REF = [
-  { nome: 'Papel A4 75g (resma 500 folhas)', tipo: 'Material', unidade: 'Caixa (CX)', unitario: 24.9 },
-  { nome: 'Cadeira de escritório giratória', tipo: 'Material', unidade: 'Unidade (UN)', unitario: 389 },
-  { nome: 'Serviço de manutenção de ar-condicionado', tipo: 'Serviço', unidade: 'Serviço (SV)', unitario: 180 },
-  { nome: 'Cabo de rede CAT6', tipo: 'Material', unidade: 'Metro (M)', unitario: 3.2 },
-  { nome: 'Consultoria técnica especializada', tipo: 'Serviço', unidade: 'Hora (H)', unitario: 250 },
-]
 
 const fmtBRL = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
@@ -142,6 +40,7 @@ const emptyForm = {
 }
 
 export function CadastroItensModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const catalogo = useCatalogo((s) => s.itens)
   const [itens, setItens] = useState<ItemLote[]>([])
   const [view, setView] = useState<'lista' | 'form' | 'importar'>('lista')
   const [origem, setOrigem] = useState<'novo' | 'catalogo'>('novo')
@@ -206,8 +105,15 @@ export function CadastroItensModal({ open, onClose }: { open: boolean; onClose: 
 
   const excluir = (i: number) => setItens((prev) => prev.filter((_, idx) => idx !== i))
 
-  const escolherDoCatalogo = (c: (typeof CATALOGO_REF)[number]) => {
-    setForm((f) => ({ ...f, nome: c.nome, tipo: c.tipo, unidade: c.unidade, unitario: String(c.unitario) }))
+  const escolherDoCatalogo = (c: (typeof catalogo)[number]) => {
+    setForm((f) => ({
+      ...f,
+      nome: c.nome,
+      codigo: c.codigo,
+      especificacoes: c.especificacao,
+      tipo: c.tipo,
+      unidade: c.unidade,
+    }))
     setOrigem('novo')
   }
 
@@ -343,8 +249,10 @@ export function CadastroItensModal({ open, onClose }: { open: boolean; onClose: 
     },
   ]
 
-  const catalogoFiltrado = CATALOGO_REF.filter((c) =>
-    c.nome.toLowerCase().includes(buscaCatalogo.toLowerCase()),
+  const catalogoFiltrado = catalogo.filter(
+    (c) =>
+      c.nome.toLowerCase().includes(buscaCatalogo.toLowerCase()) ||
+      c.codigo.toLowerCase().includes(buscaCatalogo.toLowerCase()),
   )
 
   return (
@@ -454,21 +362,30 @@ export function CadastroItensModal({ open, onClose }: { open: boolean; onClose: 
                   />
                 </div>
                 <ul className="flex max-h-64 flex-col gap-2 overflow-y-auto">
+                  {catalogoFiltrado.length === 0 && (
+                    <li className="py-4 text-center text-xs text-[var(--color-muted)]">
+                      Nenhum item no catálogo. Cadastre em Catálogo de Itens.
+                    </li>
+                  )}
                   {catalogoFiltrado.map((c) => (
-                    <li key={c.nome}>
+                    <li key={c.id}>
                       <button
                         onClick={() => escolherDoCatalogo(c)}
-                        className="flex w-full items-center gap-3 rounded-[var(--radius-control)] border border-[var(--color-line)] px-3 py-2.5 text-left transition hover:bg-[var(--color-primary-soft)]"
+                        className="flex w-full items-start gap-3 rounded-[var(--radius-control)] border border-[var(--color-line)] px-3 py-2.5 text-left transition hover:bg-[var(--color-primary-soft)]"
                       >
-                        <Package size={16} className="shrink-0 text-[var(--color-primary-strong)]" />
+                        <Package size={16} className="mt-0.5 shrink-0 text-[var(--color-primary-strong)]" />
                         <span className="min-w-0 flex-1">
-                          <span className="block text-sm font-semibold text-[var(--color-ink)]">{c.nome}</span>
-                          <span className="block text-xs text-[var(--color-muted)]">
-                            {c.tipo} • {c.unidade}
+                          <span className="block text-sm font-semibold text-[var(--color-ink)]">
+                            {c.nome}
                           </span>
-                        </span>
-                        <span className="shrink-0 text-sm font-bold text-[var(--color-primary-strong)]">
-                          R$ {fmtBRL(c.unitario)}
+                          {c.especificacao && (
+                            <span className="block text-xs text-[var(--color-muted)]">
+                              {c.especificacao}
+                            </span>
+                          )}
+                          <span className="mt-0.5 block text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                            Cód. {c.codigo} • {c.tipo} • {c.unidade}
+                          </span>
                         </span>
                       </button>
                     </li>
