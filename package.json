@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "@syncfusion/ej2": "^34.2.6",
-    "@syncfusion/ej2-locale": "^34.2.2",
     "@syncfusion/ej2-react-documenteditor": "^34.2.6",
     "chart.js": "^4.5.1",
     "jspdf": "^4.2.1",
