@@ -1,19 +1,29 @@
 import type { ReactNode } from 'react'
-import { CalendarCheck, X } from 'lucide-react'
+import { CalendarCheck, Clock, FileText, X } from 'lucide-react'
+
+export type PendingItem = {
+  id: string
+  titulo: string
+  processo: string
+  status: string
+  quando?: string
+}
 
 /** Wide modal with blue→green gradient header used by Revisões / Aprovações / Assinaturas. */
 export function PendingModal({
   open,
   onClose,
   title,
-  count = 0,
   icon,
+  items = [],
+  onOpen,
 }: {
   open: boolean
   onClose: () => void
   title: string
-  count?: number
   icon: ReactNode
+  items?: PendingItem[]
+  onOpen?: (id: string) => void
 }) {
   if (!open) return null
   return (
@@ -36,16 +46,54 @@ export function PendingModal({
           <span className="grid h-11 w-11 place-items-center rounded-[12px] bg-white/20">{icon}</span>
           <div>
             <h3 className="font-display text-lg font-bold">{title}</h3>
-            <p className="text-sm text-white/80">{count} itens</p>
+            <p className="text-sm text-white/80">{items.length} item{items.length === 1 ? '' : 's'}</p>
           </div>
         </header>
-        <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
-          <CalendarCheck size={30} className="text-[var(--color-muted)]" />
-          <p className="font-display text-base font-bold text-[#183263]">Nenhum item pendente</p>
-          <p className="text-sm text-[var(--color-muted)]">
-            Não há artefatos aguardando ação nesse filtro.
-          </p>
-        </div>
+
+        {items.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
+            <CalendarCheck size={30} className="text-[var(--color-muted)]" />
+            <p className="font-display text-base font-bold text-[#183263]">Nenhum item pendente</p>
+            <p className="text-sm text-[var(--color-muted)]">
+              Não há artefatos aguardando ação nesse filtro.
+            </p>
+          </div>
+        ) : (
+          <ul className="space-y-3 p-6">
+            {items.map((it) => (
+              <li
+                key={it.id}
+                className="rounded-[var(--radius-card)] border border-[var(--color-line)] p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] bg-[#ede9fe] text-[#7c3aed]">
+                      <FileText size={17} />
+                    </span>
+                    <div>
+                      <p className="font-display text-sm font-bold text-[#183263]">{it.titulo}</p>
+                      <p className="mt-0.5 flex items-center gap-1 text-xs text-[var(--color-muted)]">
+                        <Clock size={12} /> {it.quando || '--/--/----'}
+                      </p>
+                      <p className="mt-0.5 text-xs text-[var(--color-muted)]">
+                        Processo: <span className="font-semibold">{it.processo}</span>
+                      </p>
+                    </div>
+                  </div>
+                  <span className="shrink-0 rounded-[var(--radius-pill)] bg-[#d7f5ea] px-2.5 py-1 text-[11px] font-bold text-[var(--color-success)]">
+                    {it.status}
+                  </span>
+                </div>
+                <button
+                  onClick={() => onOpen?.(it.id)}
+                  className="mt-2 text-xs font-semibold text-[var(--color-primary)]"
+                >
+                  Ver detalhes →
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   )

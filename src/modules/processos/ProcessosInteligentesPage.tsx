@@ -21,6 +21,7 @@ import { NovoProcessoModal } from './NovoProcessoModal'
 import { ProcessoWizardModal } from './ProcessoWizardModal'
 import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 import { PROCESSOS } from '../../mocks'
+import { useRevisoes, revisoesPendentes } from '../../store/revisoes'
 
 type Row = (typeof PROCESSOS)[number]
 
@@ -57,6 +58,9 @@ export function ProcessosInteligentesPage() {
   >('none')
   const [criarOpen, setCriarOpen] = useState(false)
   const criarRef = useRef<HTMLDivElement>(null)
+
+  const revisoes = useRevisoes((s) => s.revisoes)
+  const pendentes = revisoesPendentes(revisoes)
 
   useEffect(() => {
     if (!criarOpen) return
@@ -202,6 +206,17 @@ export function ProcessosInteligentesPage() {
         onClose={() => setModal('none')}
         title="Revisões pendentes"
         icon={<PenLine size={20} />}
+        items={pendentes.map((v) => ({
+          id: v.id,
+          titulo: v.artefato,
+          processo: v.processoNome,
+          status: v.status,
+          quando: v.enviadoEm,
+        }))}
+        onOpen={(id) => {
+          setModal('none')
+          navigate(`/RevisaoProcesso/${id}`)
+        }}
       />
       <PendingModal
         open={modal === 'aprovacoes'}

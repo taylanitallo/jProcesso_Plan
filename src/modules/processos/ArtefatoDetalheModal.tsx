@@ -18,6 +18,7 @@ import { Combo } from '../../components/common/Combo'
 import { FormularioModal } from './FormularioModal'
 import { OnlyOfficeEditorModal } from '../../components/common/OnlyOfficeEditorModal'
 import { PROCESSO_ARTEFATOS, PROCESSOS, USUARIOS_NOMES } from '../../mocks'
+import { useRevisoes } from '../../store/revisoes'
 
 const ACOES = [
   'Upload',
@@ -66,6 +67,7 @@ export function ArtefatoDetalheModal({
   artefato: string | null
   onClose: () => void
 }) {
+  const abrirRevisao = useRevisoes((s) => s.abrir)
   const [responsavel, setResponsavel] = useState('')
   const [sub, setSub] = useState<Sub>(null)
   const [email, setEmail] = useState('')
@@ -324,8 +326,18 @@ export function ArtefatoDetalheModal({
       {revisaoOpen && (
         <EnviarRevisaoModal
           onClose={() => setRevisaoOpen(false)}
-          onEnviar={() => {
-            registrar('Enviado para revisão', 'Revisão', 'Aguardando revisor')
+          onEnviar={(revisores) => {
+            abrirRevisao({
+              artefato,
+              artefatoCurto: info?.nome ?? artefato,
+              numeroArtefato: processo.numero.padStart(2, '0'),
+              processoId: processo.id,
+              processoNome: processo.nome,
+              processoNumero: processo.numero,
+              docUrl,
+              revisores,
+            })
+            registrar('Enviado para revisão', 'Revisão', `Designados: ${revisores.join(', ')}`)
             setRevisaoOpen(false)
           }}
         />
@@ -576,7 +588,7 @@ function EnviarRevisaoModal({
   onEnviar,
 }: {
   onClose: () => void
-  onEnviar: () => void
+  onEnviar: (revisores: string[]) => void
 }) {
   const [busca, setBusca] = useState('')
   const [selecionados, setSelecionados] = useState<string[]>([])
@@ -700,7 +712,7 @@ function EnviarRevisaoModal({
             Cancelar
           </button>
           <button
-            onClick={onEnviar}
+            onClick={() => onEnviar(selecionados)}
             disabled={!podeEnviar}
             className="flex-[2] rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] py-2.5 text-sm font-bold uppercase tracking-wide text-white disabled:cursor-not-allowed disabled:opacity-50"
           >

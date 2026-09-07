@@ -14,6 +14,7 @@ import { ProcessoDetailPage } from '../modules/processos/ProcessoDetailPage'
 import { ProcessosWorkflowPage } from '../modules/processos/ProcessosWorkflowPage'
 import { WorkflowDetailPage } from '../modules/processos/WorkflowDetailPage'
 import { ModeloPersonalizadoPage } from '../modules/processos/ModeloPersonalizadoPage'
+import { RevisaoProcessoPage } from '../modules/processos/RevisaoProcessoPage'
 import { SollAcademyPage } from '../modules/academy/SollAcademyPage'
 import { NormativaPage } from '../modules/normativa/NormativaPage'
 import { GerenciarUsuariosPage } from '../modules/usuario/GerenciarUsuariosPage'
@@ -48,6 +49,7 @@ export const router = createBrowserRouter([
       { path: 'ProcessosWorkflow', element: <ProcessosWorkflowPage /> },
       { path: 'Workflow/:id', element: <WorkflowDetailPage /> },
       { path: 'ModeloPersonalizado', element: <ModeloPersonalizadoPage /> },
+      { path: 'RevisaoProcesso/:id', element: <RevisaoProcessoPage /> },
 
       { path: 'SollAcademy', element: <SollAcademyPage /> },
       { path: 'Normativa', element: <NormativaPage /> },
