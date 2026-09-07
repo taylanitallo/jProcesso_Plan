@@ -15,7 +15,7 @@ import { EmptyState } from '../../components/common/EmptyState'
 
 type ItemLote = {
   codigo: string
-  sequencia: string
+  especificacoes: string
   nome: string
   tipo: string
   unidade: string
@@ -131,7 +131,15 @@ const CATALOGO_REF = [
 
 const fmtBRL = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-const emptyForm = { nome: '', codigo: '', referencia: '', tipo: '', unidade: '', qtd: '', unitario: '' }
+const emptyForm = {
+  nome: '',
+  codigo: '',
+  especificacoes: '',
+  tipo: '',
+  unidade: '',
+  qtd: '',
+  unitario: '',
+}
 
 export function CadastroItensModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [itens, setItens] = useState<ItemLote[]>([])
@@ -185,7 +193,7 @@ export function CadastroItensModal({ open, onClose }: { open: boolean; onClose: 
     setForm({
       nome: it.nome,
       codigo: it.codigo,
-      referencia: it.sequencia,
+      especificacoes: it.especificacoes,
       tipo: it.tipo,
       unidade: it.unidade,
       qtd: String(it.qtd),
@@ -207,7 +215,7 @@ export function CadastroItensModal({ open, onClose }: { open: boolean; onClose: 
     if (!form.nome.trim() || !form.codigo.trim() || !form.tipo || !form.unidade) return
     const novo: ItemLote = {
       codigo: form.codigo.trim(),
-      sequencia: form.referencia.trim() || String(itens.length + 1),
+      especificacoes: form.especificacoes.trim(),
       nome: form.nome.trim(),
       tipo: form.tipo,
       unidade: form.unidade,
@@ -228,11 +236,11 @@ export function CadastroItensModal({ open, onClose }: { open: boolean; onClose: 
 
   const exportarExcel = () => {
     const linhas = [
-      ['Código', 'Sequência', 'Nome', 'Tipo', 'Unidade', 'Qtd.', 'Unitário (R$)', 'Total (R$)'],
+      ['Código', 'Nome', 'Especificações', 'Tipo', 'Unidade', 'Qtd.', 'Unitário (R$)', 'Total (R$)'],
       ...itens.map((i) => [
         i.codigo,
-        i.sequencia,
         i.nome,
+        i.especificacoes,
         i.tipo,
         i.unidade,
         String(i.qtd),
@@ -263,12 +271,12 @@ export function CadastroItensModal({ open, onClose }: { open: boolean; onClose: 
       }
       const novos: ItemLote[] = linhas.slice(1).map((linha, idx) => {
         const cols = linha.split(/[;,]/).map((c) => c.replace(/^"|"$/g, '').trim())
-        const [codigo, sequencia, nome, tipo, unidade, qtd, unitario] = cols
+        const [codigo, nome, especificacoes, tipo, unidade, qtd, unitario] = cols
         const q = Number(qtd) || 0
         const u = Number(unitario) || 0
         return {
           codigo: codigo || `IMP-${idx + 1}`,
-          sequencia: sequencia || String(itens.length + idx + 1),
+          especificacoes: especificacoes || '',
           nome: nome || 'Item importado',
           tipo: tipo || 'Material',
           unidade: unidade || 'Unidade (UN)',
@@ -288,8 +296,21 @@ export function CadastroItensModal({ open, onClose }: { open: boolean; onClose: 
 
   const cols: Column<ItemLote>[] = [
     { key: 'codigo', header: 'Código' },
-    { key: 'sequencia', header: 'Sequência' },
-    { key: 'nome', header: 'Nome' },
+    {
+      key: 'nome',
+      header: 'Nome',
+      render: (r) => (
+        <div className="max-w-[420px]">
+          <p className="font-bold text-[var(--color-ink)]">{r.nome}</p>
+          {r.especificacoes && (
+            <p className="mt-0.5 max-h-16 resize-y overflow-auto whitespace-pre-wrap text-xs text-[var(--color-muted)]">
+              <span className="font-semibold">Especificações: </span>
+              {r.especificacoes}
+            </p>
+          )}
+        </div>
+      ),
+    },
     { key: 'unidade', header: 'Unidade', align: 'center' },
     { key: 'qtd', header: 'Qtd.', align: 'center' },
     { key: 'unitario', header: 'Unitário (R$)', align: 'right', render: (r) => fmtBRL(r.unitario) },
@@ -462,9 +483,9 @@ export function CadastroItensModal({ open, onClose }: { open: boolean; onClose: 
                 </p>
 
                 <div className="grid gap-4 sm:grid-cols-3">
-                  <Field
+                  <TextAreaField
                     label="Nome do item"
-                    placeholder="Ex: Parafuso galvanizado"
+                    placeholder="Ex: NOTEBOOK AVANÇADO"
                     value={form.nome}
                     onChange={(v) => setForm((f) => ({ ...f, nome: v }))}
                   />
@@ -474,11 +495,11 @@ export function CadastroItensModal({ open, onClose }: { open: boolean; onClose: 
                     value={form.codigo}
                     onChange={(v) => setForm((f) => ({ ...f, codigo: v }))}
                   />
-                  <Field
-                    label="Referência"
-                    placeholder="Ex: 0003"
-                    value={form.referencia}
-                    onChange={(v) => setForm((f) => ({ ...f, referencia: v }))}
+                  <TextAreaField
+                    label="Especificações"
+                    placeholder="Ex: Tela 15.6, 16GB RAM, SSD 512GB…"
+                    value={form.especificacoes}
+                    onChange={(v) => setForm((f) => ({ ...f, especificacoes: v }))}
                   />
                   <Labelled label="Tipo de item">
                     <Combo value={form.tipo} onChange={(v) => setForm((f) => ({ ...f, tipo: v }))} options={TIPOS_ITEM} placeholder="Selecione" />
@@ -572,8 +593,8 @@ export function CadastroItensModal({ open, onClose }: { open: boolean; onClose: 
           <div>
             <h4 className="font-display text-sm font-bold text-[#183263]">Importar itens de uma planilha</h4>
             <p className="mb-3 text-xs text-[var(--color-muted)]">
-              Envie um arquivo .csv com as colunas: Código, Sequência, Nome, Tipo, Unidade, Qtd.,
-              Unitário.
+              Envie um arquivo .csv com as colunas: Código, Nome, Especificações, Tipo, Unidade,
+              Qtd., Unitário.
             </p>
 
             <label className="flex cursor-pointer flex-col items-center gap-2 rounded-[var(--radius-control)] border-2 border-dashed border-[#c9d6ea] bg-[#f7f9fc] px-4 py-10 text-center">
@@ -683,6 +704,31 @@ function Field({
         onChange={(e) => onChange(e.target.value)}
         className="gt-input min-w-0 font-normal normal-case"
         {...rest}
+      />
+    </label>
+  )
+}
+
+function TextAreaField({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  placeholder?: string
+}) {
+  return (
+    <label className="flex min-w-0 flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
+      {label}
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        rows={2}
+        className="gt-input min-w-0 resize-y font-normal normal-case"
       />
     </label>
   )
