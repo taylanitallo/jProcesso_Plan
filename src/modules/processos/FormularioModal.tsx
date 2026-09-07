@@ -100,7 +100,7 @@ export function FormularioModal({
       onClick={onClose}
     >
       <div
-        className="relative my-4 max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[20px] bg-white p-5 shadow-[var(--shadow-pop)] sm:p-6"
+        className="relative my-4 max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-[20px] bg-white p-5 shadow-[var(--shadow-pop)] sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <button
