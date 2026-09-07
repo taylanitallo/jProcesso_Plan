@@ -97,6 +97,31 @@ export function ProcessoDetailPage() {
     showToast('Download iniciado.')
   }
 
+  const gerarDocumentosPdf = async () => {
+    const { jsPDF } = await import('jspdf')
+    const doc = new jsPDF()
+    const margin = 20
+    const largura = doc.internal.pageSize.getWidth() - margin * 2
+
+    doc.setFontSize(16)
+    doc.text(`Processo N.º ${numero}`, margin, margin)
+    doc.setFontSize(11)
+    doc.text(`${nome} — ${tipo}`, margin, margin + 8)
+
+    PROCESSO_ARTEFATOS.forEach((a, i) => {
+      doc.addPage()
+      doc.setFontSize(14)
+      doc.text(`${i + 1}. ${a.nome}`, margin, margin)
+      doc.setFontSize(11)
+      const linhas = doc.splitTextToSize(a.completo, largura)
+      doc.text(linhas, margin, margin + 10)
+      doc.setFontSize(10)
+      doc.text(`Status: ${a.enviado ? 'Enviado' : 'Não designado'}`, margin, margin + 22)
+    })
+
+    doc.save(`Processo_${numero}_Unificado.pdf`)
+  }
+
   const MAIS_OPCOES = [
     {
       key: 'editar',
@@ -362,12 +387,13 @@ export function ProcessoDetailPage() {
       {pdfConfirm && (
         <ConfirmDialog
           titulo="Gerar Documentos em PDF?"
-          descricao="Todos os documentos enviados deste processo serão convertidos para PDF."
+          descricao="Um único PDF será gerado, com os artefatos na sequência do processo."
           confirmLabel="Gerar Documentos"
           onCancel={() => setPdfConfirm(false)}
           onConfirm={() => {
             setPdfConfirm(false)
-            showToast('Geração de PDF iniciada.')
+            gerarDocumentosPdf()
+            showToast('PDF gerado com sucesso.')
           }}
         />
       )}
