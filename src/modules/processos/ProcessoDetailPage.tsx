@@ -23,7 +23,7 @@ import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 import { ArtefatoDetalheModal } from './ArtefatoDetalheModal'
 import { MapaRiscoModal } from './MapaRiscoModal'
 import { CadastroItensModal } from './CadastroItensModal'
-import { PROCESSO_ARTEFATOS, PROCESSOS, PROCESSO_TIPOS, USUARIOS_NOMES } from '../../mocks'
+import { PROCESSO_ARTEFATOS, PROCESSOS, USUARIOS_NOMES } from '../../mocks'
 
 export function ProcessoDetailPage() {
   useModuleLinks(PROCESSOS_MODULE_LINKS)
@@ -36,7 +36,10 @@ export function ProcessoDetailPage() {
   const [chatOpen, setChatOpen] = useState(false)
 
   const [nome, setNome] = useState(proc.nome)
-  const [tipo, setTipo] = useState(proc.tipo)
+  const [tipo] = useState(proc.tipo)
+  const [numero, setNumero] = useState(proc.numero)
+  const [loteUnico, setLoteUnico] = useState('Sim')
+  const [descricao, setDescricao] = useState('')
   const [finalizado, setFinalizado] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
@@ -73,13 +76,13 @@ export function ProcessoDetailPage() {
       return
     }
     const linhas = enviados.map((a) => `${a.nome} — ${a.completo}`).join('\n')
-    const blob = new Blob([`Documentos do Processo N.º ${proc.numero}\n\n${linhas}\n`], {
+    const blob = new Blob([`Documentos do Processo N.º ${numero}\n\n${linhas}\n`], {
       type: 'text/plain;charset=utf-8;',
     })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `processo-${proc.numero}-documentos.txt`
+    a.download = `processo-${numero}-documentos.txt`
     document.body.appendChild(a)
     a.click()
     a.remove()
@@ -153,7 +156,7 @@ export function ProcessoDetailPage() {
       {/* Cabeçalho do processo */}
       <div className="flex flex-wrap items-center gap-3 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-4 shadow-[var(--shadow-card)]">
         <h3 className="border-l-4 border-[var(--color-primary)] pl-2 font-display text-sm font-bold text-[#183263]">
-          Processo N.º <span className="text-base">{proc.numero}</span>
+          Processo N.º <span className="text-base">{numero}</span>
         </h3>
         <span className="text-xs font-semibold text-[var(--color-ink)]">{nome}</span>
         <span className="rounded-[var(--radius-pill)] border border-[#bcd0ee] bg-[var(--color-primary-soft)] px-2 py-0.5 text-[11px] font-semibold text-[var(--color-primary-strong)]">
@@ -268,15 +271,26 @@ export function ProcessoDetailPage() {
       {/* Editar processo */}
       {editOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(9,21,44,0.4)] p-4"
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[rgba(9,21,44,0.4)] p-4 sm:p-8"
           onClick={() => setEditOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-[16px] bg-white p-6 shadow-[var(--shadow-pop)]"
+            className="my-4 w-full max-w-2xl rounded-[20px] bg-white p-6 shadow-[var(--shadow-pop)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="font-display text-base font-bold text-[#183263]">Editar Processo</h3>
-            <div className="mt-4 flex flex-col gap-4">
+            <div className="flex items-start gap-3">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[12px] bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)]">
+                <SquarePen size={20} />
+              </span>
+              <div>
+                <h3 className="font-display text-base font-bold text-[#183263]">Edição de Processo</h3>
+                <p className="text-xs text-[var(--color-muted)]">
+                  Atualize os dados principais do processo com poucos cliques.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 flex flex-col gap-4">
               <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
                 Nome do Processo
                 <input
@@ -285,28 +299,43 @@ export function ProcessoDetailPage() {
                   className="gt-input font-normal normal-case"
                 />
               </label>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
+                  Número do Processo
+                  <input
+                    value={numero}
+                    onChange={(e) => setNumero(e.target.value)}
+                    className="gt-input font-normal normal-case"
+                  />
+                </label>
+                <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
+                  Lote Único
+                  <Combo value={loteUnico} onChange={setLoteUnico} options={['Sim', 'Não']} placeholder="Selecione" />
+                </label>
+              </div>
+
               <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
-                Tipo de Processo
-                <Combo value={tipo} onChange={setTipo} options={PROCESSO_TIPOS} placeholder="Selecione" />
+                Descrição do Processo
+                <textarea
+                  rows={4}
+                  maxLength={500}
+                  value={descricao}
+                  onChange={(e) => setDescricao(e.target.value)}
+                  className="gt-input resize-y font-normal normal-case"
+                />
               </label>
             </div>
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                onClick={() => setEditOpen(false)}
-                className="rounded-[var(--radius-control)] px-4 py-2 text-sm font-semibold text-[var(--color-muted)]"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => {
-                  setEditOpen(false)
-                  showToast('Processo atualizado.')
-                }}
-                className="rounded-[var(--radius-control)] bg-[var(--color-primary)] px-5 py-2 text-sm font-semibold text-white"
-              >
-                Salvar
-              </button>
-            </div>
+
+            <button
+              onClick={() => {
+                setEditOpen(false)
+                showToast('Processo atualizado.')
+              }}
+              className="mt-5 w-full rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] py-2.5 text-sm font-bold uppercase tracking-wide text-white"
+            >
+              Salvar Alterações
+            </button>
           </div>
         </div>
       )}
@@ -359,7 +388,7 @@ export function ProcessoDetailPage() {
                 </span>
                 <div>
                   <p className="font-display text-sm font-bold text-[#183263]">Analisar com IA</p>
-                  <p className="text-[11px] text-[var(--color-muted)]">Processo N.º {proc.numero}</p>
+                  <p className="text-[11px] text-[var(--color-muted)]">Processo N.º {numero}</p>
                 </div>
               </div>
               <button
