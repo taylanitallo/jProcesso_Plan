@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   Bell,
   BookText,
+  CalendarRange,
   ClipboardList,
   Database,
   DatabaseBackup,
@@ -31,6 +32,7 @@ const ICONS: Record<string, LucideIcon> = {
   workflow: Workflow,
   modelo: FilePenLine,
   normativa: DatabaseBackup,
+  pca: CalendarRange,
 }
 
 export function TopBar() {

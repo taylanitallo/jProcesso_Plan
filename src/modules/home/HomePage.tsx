@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   BookOpen,
   Boxes,
+  CalendarRange,
   ClipboardList,
   FileSearch,
   FolderKanban,
@@ -65,6 +66,12 @@ const PROCESSOS: CardDef[] = [
     description: 'Registre demandas do setor para contratação.',
     icon: ClipboardList,
     to: '/RegistroNecessidade',
+  },
+  {
+    title: 'Criar PCA',
+    description: 'Monte um Plano de Contratação Anual localmente antes de enviar ao PNCP.',
+    icon: CalendarRange,
+    to: '/CriarPca',
   },
   {
     title: 'Analisadores de Processos',

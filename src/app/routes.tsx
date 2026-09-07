@@ -7,6 +7,7 @@ import { ResearchPage } from '../modules/chat/ResearchPage'
 import { AnalisadoresPage } from '../modules/analisadores/AnalisadoresPage'
 import { CatalogoItensPage } from '../modules/catalogo/CatalogoItensPage'
 import { RegistroNecessidadePage } from '../modules/necessidades/RegistroNecessidadePage'
+import { CriarPcaPage } from '../modules/pca/CriarPcaPage'
 import { ProcessosInteligentesPage } from '../modules/processos/ProcessosInteligentesPage'
 import { DashboardProcessoPage } from '../modules/processos/DashboardProcessoPage'
 import { StatusArtefatosPage } from '../modules/processos/StatusArtefatosPage'
@@ -42,6 +43,7 @@ export const router = createBrowserRouter([
 
       { path: 'CatalogoItens', element: <CatalogoItensPage /> },
       { path: 'RegistroNecessidade', element: <RegistroNecessidadePage /> },
+      { path: 'CriarPca', element: <CriarPcaPage /> },
       { path: 'processosinteligentes', element: <ProcessosInteligentesPage /> },
       { path: 'DashboardProcesso', element: <DashboardProcessoPage /> },
       { path: 'StatusArtefatos', element: <StatusArtefatosPage /> },
