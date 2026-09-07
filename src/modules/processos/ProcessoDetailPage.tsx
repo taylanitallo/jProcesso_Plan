@@ -260,13 +260,13 @@ export function ProcessoDetailPage() {
           <p className="mt-1 text-[11px] text-white/70">{pct}% concluído</p>
         </div>
 
-        <ol className="flex gap-3 overflow-x-auto p-3">
+        <ol className="grid grid-cols-2 gap-3 p-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {PROCESSO_ARTEFATOS.map((a) => (
-            <li key={a.nome} className="shrink-0">
+            <li key={a.nome}>
               <button
                 onClick={() => abrirArtefato(a)}
                 title={a.completo}
-                className={`flex w-[184px] flex-col gap-1.5 rounded-[14px] border p-3 text-left transition hover:shadow-[var(--shadow-card)] ${
+                className={`flex w-full flex-col gap-1.5 rounded-[14px] border p-3 text-left transition hover:shadow-[var(--shadow-card)] ${
                   a.enviado ? 'border-[#a9d9c1] bg-[#eefaf3]' : 'border-[#eccb87] bg-[#fdf6e6]'
                 }`}
               >
