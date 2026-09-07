@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import JSZip from 'jszip'
 import {
   Check,
   Clock,
@@ -69,20 +70,26 @@ export function ProcessoDetailPage() {
     else setArtefato(a.completo)
   }
 
-  const baixarDocumentos = () => {
+  const baixarDocumentos = async () => {
     const enviados = PROCESSO_ARTEFATOS.filter((a) => a.enviado)
     if (enviados.length === 0) {
       showToast('Nenhum documento enviado para compactar.')
       return
     }
-    const linhas = enviados.map((a) => `${a.nome} — ${a.completo}`).join('\n')
-    const blob = new Blob([`Documentos do Processo N.º ${numero}\n\n${linhas}\n`], {
-      type: 'text/plain;charset=utf-8;',
-    })
+    const zip = new JSZip()
+    const pasta = zip.folder(`Processo_${numero}_Documentos`)!
+    for (const a of enviados) {
+      const arquivo = a.nome.replace(/[\\/]/g, '-').replace(/\s+/g, '_')
+      pasta.file(
+        `${arquivo}.txt`,
+        `${a.completo}\nProcesso N.º ${numero}\nStatus: Enviado\n`,
+      )
+    }
+    const blob = await zip.generateAsync({ type: 'blob' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `processo-${numero}-documentos.txt`
+    a.download = `Processo_${numero}_Documentos.zip`
     document.body.appendChild(a)
     a.click()
     a.remove()
