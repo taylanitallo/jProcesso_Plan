@@ -41,6 +41,14 @@ export function ArtefatoDetalheModal({
   const [sub, setSub] = useState<Sub>(null)
   const [email, setEmail] = useState('')
   const [verDoc, setVerDoc] = useState(false)
+  const [historico, setHistorico] = useState<string[]>(['Artefato enviado - 22/12/2025 às 00:22'])
+
+  const registrar = (evento: string) => {
+    const agora = new Date()
+    const data = agora.toLocaleDateString('pt-BR')
+    const hora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    setHistorico((prev) => [`${evento} - ${data} às ${hora}`, ...prev])
+  }
 
   if (!artefato) return null
 
@@ -134,17 +142,19 @@ export function ArtefatoDetalheModal({
           </div>
 
           <Secao icon={<History size={15} />} titulo="Histórico">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs text-[var(--color-muted)]">
-                Artefato enviado - 22/12/2025 às 00:22
-              </p>
-              <button
-                aria-label="Baixar versão"
-                className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--color-line)] text-[var(--color-muted)]"
-              >
-                <Download size={13} />
-              </button>
-            </div>
+            <ul className="flex flex-col gap-2">
+              {historico.map((h, i) => (
+                <li key={`${h}-${i}`} className="flex items-center justify-between gap-2">
+                  <p className="text-xs text-[var(--color-muted)]">{h}</p>
+                  <button
+                    aria-label="Baixar versão"
+                    className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--color-line)] text-[var(--color-muted)]"
+                  >
+                    <Download size={13} />
+                  </button>
+                </li>
+              ))}
+            </ul>
           </Secao>
 
           <Secao icon={<ListChecks size={15} />} titulo="Status">
@@ -155,7 +165,11 @@ export function ArtefatoDetalheModal({
         </div>
       </div>
 
-      <FormularioModal artefato={sub === 'form' ? artefato : null} onClose={() => setSub(null)} />
+      <FormularioModal
+        artefato={sub === 'form' ? artefato : null}
+        onClose={() => setSub(null)}
+        onSalvar={() => registrar('Preenchimento manual concluído')}
+      />
       <OnlyOfficeEditorModal titulo={verDoc ? artefato : null} onClose={() => setVerDoc(false)} />
 
       {sub === 'solicitar' && (
@@ -177,7 +191,10 @@ export function ArtefatoDetalheModal({
               Cancelar
             </button>
             <button
-              onClick={() => setSub(null)}
+              onClick={() => {
+                registrar('Solicitação de envio enviada')
+                setSub(null)
+              }}
               className="rounded-[var(--radius-control)] bg-[var(--color-primary)] px-5 py-2 text-sm font-semibold text-white"
             >
               Enviar
@@ -204,7 +221,10 @@ export function ArtefatoDetalheModal({
           <p className="mt-2 text-center text-sm text-[var(--color-muted)]">Deseja continuar?</p>
           <div className="mt-4 flex justify-center gap-2">
             <button
-              onClick={() => setSub(null)}
+              onClick={() => {
+                registrar('Geração por IA iniciada')
+                setSub(null)
+              }}
               className="rounded-[var(--radius-control)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
             >
               Sim, Gerar Artefato
@@ -252,7 +272,10 @@ export function ArtefatoDetalheModal({
           </p>
 
           <button
-            onClick={() => setSub(null)}
+            onClick={() => {
+              registrar('Gerar por Arquivo')
+              setSub(null)
+            }}
             className="mt-4 w-full rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] py-2.5 text-sm font-bold text-white"
           >
             Enviar
@@ -260,12 +283,26 @@ export function ArtefatoDetalheModal({
         </MiniDialog>
       )}
 
-      {sub === 'upload' && <UploadArtefatoDialog nome={artefato} onClose={() => setSub(null)} />}
+      {sub === 'upload' && (
+        <UploadArtefatoDialog
+          nome={artefato}
+          onClose={() => setSub(null)}
+          onEnviar={() => registrar('Artefato enviado')}
+        />
+      )}
     </div>
   )
 }
 
-function UploadArtefatoDialog({ nome, onClose }: { nome: string; onClose: () => void }) {
+function UploadArtefatoDialog({
+  nome,
+  onClose,
+  onEnviar,
+}: {
+  nome: string
+  onClose: () => void
+  onEnviar: () => void
+}) {
   const [arquivo, setArquivo] = useState<File | null>(null)
 
   return (
@@ -297,7 +334,10 @@ function UploadArtefatoDialog({ nome, onClose }: { nome: string; onClose: () => 
           Cancelar
         </button>
         <button
-          onClick={onClose}
+          onClick={() => {
+            onEnviar()
+            onClose()
+          }}
           disabled={!arquivo}
           className="rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-6 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
         >

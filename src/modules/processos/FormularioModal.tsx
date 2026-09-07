@@ -82,9 +82,11 @@ const DFD_SECOES: Secao[] = [
 export function FormularioModal({
   artefato,
   onClose,
+  onSalvar,
 }: {
   artefato: string | null
   onClose: () => void
+  onSalvar?: () => void
 }) {
   const [step, setStep] = useState(0)
   const secoes = useMemo(() => DFD_SECOES, [])
@@ -169,7 +171,10 @@ export function FormularioModal({
           </button>
           <div className="flex gap-2">
             <button
-              onClick={onClose}
+              onClick={() => {
+                onSalvar?.()
+                onClose()
+              }}
               className="rounded-[var(--radius-control)] border border-[#bcd0ee] bg-white px-4 py-2 text-sm font-semibold text-[var(--color-primary-strong)]"
             >
               Salvar Formulário
