@@ -261,6 +261,7 @@ export function ArtefatoDetalheModal({
                     {h.evento} - {h.data}
                   </p>
                   <button
+                    onClick={baixarDoc}
                     aria-label="Baixar versão"
                     className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-[var(--color-line)] text-[var(--color-muted)]"
                   >
