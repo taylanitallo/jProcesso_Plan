@@ -73,7 +73,10 @@ const OnlyOfficeEditor = memo(function OnlyOfficeEditor({
     loadOnlyOfficeScript()
       .then(() => {
         if (cancelled || !window.DocsAPI) return
-        const key = `${titulo}-${Date.now()}`.replace(/[^\w-]/g, '').slice(0, 40)
+        // chave ÚNICA por abertura — precisa ser curta e o token variável tem
+        // que vir primeiro (senão o slice(40) corta o timestamp e o Document
+        // Server serve o cache do 1º documento aberto, ignorando a nova url).
+        const key = `k${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`
         instance = new window.DocsAPI.DocEditor(containerId, {
           documentType,
           document: {

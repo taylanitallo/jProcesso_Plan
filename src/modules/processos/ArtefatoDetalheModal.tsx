@@ -94,6 +94,16 @@ export function ArtefatoDetalheModal({
     ])
   }
 
+  const baixarDoc = () => {
+    const href = docUrl || '/modelos/termo-referencia.docx'
+    const a = document.createElement('a')
+    a.href = href
+    a.download = href.split('/').pop() || 'documento.docx'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+  }
+
   if (!artefato) return null
 
   const info = PROCESSO_ARTEFATOS.find((a) => a.completo === artefato)
@@ -202,7 +212,10 @@ export function ArtefatoDetalheModal({
 
         <div className="mb-4 rounded-[var(--radius-control)] bg-[#eef3fb] p-4">
           <div className="flex flex-wrap justify-center gap-3">
-            <button className="inline-flex items-center justify-center gap-2 rounded-[var(--radius-control)] bg-[var(--color-success)] px-5 py-2.5 text-sm font-semibold text-white">
+            <button
+              onClick={baixarDoc}
+              className="inline-flex items-center justify-center gap-2 rounded-[var(--radius-control)] bg-[var(--color-success)] px-5 py-2.5 text-sm font-semibold text-white"
+            >
               <Download size={15} /> Download Documento Original
             </button>
             <button

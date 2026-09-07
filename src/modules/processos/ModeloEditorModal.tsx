@@ -73,7 +73,7 @@ const OnlyOfficeEditor = memo(function OnlyOfficeEditor({
     loadOnlyOfficeScript()
       .then(() => {
         if (cancelled || !window.DocsAPI) return
-        const key = `modelo-${modelo}-${Date.now()}`.replace(/[^\w-]/g, '').slice(0, 40)
+        const key = `k${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`
         instance = new window.DocsAPI.DocEditor(containerId, {
           documentType: 'word',
           document: {
