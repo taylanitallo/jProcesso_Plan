@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import {
   AlertTriangle,
+  CircleUserRound,
   Download,
   FileText,
   History,
@@ -56,7 +57,7 @@ export function ArtefatoDetalheModal({
       onClick={onClose}
     >
       <div
-        className="relative my-4 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[20px] bg-white p-5 shadow-[var(--shadow-pop)] sm:p-6"
+        className="relative my-4 max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-[20px] bg-white p-5 shadow-[var(--shadow-pop)] sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -76,6 +77,7 @@ export function ArtefatoDetalheModal({
         <p className="mb-4 pl-4 text-xs text-[var(--color-muted)]">{artefato}</p>
 
         <div className="mb-4 flex flex-wrap items-center gap-2 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-[#f8fafd] p-3">
+          <CircleUserRound size={22} className="shrink-0 text-[var(--color-primary-strong)]" />
           <div className="min-w-48 flex-1">
             <Combo
               value={responsavel}
