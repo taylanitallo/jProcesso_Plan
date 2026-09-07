@@ -3,12 +3,12 @@ import { Download, FilePenLine, Plus, Trash2 } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { Button } from '../../components/common/Button'
 import { DataTable, Pagination, type Column } from '../../components/common/DataTable'
+import { EmptyState } from '../../components/common/EmptyState'
 import { useModuleLinks } from '../../components/shell/useModuleLinks'
 import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 import { ModeloEditorModal } from './ModeloEditorModal'
-import { MODELOS_PERSONALIZADOS } from '../../mocks'
-
-type Row = (typeof MODELOS_PERSONALIZADOS)[number]
+import { NovoModeloModal } from './NovoModeloModal'
+import { useModelos, type Modelo } from '../../store/modelos'
 
 function Autor({ sigla, data }: { sigla: string; data: string }) {
   return (
@@ -23,9 +23,32 @@ function Autor({ sigla, data }: { sigla: string; data: string }) {
 
 export function ModeloPersonalizadoPage() {
   useModuleLinks(PROCESSOS_MODULE_LINKS)
-  const [editando, setEditando] = useState<string | null>(null)
 
-  const cols: Column<Row>[] = [
+  const modelos = useModelos((s) => s.modelos)
+  const remover = useModelos((s) => s.remover)
+
+  const [editando, setEditando] = useState<string | null>(null)
+  const [novoAberto, setNovoAberto] = useState(false)
+  const [busca, setBusca] = useState('')
+  const [confirmarId, setConfirmarId] = useState<string | null>(null)
+
+  const filtrados = modelos.filter((m) => m.nome.toLowerCase().includes(busca.toLowerCase()))
+  const itemConfirmar = modelos.find((m) => m.id === confirmarId) ?? null
+
+  const baixar = (m: Modelo) => {
+    const conteudo = `Modelo: ${m.nome}\nLegislação: ${m.legislacao}\nIdentificador: ${m.identificador}\nOrigem: ${m.origem === 'Word' ? `Arquivo Word (${m.arquivo})` : 'Estrutura SollAI'}\n`
+    const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${m.nome.replace(/[\\/]/g, '-')}.txt`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  }
+
+  const cols: Column<Modelo>[] = [
     {
       key: 'nome',
       header: 'Modelo',
@@ -36,11 +59,7 @@ export function ModeloPersonalizadoPage() {
         </div>
       ),
     },
-    {
-      key: 'inclusao',
-      header: 'Data de inclusão',
-      render: (r) => <Autor sigla={r.inclusaoPor} data={r.inclusao} />,
-    },
+    { key: 'inclusao', header: 'Data de inclusão', render: (r) => <Autor sigla={r.inclusaoPor} data={r.inclusao} /> },
     {
       key: 'ultimaEdicao',
       header: 'Última edição',
@@ -52,7 +71,10 @@ export function ModeloPersonalizadoPage() {
       align: 'right',
       render: (r) => (
         <div className="flex justify-end gap-2">
-          <button className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-[var(--color-line)] px-3 py-1.5 text-xs font-semibold text-[var(--color-muted)]">
+          <button
+            onClick={() => baixar(r)}
+            className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-[var(--color-line)] px-3 py-1.5 text-xs font-semibold text-[var(--color-muted)]"
+          >
             <Download size={13} /> Download
           </button>
           <button
@@ -61,7 +83,10 @@ export function ModeloPersonalizadoPage() {
           >
             <FilePenLine size={13} /> Editar
           </button>
-          <button className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-[#f0c2c8] px-3 py-1.5 text-xs font-semibold text-[var(--color-danger)]">
+          <button
+            onClick={() => setConfirmarId(r.id)}
+            className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-[#f0c2c8] px-3 py-1.5 text-xs font-semibold text-[var(--color-danger)]"
+          >
             <Trash2 size={13} /> Excluir
           </button>
         </div>
@@ -77,25 +102,71 @@ export function ModeloPersonalizadoPage() {
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-3 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-4 shadow-[var(--shadow-card)]">
-        <Button>
+        <Button onClick={() => setNovoAberto(true)}>
           <Plus size={16} /> Novo modelo
         </Button>
-        <input placeholder="Buscar por nome" className="gt-input min-w-40 flex-1" />
+        <input
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          placeholder="Buscar por nome"
+          className="gt-input min-w-40 flex-1"
+        />
       </div>
 
-      <DataTable<Row>
+      <DataTable<Modelo>
         columns={cols}
-        rows={MODELOS_PERSONALIZADOS}
+        rows={filtrados}
         rowKey={(r) => r.id}
+        empty={
+          <EmptyState title="Nenhum modelo encontrado" subtitle="Crie um novo modelo personalizado." />
+        }
         footer={
           <>
             <Pagination />
-            <span>Registros encontrados: {MODELOS_PERSONALIZADOS.length}</span>
+            <span>Registros encontrados: {filtrados.length}</span>
           </>
         }
       />
 
+      {novoAberto && <NovoModeloModal onClose={() => setNovoAberto(false)} />}
       <ModeloEditorModal modelo={editando} onClose={() => setEditando(null)} />
+
+      {itemConfirmar && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-[rgba(9,21,44,0.4)] p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setConfirmarId(null)
+          }}
+        >
+          <div className="w-full max-w-md rounded-[16px] bg-white p-6 text-center shadow-[var(--shadow-pop)]">
+            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border-2 border-[#f0c2c8] text-[var(--color-danger)]">
+              <Trash2 size={24} />
+            </span>
+            <p className="mt-3 font-display text-base font-bold text-[#183263]">Excluir modelo?</p>
+            <p className="mt-2 text-sm text-[var(--color-muted)]">
+              O modelo <strong>{itemConfirmar.nome}</strong> será removido. Esta ação não pode ser
+              desfeita.
+            </p>
+            <div className="mt-5 flex justify-center gap-2">
+              <button
+                onClick={() => setConfirmarId(null)}
+                className="rounded-[var(--radius-control)] bg-[#e6e9ef] px-4 py-2 text-sm font-semibold text-[var(--color-ink)]"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  remover(itemConfirmar.id)
+                  setConfirmarId(null)
+                }}
+                className="rounded-[var(--radius-control)] bg-[var(--color-danger)] px-5 py-2 text-sm font-semibold text-white"
+              >
+                Sim, excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
