@@ -1,24 +1,27 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Combo } from '../../components/common/Combo'
 import { PROCESSO_LEGISLACOES, PROCESSO_TIPOS, WORKFLOWS } from '../../mocks'
+import type { ProcessoFormValue } from './processoForm'
 
 /**
  * Campos da aba "Processo" — compartilhados pelos três modos de criação de
  * Processo Inteligente (manual, a partir de registros, com solicitação).
+ * Controlado: estado vive no modal pai.
  */
-export function ProcessoFields() {
-  const [numero, setNumero] = useState('')
-  const [legislacao, setLegislacao] = useState('')
-  const [tipo, setTipo] = useState('')
-  const [fluxo, setFluxo] = useState('')
-  const [nome, setNome] = useState('')
-  const [lote, setLote] = useState('')
-  const [descricao, setDescricao] = useState('')
-
-  const fluxoLiberado = Boolean(legislacao && tipo)
+export function ProcessoFields({
+  value,
+  onChange,
+}: {
+  value: ProcessoFormValue
+  onChange: (patch: Partial<ProcessoFormValue>) => void
+}) {
+  const fluxoLiberado = Boolean(value.legislacao && value.tipo)
   const fluxoOptions = useMemo(
-    () => WORKFLOWS.filter((w) => w.legislacao === legislacao && w.tipo === tipo).map((w) => w.nome),
-    [legislacao, tipo],
+    () =>
+      WORKFLOWS.filter((w) => w.legislacao === value.legislacao && w.tipo === value.tipo).map(
+        (w) => w.nome,
+      ),
+    [value.legislacao, value.tipo],
   )
 
   return (
@@ -28,22 +31,22 @@ export function ProcessoFields() {
           <Field
             label="NÚMERO DO PROCESSO"
             placeholder="Digite o número do processo"
-            value={numero}
-            onChange={(e) => setNumero(e.target.value)}
+            value={value.numero}
+            onChange={(e) => onChange({ numero: e.target.value })}
           />
         </div>
         <Labelled label="LEGISLAÇÃO">
           <Combo
-            value={legislacao}
-            onChange={setLegislacao}
+            value={value.legislacao}
+            onChange={(v) => onChange({ legislacao: v, fluxo: '' })}
             options={PROCESSO_LEGISLACOES}
             placeholder="Selecione uma Legislação"
           />
         </Labelled>
         <Labelled label="TIPO DE PROCESSO">
           <Combo
-            value={tipo}
-            onChange={setTipo}
+            value={value.tipo}
+            onChange={(v) => onChange({ tipo: v, fluxo: '' })}
             options={PROCESSO_TIPOS}
             placeholder="Selecione um Tipo"
           />
@@ -51,8 +54,8 @@ export function ProcessoFields() {
         <div className="sm:col-span-2">
           <Labelled label="FLUXO DE TRABALHO">
             <Combo
-              value={fluxo}
-              onChange={setFluxo}
+              value={value.fluxo}
+              onChange={(v) => onChange({ fluxo: v })}
               options={fluxoOptions}
               placeholder="Selecione um Fluxo"
               disabled={!fluxoLiberado}
@@ -68,12 +71,17 @@ export function ProcessoFields() {
           <Field
             label="NOME DO PROCESSO"
             placeholder="Digite o nome do processo"
-            value={nome}
-            onChange={(e) => setNome(e.target.value)}
+            value={value.nome}
+            onChange={(e) => onChange({ nome: e.target.value })}
           />
         </div>
         <Labelled label="LOTE ÚNICO">
-          <Combo value={lote} onChange={setLote} options={['Sim', 'Não']} placeholder="Selecione:" />
+          <Combo
+            value={value.lote}
+            onChange={(v) => onChange({ lote: v })}
+            options={['Sim', 'Não']}
+            placeholder="Selecione:"
+          />
         </Labelled>
       </div>
 
@@ -82,8 +90,8 @@ export function ProcessoFields() {
         <textarea
           rows={4}
           maxLength={500}
-          value={descricao}
-          onChange={(e) => setDescricao(e.target.value)}
+          value={value.descricao}
+          onChange={(e) => onChange({ descricao: e.target.value })}
           className="gt-input resize-y font-normal normal-case"
           placeholder="Caso queira, descreva detalhes adicionais"
         />

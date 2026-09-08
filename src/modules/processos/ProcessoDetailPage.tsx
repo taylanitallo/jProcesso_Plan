@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import JSZip from 'jszip'
 import {
   AlertTriangle,
@@ -26,24 +27,25 @@ import { MapaRiscoModal } from './MapaRiscoModal'
 import { CadastroItensModal } from './CadastroItensModal'
 import { NormativasProcessoModal } from './NormativasProcessoModal'
 import { PermissoesProcessoModal } from './PermissoesProcessoModal'
-import { PROCESSO_ARTEFATOS, PROCESSOS } from '../../mocks'
+import { useProcessos, type ProcessoArtefato } from '../../store/processos'
+
+const EDIT_VAZIO = { nome: '', numero: '', loteUnico: 'Não' as 'Sim' | 'Não', descricao: '' }
 
 export function ProcessoDetailPage() {
   useModuleLinks(PROCESSOS_MODULE_LINKS)
-  const proc = PROCESSOS[0]
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const proc = useProcessos((s) => s.processos.find((p) => p.id === id))
+  const atualizar = useProcessos((s) => s.atualizar)
+  const finalizar = useProcessos((s) => s.finalizar)
+
   const [value, setValue] = useState('')
   const [artefato, setArtefato] = useState<string | null>(null)
   const [mapaRisco, setMapaRisco] = useState(false)
   const [itensOpen, setItensOpen] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
-
-  const [nome, setNome] = useState(proc.nome)
-  const [tipo] = useState(proc.tipo)
-  const [numero, setNumero] = useState(proc.numero)
-  const [loteUnico, setLoteUnico] = useState('Sim')
-  const [descricao, setDescricao] = useState('')
-  const [finalizado, setFinalizado] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState(EDIT_VAZIO)
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
@@ -67,13 +69,47 @@ export function ProcessoDetailPage() {
     setTimeout(() => setToast(null), 3000)
   }
 
-  const abrirArtefato = (a: (typeof PROCESSO_ARTEFATOS)[number]) => {
+  if (!proc) {
+    return (
+      <div className="grid min-h-[60vh] place-items-center px-4 text-center">
+        <div>
+          <p className="font-display text-lg font-bold text-[#183263]">Processo não encontrado</p>
+          <p className="mt-1 text-sm text-[var(--color-muted)]">
+            Ele pode ter sido excluído ou o link está incorreto.
+          </p>
+          <button
+            onClick={() => navigate('/processosinteligentes')}
+            className="mt-4 rounded-[var(--radius-control)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
+          >
+            Voltar para Processos
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  const numero = proc.numero
+  const nome = proc.nome
+  const tipo = proc.tipo
+  const finalizado = proc.status === 'FINALIZADO'
+
+  const abrirEdicao = () => {
+    setEditForm({
+      nome: proc.nome,
+      numero: proc.numero,
+      loteUnico: proc.loteUnico,
+      descricao: proc.descricao,
+    })
+    setEditOpen(true)
+  }
+
+  const abrirArtefato = (a: ProcessoArtefato) => {
     if (a.nome === 'Mapa de Risco') setMapaRisco(true)
     else setArtefato(a.completo)
   }
 
   const baixarDocumentos = async () => {
-    const enviados = PROCESSO_ARTEFATOS.filter((a) => a.enviado)
+    const enviados = proc.artefatos.filter((a) => a.enviado)
     if (enviados.length === 0) {
       showToast('Nenhum documento enviado para compactar.')
       return
@@ -110,7 +146,7 @@ export function ProcessoDetailPage() {
     doc.setFontSize(11)
     doc.text(`${nome} — ${tipo}`, margin, margin + 8)
 
-    PROCESSO_ARTEFATOS.forEach((a, i) => {
+    proc.artefatos.forEach((a, i) => {
       doc.addPage()
       doc.setFontSize(14)
       doc.text(`${i + 1}. ${a.nome}`, margin, margin)
@@ -131,7 +167,7 @@ export function ProcessoDetailPage() {
       icon: <SquarePen size={16} />,
       onClick: () => {
         setMenuOpen(false)
-        setEditOpen(true)
+        abrirEdicao()
       },
     },
     {
@@ -181,9 +217,9 @@ export function ProcessoDetailPage() {
     },
   ] as const
 
-  const total = PROCESSO_ARTEFATOS.length
-  const feitos = PROCESSO_ARTEFATOS.filter((a) => a.enviado).length
-  const pct = Math.round((feitos / total) * 100)
+  const total = proc.artefatos.length
+  const feitos = proc.artefatos.filter((a) => a.enviado).length
+  const pct = total === 0 ? 0 : Math.round((feitos / total) * 100)
 
   return (
     <div className="flex flex-col gap-4">
@@ -194,7 +230,7 @@ export function ProcessoDetailPage() {
         </h3>
         <span className="text-xs font-semibold text-[var(--color-ink)]">{nome}</span>
         <span className="rounded-[var(--radius-pill)] border border-[#bcd0ee] bg-[var(--color-primary-soft)] px-2 py-0.5 text-[11px] font-semibold text-[var(--color-primary-strong)]">
-          14.133
+          {proc.legislacao}
         </span>
         <span className="rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-[#f1f4f9] px-2 py-0.5 text-[11px] font-semibold text-[var(--color-muted)]">
           {tipo}
@@ -261,8 +297,8 @@ export function ProcessoDetailPage() {
         </div>
 
         <ol className="grid grid-cols-2 gap-3 p-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {PROCESSO_ARTEFATOS.map((a) => (
-            <li key={a.nome}>
+          {proc.artefatos.map((a) => (
+            <li key={a.completo}>
               <button
                 onClick={() => abrirArtefato(a)}
                 title={a.completo}
@@ -287,10 +323,10 @@ export function ProcessoDetailPage() {
                   </p>
                 </div>
                 <p className="flex items-center gap-1 text-[11px] text-[var(--color-muted)]">
-                  <UserRound size={10} /> Não designado
+                  <UserRound size={10} /> {a.responsavel || 'Não designado'}
                 </p>
                 <p className="flex items-center gap-1 text-[11px] text-[var(--color-muted)]">
-                  <Clock size={10} /> Sem Prazo Definido
+                  <Clock size={10} /> {a.prazo || 'Sem Prazo Definido'}
                 </p>
               </button>
             </li>
@@ -298,7 +334,11 @@ export function ProcessoDetailPage() {
         </ol>
       </div>
 
-      <ArtefatoDetalheModal artefato={artefato} onClose={() => setArtefato(null)} />
+      <ArtefatoDetalheModal
+        artefato={artefato}
+        processo={proc}
+        onClose={() => setArtefato(null)}
+      />
       <MapaRiscoModal open={mapaRisco} onClose={() => setMapaRisco(false)} />
       <CadastroItensModal open={itensOpen} onClose={() => setItensOpen(false)} />
 
@@ -328,8 +368,8 @@ export function ProcessoDetailPage() {
               <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
                 Nome do Processo
                 <input
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
+                  value={editForm.nome}
+                  onChange={(e) => setEditForm((f) => ({ ...f, nome: e.target.value }))}
                   className="gt-input font-normal normal-case"
                 />
               </label>
@@ -338,14 +378,19 @@ export function ProcessoDetailPage() {
                 <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
                   Número do Processo
                   <input
-                    value={numero}
-                    onChange={(e) => setNumero(e.target.value)}
+                    value={editForm.numero}
+                    onChange={(e) => setEditForm((f) => ({ ...f, numero: e.target.value }))}
                     className="gt-input font-normal normal-case"
                   />
                 </label>
                 <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
                   Lote Único
-                  <Combo value={loteUnico} onChange={setLoteUnico} options={['Sim', 'Não']} placeholder="Selecione" />
+                  <Combo
+                    value={editForm.loteUnico}
+                    onChange={(v) => setEditForm((f) => ({ ...f, loteUnico: v as 'Sim' | 'Não' }))}
+                    options={['Sim', 'Não']}
+                    placeholder="Selecione"
+                  />
                 </label>
               </div>
 
@@ -354,8 +399,8 @@ export function ProcessoDetailPage() {
                 <textarea
                   rows={4}
                   maxLength={500}
-                  value={descricao}
-                  onChange={(e) => setDescricao(e.target.value)}
+                  value={editForm.descricao}
+                  onChange={(e) => setEditForm((f) => ({ ...f, descricao: e.target.value }))}
                   className="gt-input resize-y font-normal normal-case"
                 />
               </label>
@@ -363,6 +408,12 @@ export function ProcessoDetailPage() {
 
             <button
               onClick={() => {
+                atualizar(proc.id, {
+                  nome: editForm.nome.trim(),
+                  numero: editForm.numero.trim(),
+                  loteUnico: editForm.loteUnico,
+                  descricao: editForm.descricao,
+                })
                 setEditOpen(false)
                 showToast('Processo atualizado.')
               }}
@@ -436,7 +487,7 @@ export function ProcessoDetailPage() {
               <button
                 onClick={() => {
                   setFinalizarConfirm(false)
-                  setFinalizado(true)
+                  finalizar(proc.id)
                   showToast('Processo finalizado.')
                 }}
                 className="rounded-[var(--radius-control)] bg-[var(--color-danger)] px-4 py-2 text-sm font-semibold text-white"

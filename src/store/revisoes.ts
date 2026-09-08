@@ -6,7 +6,7 @@ export type Revisao = {
   artefato: string
   artefatoCurto: string
   numeroArtefato: string
-  processoId: number
+  processoId: string
   processoNome: string
   processoNumero: string
   docUrl: string
@@ -50,7 +50,16 @@ export const useRevisoes = create<State>()(
         })),
       remover: (id) => set((s) => ({ revisoes: s.revisoes.filter((v) => v.id !== id) })),
     }),
-    { name: 'sollai-revisoes' },
+    {
+      name: 'sollai-revisoes',
+      version: 1,
+      migrate: (persisted) => {
+        const s = persisted as { revisoes?: (Omit<Revisao, 'processoId'> & { processoId: unknown })[] }
+        return {
+          revisoes: (s.revisoes ?? []).map((v) => ({ ...v, processoId: String(v.processoId ?? '') })),
+        }
+      },
+    },
   ),
 )
 

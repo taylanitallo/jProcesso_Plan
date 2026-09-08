@@ -7,6 +7,7 @@ import { useModuleLinks } from '../../components/shell/useModuleLinks'
 import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 import { ArtefatoDetalheModal } from './ArtefatoDetalheModal'
 import { MapaRiscoModal } from './MapaRiscoModal'
+import { useProcessos, type ProcessoLocal } from '../../store/processos'
 
 /** Artefatos do fluxo 14.133 — ordem e rótulos conforme o SollAI real. */
 const ARTEFATOS = [
@@ -42,21 +43,12 @@ const ARTEFATOS = [
   'Termo de Homologação',
 ]
 
-/** Só os primeiros artefatos (fluxo principal) têm processos gerais associados. */
-const COM_PROCESSOS = 14
-
 type LinhaProcesso = {
-  numero: string
-  nome: string
+  proc: ProcessoLocal
   responsavel: string
   prazo: string
   status: 'ENVIADO' | 'NÃO ENVIADO' | 'NÃO INICIADO'
 }
-
-const LINHAS: LinhaProcesso[] = [
-  { numero: '1', nome: 'PERMANENTE', responsavel: 'Não definido', prazo: 'Sem prazo', status: 'NÃO ENVIADO' },
-  { numero: 'teste', nome: 'OBRA 33', responsavel: 'Não definido', prazo: 'Sem prazo', status: 'NÃO INICIADO' },
-]
 
 const STATUS_TONE = {
   ENVIADO: 'success',
@@ -66,25 +58,39 @@ const STATUS_TONE = {
 
 export function StatusArtefatosPage() {
   useModuleLinks(PROCESSOS_MODULE_LINKS)
+  const processos = useProcessos((s) => s.processos)
   const [sel, setSel] = useState(0)
   const [detalhe, setDetalhe] = useState<string | null>(null)
+  const [detalheProc, setDetalheProc] = useState<ProcessoLocal | null>(null)
   const [mapaRisco, setMapaRisco] = useState(false)
 
   const artefatoSel = ARTEFATOS[sel]
-  const linhas = sel < COM_PROCESSOS ? LINHAS : []
 
-  const abrir = () => {
+  const linhas: LinhaProcesso[] = processos.map((p) => {
+    const a = p.artefatos.find((x) => x.completo === artefatoSel || x.nome === artefatoSel)
+    return {
+      proc: p,
+      responsavel: a?.responsavel || 'Não definido',
+      prazo: a?.prazo || 'Sem prazo',
+      status: !a ? 'NÃO INICIADO' : a.enviado ? 'ENVIADO' : 'NÃO ENVIADO',
+    }
+  })
+
+  const abrir = (proc: ProcessoLocal) => {
     if (artefatoSel === 'Mapa de Risco') setMapaRisco(true)
-    else setDetalhe(artefatoSel)
+    else {
+      setDetalheProc(proc)
+      setDetalhe(artefatoSel)
+    }
   }
 
   const cols: Column<LinhaProcesso>[] = [
-    { key: 'numero', header: 'Número do Processo', align: 'center' },
+    { key: 'numero', header: 'Número do Processo', align: 'center', render: (r) => r.proc.numero },
     {
       key: 'nome',
       header: 'Nome do Processo',
       render: (r) => (
-        <span className="font-semibold text-[var(--color-primary-strong)]">{r.nome}</span>
+        <span className="font-semibold text-[var(--color-primary-strong)]">{r.proc.nome}</span>
       ),
     },
     { key: 'responsavel', header: 'Responsável', align: 'center' },
@@ -99,10 +105,10 @@ export function StatusArtefatosPage() {
       key: 'acoes',
       header: 'Ações',
       align: 'right',
-      render: () => (
+      render: (r) => (
         <div className="flex justify-end">
           <button
-            onClick={abrir}
+            onClick={() => abrir(r.proc)}
             className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-success)] px-3 py-1.5 text-xs font-semibold text-white"
           >
             <Search size={13} /> Detalhes
@@ -153,12 +159,12 @@ export function StatusArtefatosPage() {
       <DataTable<LinhaProcesso>
         columns={cols}
         rows={linhas}
-        rowKey={(r) => r.numero}
+        rowKey={(r) => r.proc.id}
         empty={
           <EmptyState
             icon={Plus}
             title="Nenhum processo encontrado"
-            subtitle="Não há processos gerais registrados para este modelo."
+            subtitle="Crie um processo em Processos Inteligentes para acompanhar os artefatos."
           />
         }
         footer={
@@ -169,7 +175,14 @@ export function StatusArtefatosPage() {
         }
       />
 
-      <ArtefatoDetalheModal artefato={detalhe} onClose={() => setDetalhe(null)} />
+      <ArtefatoDetalheModal
+        artefato={detalheProc ? detalhe : null}
+        processo={detalheProc ?? processos[0]}
+        onClose={() => {
+          setDetalhe(null)
+          setDetalheProc(null)
+        }}
+      />
       <MapaRiscoModal open={mapaRisco} onClose={() => setMapaRisco(false)} />
     </div>
   )

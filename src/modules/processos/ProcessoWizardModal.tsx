@@ -1,13 +1,17 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Plus, X } from 'lucide-react'
 import { EmptyState } from '../../components/common/EmptyState'
+import { useProcessos } from '../../store/processos'
+import { useNecessidades } from '../../store/necessidades'
 import { ProcessoFields } from './ProcessoFields'
+import { PROCESSO_FORM_VAZIO, toNovoProcesso } from './processoForm'
 
 /**
  * Wizard multi-etapa de criação de Processo Inteligente — usado pelos modos
  * "a partir de Registro de Necessidade" e "com solicitação integrada".
  * A primeira aba é sempre "Processo" (campos do processo); as demais são
- * etapas de seleção de itens, exibidas como placeholder nesta versão.
+ * etapas de seleção de registros de necessidade.
  */
 export function ProcessoWizardModal({
   open,
@@ -15,30 +19,70 @@ export function ProcessoWizardModal({
   title,
   subtitle,
   tabs,
+  modo,
 }: {
   open: boolean
   onClose: () => void
   title: string
   subtitle: string
   tabs: string[]
+  modo: 'registros' | 'solicitacao'
 }) {
+  const criar = useProcessos((s) => s.criar)
+  const registros = useNecessidades((s) => s.registros)
+  const navigate = useNavigate()
+
   const [tab, setTab] = useState(0)
+  const [form, setForm] = useState(PROCESSO_FORM_VAZIO)
+  const [registrosSel, setRegistrosSel] = useState<string[]>([])
+  const [nota, setNota] = useState('')
 
   if (!open) return null
 
   const last = tab === tabs.length - 1
+  const itensResumo = registros
+    .filter((r) => registrosSel.includes(r.id))
+    .reduce((s, r) => s + r.itens, 0)
+  const podeConcluir = Boolean(form.nome.trim() && form.numero.trim() && form.tipo && form.legislacao)
+
+  const toggle = (id: string) =>
+    setRegistrosSel((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+
+  const resetar = () => {
+    setTab(0)
+    setForm(PROCESSO_FORM_VAZIO)
+    setRegistrosSel([])
+    setNota('')
+  }
+
+  const fechar = () => {
+    resetar()
+    onClose()
+  }
+
+  const concluir = () => {
+    if (!podeConcluir) return
+    const id = criar({
+      ...toNovoProcesso(form),
+      origem: modo === 'registros' ? 'REGISTROS' : 'SOLICITACAO',
+      registroIds: registrosSel,
+      itensResumo,
+    })
+    resetar()
+    onClose()
+    navigate(`/Processo/${id}`)
+  }
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[rgba(9,21,44,0.6)] p-3 backdrop-blur-sm sm:p-8"
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) fechar()
+      }}
     >
-      <div
-        className="relative my-4 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[20px] bg-white p-5 shadow-[var(--shadow-pop)] sm:p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="relative my-4 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[20px] bg-white p-5 shadow-[var(--shadow-pop)] sm:p-6">
         <button
-          onClick={onClose}
+          onClick={fechar}
           aria-label="Fechar"
           className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white text-[var(--color-muted)] shadow"
         >
@@ -72,24 +116,71 @@ export function ProcessoWizardModal({
         </div>
 
         {tab === 0 ? (
-          <ProcessoFields />
-        ) : (
+          <ProcessoFields value={form} onChange={(patch) => setForm((f) => ({ ...f, ...patch }))} />
+        ) : registros.length === 0 ? (
           <EmptyState
-            title="Nenhum item selecionado"
-            subtitle="Avance pelas etapas para escolher os registros e itens que comporão o processo."
+            title="Nenhum registro de necessidade"
+            subtitle="Cadastre registros em Registro de Necessidades para compor o processo."
           />
+        ) : (
+          <div>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
+              Selecione os registros de necessidade
+            </p>
+            <ul className="flex max-h-72 flex-col gap-1 overflow-y-auto">
+              {registros.map((r) => (
+                <li key={r.id}>
+                  <label className="flex items-center justify-between gap-3 rounded-[var(--radius-control)] border border-[var(--color-line)] px-3 py-2.5 hover:bg-[#f8fafd]">
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-[var(--color-ink)]">
+                        {r.nome}
+                      </span>
+                      <span className="block text-[11px] uppercase tracking-wide text-[var(--color-muted)]">
+                        {r.setor} • {r.itens} {r.itens === 1 ? 'item' : 'itens'}
+                      </span>
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={registrosSel.includes(r.id)}
+                      onChange={() => toggle(r.id)}
+                      className="h-4 w-4 accent-[var(--color-primary)]"
+                    />
+                  </label>
+                </li>
+              ))}
+            </ul>
+
+            {modo === 'solicitacao' && (
+              <label className="mt-3 flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
+                Observação para os setores
+                <textarea
+                  rows={3}
+                  maxLength={500}
+                  value={nota}
+                  onChange={(e) => setNota(e.target.value)}
+                  placeholder="Oriente os setores sobre o preenchimento…"
+                  className="gt-input resize-y font-normal normal-case"
+                />
+              </label>
+            )}
+
+            <p className="mt-3 text-sm text-[var(--color-muted)]">
+              Itens somados: <strong className="text-[var(--color-ink)]">{itensResumo}</strong>
+            </p>
+          </div>
         )}
 
         <div className="mt-5 flex justify-end gap-2">
           <button
-            onClick={onClose}
+            onClick={fechar}
             className="rounded-[var(--radius-control)] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-muted)] hover:text-[var(--color-ink)]"
           >
             Cancelar
           </button>
           <button
-            onClick={() => (last ? onClose() : setTab((t) => t + 1))}
-            className="rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-6 py-2 text-sm font-bold uppercase tracking-wide text-white"
+            onClick={() => (last ? concluir() : setTab((t) => t + 1))}
+            disabled={last && !podeConcluir}
+            className="rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-6 py-2 text-sm font-bold uppercase tracking-wide text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             {last ? 'Concluir' : 'Próximo'}
           </button>

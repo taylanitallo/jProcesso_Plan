@@ -7,9 +7,11 @@ import {
   ClipboardCheck,
   FileSignature,
   Filter,
+  MoreVertical,
   PenLine,
   Plus,
   Search,
+  Trash2,
   X,
 } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
@@ -21,12 +23,13 @@ import { PendingModal } from './PendingModal'
 import { NovoProcessoModal } from './NovoProcessoModal'
 import { ProcessoWizardModal } from './ProcessoWizardModal'
 import { PROCESSOS_MODULE_LINKS } from './processosLinks'
-import { PROCESSOS, PROCESSO_LEGISLACOES, PROCESSO_TIPOS } from '../../mocks'
+import { PROCESSO_LEGISLACOES, PROCESSO_TIPOS } from '../../mocks'
 import { useRevisoes, revisoesPendentes } from '../../store/revisoes'
+import { useProcessos, statusProcessoLabel, type ProcessoLocal } from '../../store/processos'
 
 const STATUS_OPCOES = ['Ativo', 'Finalizado']
 
-type Row = (typeof PROCESSOS)[number]
+type Row = ProcessoLocal
 
 const CRIAR_OPCOES = [
   {
@@ -66,9 +69,14 @@ export function ProcessosInteligentesPage() {
   const [tipoFiltro, setTipoFiltro] = useState('Todos')
   const [legislacaoFiltro, setLegislacaoFiltro] = useState('Todas')
   const [ativoFiltro, setAtivoFiltro] = useState('Todos')
+  const [excluirId, setExcluirId] = useState<string | null>(null)
 
+  const processos = useProcessos((s) => s.processos)
+  const remover = useProcessos((s) => s.remover)
   const revisoes = useRevisoes((s) => s.revisoes)
   const pendentes = revisoesPendentes(revisoes)
+
+  const excluirAlvo = processos.find((p) => p.id === excluirId) ?? null
 
   const filtrosAtivos =
     busca !== '' || tipoFiltro !== 'Todos' || legislacaoFiltro !== 'Todas' || ativoFiltro !== 'Todos'
@@ -80,11 +88,12 @@ export function ProcessosInteligentesPage() {
     setAtivoFiltro('Todos')
   }
 
-  const linhas = PROCESSOS.filter(
+  const linhas = processos.filter(
     (p) =>
       (busca === '' || p.nome.toLowerCase().includes(busca.toLowerCase())) &&
       (tipoFiltro === 'Todos' || p.tipo === tipoFiltro) &&
-      (ativoFiltro === 'Todos' || p.status === ativoFiltro),
+      (legislacaoFiltro === 'Todas' || p.legislacao === legislacaoFiltro) &&
+      (ativoFiltro === 'Todos' || statusProcessoLabel(p.status) === ativoFiltro),
   )
 
   useEffect(() => {
@@ -115,7 +124,11 @@ export function ProcessosInteligentesPage() {
     {
       key: 'status',
       header: 'Status',
-      render: (r) => <Badge tone="neutral">{r.status}</Badge>,
+      render: (r) => (
+        <Badge tone={r.status === 'FINALIZADO' ? 'success' : 'info'}>
+          {statusProcessoLabel(r.status)}
+        </Badge>
+      ),
     },
     {
       key: 'acoes',
@@ -129,9 +142,10 @@ export function ProcessosInteligentesPage() {
           >
             <Search size={13} /> Detalhes
           </button>
-          <button className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] border border-[var(--color-line)] text-[var(--color-muted)]">
-            ⋮
-          </button>
+          <RowMenu
+            onDetalhes={() => navigate(`/Processo/${r.id}`)}
+            onExcluir={() => setExcluirId(r.id)}
+          />
         </div>
       ),
     },
@@ -165,7 +179,7 @@ export function ProcessosInteligentesPage() {
             Total de Processos
           </p>
           <p className="text-lg font-extrabold text-[#183263]">
-            {PROCESSOS.length} <span className="text-[var(--color-success)]">/ Ilimitado</span>
+            {processos.length} <span className="text-[var(--color-success)]">/ Ilimitado</span>
           </p>
         </div>
       </div>
@@ -283,7 +297,7 @@ export function ProcessosInteligentesPage() {
       <DataTable<Row>
         columns={columns}
         rows={linhas}
-        rowKey={(r) => String(r.id)}
+        rowKey={(r) => r.id}
         footer={
           <>
             <Pagination />
@@ -291,6 +305,43 @@ export function ProcessosInteligentesPage() {
           </>
         }
       />
+
+      {excluirAlvo && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-[rgba(9,21,44,0.4)] p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setExcluirId(null)
+          }}
+        >
+          <div className="w-full max-w-md rounded-[16px] bg-white p-6 text-center shadow-[var(--shadow-pop)]">
+            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border-2 border-[#f0c2c8] text-[var(--color-danger)]">
+              <Trash2 size={24} />
+            </span>
+            <p className="mt-3 font-display text-base font-bold text-[#183263]">Excluir processo?</p>
+            <p className="mt-2 text-sm text-[var(--color-muted)]">
+              O processo <strong>{excluirAlvo.nome}</strong> e seus artefatos serão removidos. Esta
+              ação não pode ser desfeita.
+            </p>
+            <div className="mt-5 flex justify-center gap-2">
+              <button
+                onClick={() => setExcluirId(null)}
+                className="rounded-[var(--radius-control)] bg-[#e6e9ef] px-4 py-2 text-sm font-semibold text-[var(--color-ink)]"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  remover(excluirAlvo.id)
+                  setExcluirId(null)
+                }}
+                className="rounded-[var(--radius-control)] bg-[var(--color-danger)] px-5 py-2 text-sm font-semibold text-white"
+              >
+                Sim, excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <AgendaModal open={modal === 'agenda'} onClose={() => setModal('none')} />
       <PendingModal
@@ -326,13 +377,15 @@ export function ProcessosInteligentesPage() {
       <ProcessoWizardModal
         open={modal === 'registros'}
         onClose={() => setModal('none')}
+        modo="registros"
         title="Criar Processo a partir de Registros"
-        subtitle="Defina os dados do processo e selecione, por item, de quais registros/setores você vai utilizar."
+        subtitle="Defina os dados do processo e selecione de quais registros de necessidade você vai utilizar."
         tabs={['Processo', 'Itens', 'Quantidades']}
       />
       <ProcessoWizardModal
         open={modal === 'solicitacao'}
         onClose={() => setModal('none')}
+        modo="solicitacao"
         title="Criar Processo + Solicitar Registro de Necessidade"
         subtitle="Informe os dados do processo."
         tabs={['Processo', 'Solicitação + Itens']}
@@ -361,6 +414,54 @@ function HubBtn({
       {icon}
       {children}
     </button>
+  )
+}
+
+function RowMenu({ onDetalhes, onExcluir }: { onDetalhes: () => void; onExcluir: () => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [open])
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Mais ações"
+        className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+      >
+        <MoreVertical size={14} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full z-30 mt-1 w-40 overflow-hidden rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white py-1 text-left shadow-[var(--shadow-pop)]">
+          <button
+            onClick={() => {
+              setOpen(false)
+              onDetalhes()
+            }}
+            className="block w-full px-3 py-2 text-left text-sm text-[var(--color-ink)] hover:bg-[var(--color-primary-soft)]"
+          >
+            Detalhes
+          </button>
+          <button
+            onClick={() => {
+              setOpen(false)
+              onExcluir()
+            }}
+            className="block w-full px-3 py-2 text-left text-sm text-[var(--color-danger)] hover:bg-[#fbe4e7]"
+          >
+            Excluir
+          </button>
+        </div>
+      )}
+    </div>
   )
 }
 

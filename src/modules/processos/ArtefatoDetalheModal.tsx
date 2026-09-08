@@ -17,8 +17,9 @@ import {
 import { Combo } from '../../components/common/Combo'
 import { FormularioModal } from './FormularioModal'
 import { OnlyOfficeEditorModal } from '../../components/common/OnlyOfficeEditorModal'
-import { PROCESSO_ARTEFATOS, PROCESSOS, USUARIOS_NOMES } from '../../mocks'
+import { USUARIOS_NOMES } from '../../mocks'
 import { useRevisoes } from '../../store/revisoes'
+import { useProcessos, type ProcessoLocal } from '../../store/processos'
 
 const ACOES = [
   'Upload',
@@ -62,12 +63,15 @@ type HistItem = {
  */
 export function ArtefatoDetalheModal({
   artefato,
+  processo,
   onClose,
 }: {
   artefato: string | null
+  processo: ProcessoLocal
   onClose: () => void
 }) {
   const abrirRevisao = useRevisoes((s) => s.abrir)
+  const atualizarArtefato = useProcessos((s) => s.atualizarArtefato)
   const [responsavel, setResponsavel] = useState('')
   const [sub, setSub] = useState<Sub>(null)
   const [email, setEmail] = useState('')
@@ -108,9 +112,8 @@ export function ArtefatoDetalheModal({
 
   if (!artefato) return null
 
-  const info = PROCESSO_ARTEFATOS.find((a) => a.completo === artefato)
+  const info = processo.artefatos.find((a) => a.completo === artefato)
   const temRevisao = Boolean(info?.revisao)
-  const processo = PROCESSOS[0]
 
   const painel = (
     <div className="flex h-full flex-col">
@@ -471,6 +474,7 @@ export function ArtefatoDetalheModal({
           onClose={() => setSub(null)}
           onEnviar={(url) => {
             if (url) setDocUrl(url)
+            atualizarArtefato(processo.id, artefato, { enviado: true })
             registrar('Artefato enviado', 'Upload', 'Arquivo enviado')
           }}
         />
