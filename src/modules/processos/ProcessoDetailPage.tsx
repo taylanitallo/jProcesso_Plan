@@ -28,6 +28,8 @@ import { CadastroItensModal } from './CadastroItensModal'
 import { NormativasProcessoModal } from './NormativasProcessoModal'
 import { PermissoesProcessoModal } from './PermissoesProcessoModal'
 import { useProcessos, type ProcessoArtefato } from '../../store/processos'
+import { useSolicitacoes, statusSolicitacaoLabel } from '../../store/solicitacoes'
+import { Badge } from '../../components/common/Badge'
 
 const EDIT_VAZIO = { nome: '', numero: '', loteUnico: 'Não' as 'Sim' | 'Não', descricao: '' }
 
@@ -38,6 +40,8 @@ export function ProcessoDetailPage() {
   const proc = useProcessos((s) => s.processos.find((p) => p.id === id))
   const atualizar = useProcessos((s) => s.atualizar)
   const finalizar = useProcessos((s) => s.finalizar)
+  const solicitacoes = useSolicitacoes((s) => s.solicitacoes)
+  const solicitacoesProc = solicitacoes.filter((x) => x.processoId === id)
 
   const [value, setValue] = useState('')
   const [artefato, setArtefato] = useState<string | null>(null)
@@ -333,6 +337,33 @@ export function ProcessoDetailPage() {
           ))}
         </ol>
       </div>
+
+      {solicitacoesProc.length > 0 && (
+        <div className="overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white shadow-[var(--shadow-card)]">
+          <div className="border-b border-[var(--color-line)] px-4 py-3">
+            <h2 className="font-display text-sm font-bold">Solicitações de preenchimento</h2>
+            <p className="text-xs text-[var(--color-muted)]">
+              Pedidos enviados aos setores. Responda em Registro de Necessidades › Solicitações de
+              Preenchimento.
+            </p>
+          </div>
+          <ul className="divide-y divide-[var(--color-line)]">
+            {solicitacoesProc.map((s) => (
+              <li key={s.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
+                <div className="min-w-0">
+                  <p className="font-semibold text-[var(--color-ink)]">{s.setor}</p>
+                  {s.descricao && (
+                    <p className="truncate text-xs text-[var(--color-muted)]">{s.descricao}</p>
+                  )}
+                </div>
+                <Badge tone={s.status === 'RESPONDIDA' ? 'success' : 'warning'}>
+                  {statusSolicitacaoLabel(s.status)}
+                </Badge>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <ArtefatoDetalheModal
         artefato={artefato}

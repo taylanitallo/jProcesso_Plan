@@ -3,15 +3,19 @@ import { useNavigate } from 'react-router-dom'
 import { Plus, X } from 'lucide-react'
 import { EmptyState } from '../../components/common/EmptyState'
 import { useProcessos } from '../../store/processos'
-import { useNecessidades } from '../../store/necessidades'
+import { useNecessidades, SETORES_NECESSIDADE } from '../../store/necessidades'
+import { useSolicitacoes } from '../../store/solicitacoes'
 import { ProcessoFields } from './ProcessoFields'
 import { PROCESSO_FORM_VAZIO, toNovoProcesso } from './processoForm'
 
+const SETORES_SOLICITAVEIS = SETORES_NECESSIDADE.filter((s) => s !== 'Sem setor')
+
 /**
- * Wizard multi-etapa de criação de Processo Inteligente — usado pelos modos
- * "a partir de Registro de Necessidade" e "com solicitação integrada".
- * A primeira aba é sempre "Processo" (campos do processo); as demais são
- * etapas de seleção de registros de necessidade.
+ * Wizard multi-etapa de criação de Processo Inteligente.
+ * - modo "registros": a etapa 2 escolhe registros de necessidade.
+ * - modo "solicitacao": a etapa 2 escolhe setores a quem solicitar preenchimento
+ *   + observação; ao concluir, gera uma Solicitação de Preenchimento por setor.
+ * A primeira aba é sempre "Processo" (campos do processo).
  */
 export function ProcessoWizardModal({
   open,
@@ -30,11 +34,13 @@ export function ProcessoWizardModal({
 }) {
   const criar = useProcessos((s) => s.criar)
   const registros = useNecessidades((s) => s.registros)
+  const criarLote = useSolicitacoes((s) => s.criarLote)
   const navigate = useNavigate()
 
   const [tab, setTab] = useState(0)
   const [form, setForm] = useState(PROCESSO_FORM_VAZIO)
   const [registrosSel, setRegistrosSel] = useState<string[]>([])
+  const [setoresSel, setSetoresSel] = useState<string[]>([])
   const [nota, setNota] = useState('')
 
   if (!open) return null
@@ -43,15 +49,19 @@ export function ProcessoWizardModal({
   const itensResumo = registros
     .filter((r) => registrosSel.includes(r.id))
     .reduce((s, r) => s + r.itens, 0)
-  const podeConcluir = Boolean(form.nome.trim() && form.numero.trim() && form.tipo && form.legislacao)
+  const formOk = Boolean(form.nome.trim() && form.numero.trim() && form.tipo && form.legislacao)
+  const podeConcluir = formOk && (modo === 'solicitacao' ? setoresSel.length > 0 : true)
 
-  const toggle = (id: string) =>
+  const toggleRegistro = (id: string) =>
     setRegistrosSel((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  const toggleSetor = (s: string) =>
+    setSetoresSel((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]))
 
   const resetar = () => {
     setTab(0)
     setForm(PROCESSO_FORM_VAZIO)
     setRegistrosSel([])
+    setSetoresSel([])
     setNota('')
   }
 
@@ -62,9 +72,22 @@ export function ProcessoWizardModal({
 
   const concluir = () => {
     if (!podeConcluir) return
+    if (modo === 'solicitacao') {
+      const numero = form.numero.trim()
+      const nome = form.nome.trim()
+      const id = criar({ ...toNovoProcesso(form), origem: 'SOLICITACAO' })
+      criarLote(
+        { processoId: id, processoNumero: numero, processoNome: nome, descricao: nota },
+        setoresSel,
+      )
+      resetar()
+      onClose()
+      navigate(`/Processo/${id}`)
+      return
+    }
     const id = criar({
       ...toNovoProcesso(form),
-      origem: modo === 'registros' ? 'REGISTROS' : 'SOLICITACAO',
+      origem: 'REGISTROS',
       registroIds: registrosSel,
       itensResumo,
     })
@@ -117,6 +140,44 @@ export function ProcessoWizardModal({
 
         {tab === 0 ? (
           <ProcessoFields value={form} onChange={(patch) => setForm((f) => ({ ...f, ...patch }))} />
+        ) : modo === 'solicitacao' ? (
+          <div>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
+              Setores a solicitar preenchimento
+            </p>
+            <ul className="flex flex-col gap-1">
+              {SETORES_SOLICITAVEIS.map((s) => (
+                <li key={s}>
+                  <label className="flex items-center justify-between gap-3 rounded-[var(--radius-control)] border border-[var(--color-line)] px-3 py-2.5 hover:bg-[#f8fafd]">
+                    <span className="text-sm font-semibold text-[var(--color-ink)]">{s}</span>
+                    <input
+                      type="checkbox"
+                      checked={setoresSel.includes(s)}
+                      onChange={() => toggleSetor(s)}
+                      className="h-4 w-4 accent-[var(--color-primary)]"
+                    />
+                  </label>
+                </li>
+              ))}
+            </ul>
+
+            <label className="mt-3 flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
+              Observação para os setores
+              <textarea
+                rows={3}
+                maxLength={500}
+                value={nota}
+                onChange={(e) => setNota(e.target.value)}
+                placeholder="Oriente os setores sobre o preenchimento…"
+                className="gt-input resize-y font-normal normal-case"
+              />
+            </label>
+
+            <p className="mt-3 text-sm text-[var(--color-muted)]">
+              Solicitações a gerar:{' '}
+              <strong className="text-[var(--color-ink)]">{setoresSel.length}</strong>
+            </p>
+          </div>
         ) : registros.length === 0 ? (
           <EmptyState
             title="Nenhum registro de necessidade"
@@ -142,27 +203,13 @@ export function ProcessoWizardModal({
                     <input
                       type="checkbox"
                       checked={registrosSel.includes(r.id)}
-                      onChange={() => toggle(r.id)}
+                      onChange={() => toggleRegistro(r.id)}
                       className="h-4 w-4 accent-[var(--color-primary)]"
                     />
                   </label>
                 </li>
               ))}
             </ul>
-
-            {modo === 'solicitacao' && (
-              <label className="mt-3 flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
-                Observação para os setores
-                <textarea
-                  rows={3}
-                  maxLength={500}
-                  value={nota}
-                  onChange={(e) => setNota(e.target.value)}
-                  placeholder="Oriente os setores sobre o preenchimento…"
-                  className="gt-input resize-y font-normal normal-case"
-                />
-              </label>
-            )}
 
             <p className="mt-3 text-sm text-[var(--color-muted)]">
               Itens somados: <strong className="text-[var(--color-ink)]">{itensResumo}</strong>

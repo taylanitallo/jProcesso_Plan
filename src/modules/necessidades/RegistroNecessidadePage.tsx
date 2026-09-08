@@ -1,15 +1,21 @@
 import { useState } from 'react'
-import { ClipboardX, FilePenLine, Plus, Trash2 } from 'lucide-react'
+import { ClipboardX, FilePenLine, MessageSquareReply, Plus, Trash2 } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { Button } from '../../components/common/Button'
 import { Badge } from '../../components/common/Badge'
 import { DataTable, Pagination, type Column } from '../../components/common/DataTable'
 import { EmptyState } from '../../components/common/EmptyState'
 import { useModuleLinks } from '../../components/shell/useModuleLinks'
-import { useNecessidades, type Registro } from '../../store/necessidades'
+import { useNecessidades, SETORES_NECESSIDADE, type Registro } from '../../store/necessidades'
+import {
+  useSolicitacoes,
+  statusSolicitacaoLabel,
+  type Solicitacao,
+} from '../../store/solicitacoes'
 import { NovoRegistroModal } from './NovoRegistroModal'
 import { ImportarPcaModal } from './ImportarPcaModal'
 import { ImportarExcelRegistroModal } from './ImportarExcelRegistroModal'
+import { ResponderSolicitacaoModal } from './ResponderSolicitacaoModal'
 
 const TABS = ['Meus Registros', 'Solicitações de Preenchimento'] as const
 
@@ -21,11 +27,15 @@ export function RegistroNecessidadePage() {
 
   const registros = useNecessidades((s) => s.registros)
   const remover = useNecessidades((s) => s.remover)
+  const solicitacoes = useSolicitacoes((s) => s.solicitacoes)
 
   const [tab, setTab] = useState<(typeof TABS)[number]>('Meus Registros')
   const [busca, setBusca] = useState('')
   const [modal, setModal] = useState<'none' | 'novo' | 'pca' | 'excel'>('none')
   const [confirmarId, setConfirmarId] = useState<string | null>(null)
+  const [solSetor, setSolSetor] = useState('')
+  const [solBusca, setSolBusca] = useState('')
+  const [responderId, setResponderId] = useState<string | null>(null)
 
   const filtrados = registros.filter(
     (r) =>
@@ -33,6 +43,67 @@ export function RegistroNecessidadePage() {
       r.descricao.toLowerCase().includes(busca.toLowerCase()),
   )
   const itemConfirmar = registros.find((r) => r.id === confirmarId) ?? null
+
+  const solFiltradas = solicitacoes.filter((s) => {
+    const q = solBusca.toLowerCase()
+    return (
+      (solSetor === '' || s.setor === solSetor) &&
+      (q === '' ||
+        s.processoNome.toLowerCase().includes(q) ||
+        s.processoNumero.toLowerCase().includes(q))
+    )
+  })
+  const responderAlvo = solicitacoes.find((s) => s.id === responderId) ?? null
+
+  const solColumns: Column<Solicitacao>[] = [
+    {
+      key: 'processo',
+      header: 'Processo',
+      render: (s) => (
+        <div>
+          <p className="font-bold text-[var(--color-ink)]">{s.processoNome}</p>
+          <p className="text-xs text-[var(--color-muted)]">Nº {s.processoNumero}</p>
+        </div>
+      ),
+    },
+    { key: 'setor', header: 'Setor', align: 'center' },
+    {
+      key: 'descricao',
+      header: 'Orientação',
+      render: (s) => (
+        <span className="line-clamp-2 max-w-[360px] text-xs text-[var(--color-muted)]">
+          {s.descricao || '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      align: 'center',
+      render: (s) => (
+        <Badge tone={s.status === 'RESPONDIDA' ? 'success' : 'warning'}>
+          {statusSolicitacaoLabel(s.status)}
+        </Badge>
+      ),
+    },
+    { key: 'criadoEm', header: 'Aberta em', align: 'center' },
+    {
+      key: 'acoes',
+      header: 'Ações',
+      align: 'right',
+      render: (s) => (
+        <div className="flex justify-end">
+          <button
+            onClick={() => setResponderId(s.id)}
+            className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-primary)] px-3 py-1.5 text-xs font-semibold text-white"
+          >
+            <MessageSquareReply size={13} />
+            {s.status === 'RESPONDIDA' ? 'Ver resposta' : 'Responder'}
+          </button>
+        </div>
+      ),
+    },
+  ]
 
   const columns: Column<Registro>[] = [
     {
@@ -148,30 +219,60 @@ export function RegistroNecessidadePage() {
           />
         </>
       ) : (
-        <div className="rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-4 shadow-[var(--shadow-card)]">
-          <div className="mb-3 flex flex-wrap items-center gap-3">
+        <>
+          <div className="mb-4 flex flex-wrap items-center gap-3 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-4 shadow-[var(--shadow-card)]">
             <span className="text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
               Setor:
             </span>
-            <select className="gt-input w-48 font-normal normal-case">
-              <option>Selecione um setor…</option>
+            <select
+              value={solSetor}
+              onChange={(e) => setSolSetor(e.target.value)}
+              className="gt-input w-48 font-normal normal-case"
+            >
+              <option value="">Todos os setores</option>
+              {SETORES_NECESSIDADE.filter((s) => s !== 'Sem setor').map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
             </select>
             <input
-              placeholder="Buscar por Nome do Registro / ID Processo"
+              value={solBusca}
+              onChange={(e) => setSolBusca(e.target.value)}
+              placeholder="Buscar por Nome / Nº do Processo"
               className="gt-input min-w-40 flex-1"
             />
           </div>
-          <EmptyState
-            icon={ClipboardX}
-            title="Nenhum processo pendente encontrado"
-            subtitle="Tente ajustar o filtro."
+
+          <DataTable<Solicitacao>
+            columns={solColumns}
+            rows={solFiltradas}
+            rowKey={(s) => s.id}
+            empty={
+              <EmptyState
+                icon={ClipboardX}
+                title="Nenhuma solicitação encontrada"
+                subtitle="Solicitações são geradas ao criar um processo com solicitação integrada."
+              />
+            }
+            footer={
+              <>
+                <Pagination />
+                <span>Registros encontrados: {solFiltradas.length}</span>
+              </>
+            }
           />
-        </div>
+        </>
       )}
 
       {modal === 'novo' && <NovoRegistroModal onClose={() => setModal('none')} />}
       {modal === 'pca' && <ImportarPcaModal onClose={() => setModal('none')} />}
       {modal === 'excel' && <ImportarExcelRegistroModal onClose={() => setModal('none')} />}
+
+      <ResponderSolicitacaoModal
+        solicitacao={responderAlvo}
+        onClose={() => setResponderId(null)}
+      />
 
       {itemConfirmar && (
         <div
