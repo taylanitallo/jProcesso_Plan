@@ -7,7 +7,7 @@ import { ControleGeralModal } from './ControleGeralModal'
 import { NodeConfigModal } from './NodeConfigModal'
 import { AdicionarArtefatoModal } from './AdicionarArtefatoModal'
 import { PrimeiraVezModal } from './PrimeiraVezModal'
-import { WORKFLOW_NODES, WORKFLOW_NODE_CHIPS, WORKFLOW_NODE_DEPS, WORKFLOWS } from '../../mocks'
+import { useWorkflows } from '../../store/workflows'
 
 const NODE_W = 280
 const NODE_H = 160
@@ -17,13 +17,10 @@ const COLS = 4
 
 type Pos = { x: number; y: number }
 
-const gridFor = (list: string[]): Record<string, Pos> => {
-  const map: Record<string, Pos> = {}
-  list.forEach((n, i) => {
-    map[n] = { x: 24 + (i % COLS) * COL_GAP, y: 24 + Math.floor(i / COLS) * ROW_GAP }
-  })
-  return map
-}
+const gridPos = (i: number): Pos => ({
+  x: 24 + (i % COLS) * COL_GAP,
+  y: 24 + Math.floor(i / COLS) * ROW_GAP,
+})
 
 /** Índice do slot da grade mais próximo de uma posição solta em modo "Organizar ordem". */
 const slotIndexFor = (pos: Pos, count: number) => {
@@ -47,13 +44,16 @@ export function WorkflowDetailPage() {
   useModuleLinks(PROCESSOS_MODULE_LINKS)
   const { id } = useParams()
 
-  const current = WORKFLOWS.find((w) => w.id === id)
-  const nomeOriginal = current?.nome ?? 'Novo fluxo'
-  const [fluxoNome, setFluxoNome] = useState(nomeOriginal)
-  const nomeAlterado = fluxoNome.trim() !== nomeOriginal && fluxoNome.trim() !== ''
+  const wf = useWorkflows((s) => s.workflows.find((w) => w.id === id))
+  const renomear = useWorkflows((s) => s.renomear)
+  const reordenarNos = useWorkflows((s) => s.reordenarNos)
+  const adicionarNo = useWorkflows((s) => s.adicionarNo)
 
-  const [nodes, setNodes] = useState<string[]>(WORKFLOW_NODES)
-  const [positions, setPositions] = useState<Record<string, Pos>>(() => gridFor(WORKFLOW_NODES))
+  const nosRef = wf?.nos
+  const nodesFromStore = useMemo(() => nosRef?.map((n) => n.nome) ?? [], [nosRef])
+
+  const [fluxoNome, setFluxoNome] = useState(wf?.nome ?? '')
+  const [overrides, setOverrides] = useState<Record<string, Pos>>({})
   const [zoom, setZoom] = useState(100)
   const [controle, setControle] = useState(false)
   const [configNode, setConfigNode] = useState<string | null>(null)
@@ -63,10 +63,18 @@ export function WorkflowDetailPage() {
   // modo "Organizar ordem"
   const [ordenando, setOrdenando] = useState(false)
   const [dirty, setDirty] = useState(false)
-  const snapshot = useRef<{ positions: Record<string, Pos>; nodes: string[] }>({
-    positions: {},
-    nodes: [],
-  })
+  const [draftNodes, setDraftNodes] = useState<string[]>([])
+
+  const nodes = ordenando ? draftNodes : nodesFromStore
+
+  /** Posição efetiva de cada nó: override manual do drag, senão slot da grade pelo índice. */
+  const positions = useMemo(() => {
+    const map: Record<string, Pos> = {}
+    nodes.forEach((n, i) => {
+      map[n] = overrides[n] ?? gridPos(i)
+    })
+    return map
+  }, [nodes, overrides])
 
   const drag = useRef<{
     node: string
@@ -93,35 +101,34 @@ export function WorkflowDetailPage() {
     const y = Math.max(0, d.origY + dy)
     d.curX = x
     d.curY = y
-    setPositions((prev) => ({ ...prev, [d.node]: { x, y } }))
+    setOverrides((prev) => ({ ...prev, [d.node]: { x, y } }))
   }
   const onPointerUp = () => {
     const d = drag.current
     window.removeEventListener('pointermove', onPointerMove)
     window.removeEventListener('pointerup', onPointerUp)
-    if (d && !d.moved && !ordenando) setConfigNode(d.node)
-    if (d && d.moved && ordenando) {
+    if (!d) return
+    if (!d.moved && !ordenando) {
+      setConfigNode(d.node)
+    } else if (d.moved && ordenando) {
       const dropPos = { x: d.curX, y: d.curY }
-      setNodes((prev) => {
+      setDraftNodes((prev) => {
         const targetIndex = slotIndexFor(dropPos, prev.length)
         const from = prev.indexOf(d.node)
-        if (from === -1 || from === targetIndex) {
-          setPositions(gridFor(prev))
-          return prev
-        }
+        if (from === -1 || from === targetIndex) return prev
         const next = [...prev]
         next.splice(from, 1)
         next.splice(targetIndex, 0, d.node)
-        setPositions(gridFor(next))
         return next
       })
+      setOverrides({})
     }
     drag.current = null
   }
   const onPointerDown = (e: React.PointerEvent, node: string) => {
     if ((e.target as HTMLElement).closest('[data-chip]')) return
     e.preventDefault()
-    const p = positions[node]
+    const p = positions[node] ?? gridPos(0)
     drag.current = {
       node,
       startX: e.clientX,
@@ -137,29 +144,21 @@ export function WorkflowDetailPage() {
   }
 
   const iniciarOrganizar = () => {
-    snapshot.current = { positions, nodes }
+    setDraftNodes(nodesFromStore)
+    setOverrides({})
     setDirty(false)
     setOrdenando(true)
   }
   const cancelarOrganizar = () => {
-    setPositions(snapshot.current.positions)
-    setNodes(snapshot.current.nodes)
+    setOverrides({})
     setDirty(false)
     setOrdenando(false)
   }
   const salvarOrdem = () => {
-    setPositions(gridFor(nodes))
+    if (wf) reordenarNos(wf.id, draftNodes)
+    setOverrides({})
     setDirty(false)
     setOrdenando(false)
-  }
-
-  const addArtefato = (nome: string, afterIndex: number) => {
-    setNodes((prev) => {
-      const next = [...prev]
-      next.splice(afterIndex + 1, 0, nome)
-      setPositions(gridFor(next))
-      return next
-    })
   }
 
   const canvasSize = useMemo(() => {
@@ -168,12 +167,21 @@ export function WorkflowDetailPage() {
     return { w: Math.max(...xs, 0) + NODE_W + 40, h: Math.max(...ys, 0) + 210 }
   }, [positions])
 
+  /** Dependências por nó (config do próprio fluxo). */
+  const depsMap = useMemo(() => {
+    const m: Record<string, string[]> = {}
+    nosRef?.forEach((no) => {
+      if (no.config.deps.length) m[no.nome] = no.config.deps
+    })
+    return m
+  }, [nosRef])
+
   /** Conectores (fios) desenhados entre um nó e cada dependência que ele exige. */
   const conexoes = useMemo(() => {
     const set = new Set(nodes)
     const list: { key: string; d: string }[] = []
     for (const node of nodes) {
-      const deps = WORKFLOW_NODE_DEPS[node]
+      const deps = depsMap[node]
       if (!deps) continue
       for (const dep of deps) {
         if (!set.has(dep) || !positions[dep] || !positions[node]) continue
@@ -181,7 +189,27 @@ export function WorkflowDetailPage() {
       }
     }
     return list
-  }, [nodes, positions])
+  }, [nodes, positions, depsMap])
+
+  if (!wf) {
+    return (
+      <div className="flex flex-col items-start gap-3">
+        <Link
+          to="/ProcessosWorkflow"
+          className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--color-primary)]"
+        >
+          <ChevronLeft size={15} /> Fluxos de Processos
+        </Link>
+        <p className="text-sm text-[var(--color-muted)]">Fluxo não encontrado.</p>
+      </div>
+    )
+  }
+
+  const nomeAlterado = fluxoNome.trim() !== wf.nome && fluxoNome.trim() !== ''
+
+  const addArtefato = (nome: string, afterIndex: number, icone: string) => {
+    adicionarNo(wf.id, nome, afterIndex, icone)
+  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -221,6 +249,7 @@ export function WorkflowDetailPage() {
           </label>
           <button
             disabled={!nomeAlterado}
+            onClick={() => renomear(wf.id, fluxoNome)}
             className="font-semibold text-[var(--color-primary)] disabled:cursor-not-allowed disabled:text-[var(--color-muted)]"
           >
             Salvar nome
@@ -306,15 +335,28 @@ export function WorkflowDetailPage() {
                 ))}
               </svg>
               {nodes.map((node, i) => {
-                const p = positions[node] ?? { x: 24, y: 24 }
-                const deps = WORKFLOW_NODE_DEPS[node]
+                const p = positions[node] ?? gridPos(i)
+                const cfg = wf.nos.find((n) => n.nome === node)?.config
+                const deps = cfg?.deps ?? []
+                const inativo = cfg ? !cfg.ativo : false
+                const chips: string[] = []
+                if (cfg?.prazoAtivo) chips.push('Prazo')
+                if (cfg?.revisao) chips.push('Revisão')
+                if (cfg?.aprovacao) chips.push('Aprovação')
+                if (cfg?.assinatura) chips.push('Assinatura')
                 return (
                   <div
                     key={node}
                     onPointerDown={(e) => onPointerDown(e, node)}
                     style={{ left: p.x, top: p.y, width: NODE_W }}
-                    title="Artefato ativo — Exigido nos processos deste fluxo"
-                    className="absolute cursor-grab touch-none select-none rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white p-4 pb-6 shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-pop)] active:cursor-grabbing"
+                    title={
+                      inativo
+                        ? 'Artefato inativo — não exigido nos processos deste fluxo'
+                        : 'Artefato ativo — Exigido nos processos deste fluxo'
+                    }
+                    className={`absolute cursor-grab touch-none select-none rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white p-4 pb-6 shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-pop)] active:cursor-grabbing ${
+                      inativo ? 'opacity-55' : ''
+                    }`}
                   >
                     <div className="mb-2 flex items-center gap-2">
                       <span className="grid h-5 w-5 place-items-center rounded-full border border-[#bcd0ee] bg-[var(--color-primary-soft)] text-[10px] font-bold text-[var(--color-primary-strong)]">
@@ -323,21 +365,30 @@ export function WorkflowDetailPage() {
                       <p className="truncate font-display text-sm font-bold text-[#183263]">{node}</p>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
-                      {WORKFLOW_NODE_CHIPS.map((chip) => (
+                      {chips.length ? (
+                        chips.map((chip) => (
+                          <span
+                            key={chip}
+                            data-chip
+                            className="rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-white px-2.5 py-1 text-[11px] font-semibold text-[var(--color-muted)]"
+                          >
+                            {chip}
+                          </span>
+                        ))
+                      ) : (
                         <span
-                          key={chip}
                           data-chip
-                          className="rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-white px-2.5 py-1 text-[11px] font-semibold text-[var(--color-muted)]"
+                          className="rounded-[var(--radius-pill)] border border-dashed border-[var(--color-line)] bg-white px-2.5 py-1 text-[11px] font-semibold text-[var(--color-muted)]"
                         >
-                          {chip}
+                          Sem regras
                         </span>
-                      ))}
-                      {deps ? (
+                      )}
+                      {deps.length ? (
                         <span
                           data-chip
                           className="group relative rounded-[var(--radius-pill)] border border-[#a7dcc4] bg-[#e4f4ec] px-2.5 py-1 text-[11px] font-semibold text-[var(--color-success)]"
                         >
-                          Dependências
+                          Dependências ({deps.length})
                           <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-1 hidden w-52 -translate-x-1/2 rounded-[10px] bg-[var(--color-primary)] p-3 text-left text-[11px] font-normal text-white shadow-[var(--shadow-pop)] group-hover:block">
                             <span className="font-bold">Depende de:</span>
                             <ul className="mt-1 list-disc space-y-0.5 pl-4">
@@ -356,9 +407,15 @@ export function WorkflowDetailPage() {
                         </span>
                       )}
                     </div>
-                    <span className="absolute bottom-2 right-2 grid h-5 w-5 place-items-center rounded-full bg-[#e4f4ec] text-[var(--color-success)]">
-                      <Check size={12} />
-                    </span>
+                    {inativo ? (
+                      <span className="absolute bottom-2 right-2 rounded-[var(--radius-pill)] bg-[#eef2f8] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--color-muted)]">
+                        Inativo
+                      </span>
+                    ) : (
+                      <span className="absolute bottom-2 right-2 grid h-5 w-5 place-items-center rounded-full bg-[#e4f4ec] text-[var(--color-success)]">
+                        <Check size={12} />
+                      </span>
+                    )}
                   </div>
                 )
               })}
@@ -370,8 +427,15 @@ export function WorkflowDetailPage() {
       {primeiraVez && (
         <PrimeiraVezModal total={nodes.length} onDone={() => setPrimeiraVez(false)} />
       )}
-      <ControleGeralModal open={controle} onClose={() => setControle(false)} />
-      <NodeConfigModal node={configNode} onClose={() => setConfigNode(null)} />
+      <ControleGeralModal open={controle} workflowId={wf.id} onClose={() => setControle(false)} />
+      {configNode && (
+        <NodeConfigModal
+          key={configNode}
+          workflowId={wf.id}
+          node={configNode}
+          onClose={() => setConfigNode(null)}
+        />
+      )}
       <AdicionarArtefatoModal
         open={addOpen}
         onClose={() => setAddOpen(false)}

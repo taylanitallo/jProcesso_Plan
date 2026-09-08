@@ -11,7 +11,8 @@ import {
   X,
 } from 'lucide-react'
 import { Combo } from '../../components/common/Combo'
-import { CATEGORIAS_ASSINANTES, WORKFLOW_NODES } from '../../mocks'
+import { CATEGORIAS_ASSINANTES } from '../../mocks'
+import { useWorkflows, type ContagemPrazo } from '../../store/workflows'
 
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: () => void }) {
   return (
@@ -69,26 +70,43 @@ function Card({
 }
 
 /** Abre ao clicar num nó do fluxo. Espelha "Configuração do Fluxo de Trabalho" do SollAI. */
-export function NodeConfigModal({ node, onClose }: { node: string | null; onClose: () => void }) {
-  const [ativo, setAtivo] = useState(true)
-  const [deps, setDeps] = useState(false)
-  const [prazo, setPrazo] = useState(false)
-  const [revisao, setRevisao] = useState(false)
-  const [aprovacao, setAprovacao] = useState(false)
-  const [assinatura, setAssinatura] = useState(false)
+export function NodeConfigModal({
+  workflowId,
+  node,
+  onClose,
+}: {
+  workflowId: string
+  node: string | null
+  onClose: () => void
+}) {
+  const wf = useWorkflows((s) => s.workflows.find((w) => w.id === workflowId))
+  const configurarNo = useWorkflows((s) => s.configurarNo)
+  const no = wf?.nos.find((n) => n.nome === node)
 
-  const [depSel, setDepSel] = useState<Set<string>>(new Set())
+  // o pai monta este modal com `key={node}`, então os initializers rodam uma vez por nó
+  const c0 = no?.config
+  const [ativo, setAtivo] = useState(c0?.ativo ?? true)
+  const [deps, setDeps] = useState((c0?.deps.length ?? 0) > 0)
+  const [prazo, setPrazo] = useState(c0?.prazoAtivo ?? false)
+  const [revisao, setRevisao] = useState(c0?.revisao ?? false)
+  const [aprovacao, setAprovacao] = useState(c0?.aprovacao ?? false)
+  const [assinatura, setAssinatura] = useState(c0?.assinatura ?? false)
+
+  const [depSel, setDepSel] = useState<Set<string>>(() => new Set(c0?.deps ?? []))
   const [depQuery, setDepQuery] = useState('')
-  const [duracao, setDuracao] = useState('')
-  const [contagem, setContagem] = useState('')
-  const [respRevisao, setRespRevisao] = useState('')
-  const [respAprovacao, setRespAprovacao] = useState('')
-  const [respAssinatura, setRespAssinatura] = useState('')
+  const [duracao, setDuracao] = useState(c0?.duracao ? String(c0.duracao) : '')
+  const [contagem, setContagem] = useState<ContagemPrazo>(c0?.contagem ?? '')
+  const [respRevisao, setRespRevisao] = useState(c0?.respRevisao ?? '')
+  const [respAprovacao, setRespAprovacao] = useState(c0?.respAprovacao ?? '')
+  const [respAssinatura, setRespAssinatura] = useState(c0?.respAssinatura ?? '')
 
-  const outros = useMemo(() => WORKFLOW_NODES.filter((n) => n !== node), [node])
+  const outros = useMemo(
+    () => (wf?.nos ?? []).map((n) => n.nome).filter((n) => n !== node),
+    [wf?.nos, node],
+  )
   const depList = outros.filter((n) => n.toLowerCase().includes(depQuery.toLowerCase()))
 
-  if (!node) return null
+  if (!node || !wf || !no) return null
 
   const toggleDep = (n: string) =>
     setDepSel((prev) => {
@@ -99,15 +117,31 @@ export function NodeConfigModal({ node, onClose }: { node: string | null; onClos
     })
   const allSelected = depSel.size === outros.length && outros.length > 0
 
+  const salvar = () => {
+    configurarNo(workflowId, node, {
+      ativo,
+      deps: deps ? [...depSel].filter((d) => outros.includes(d)) : [],
+      prazoAtivo: prazo,
+      duracao: prazo ? Number(duracao) || 0 : 0,
+      contagem: prazo ? contagem : '',
+      revisao,
+      respRevisao: revisao ? respRevisao : '',
+      aprovacao,
+      respAprovacao: aprovacao ? respAprovacao : '',
+      assinatura,
+      respAssinatura: assinatura ? respAssinatura : '',
+    })
+    onClose()
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[rgba(9,21,44,0.6)] p-3 backdrop-blur-sm sm:p-4"
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
     >
-      <div
-        className="relative my-4 max-h-[90vh] w-full max-w-[1320px] overflow-y-auto rounded-[20px] bg-white p-5 shadow-[var(--shadow-pop)] sm:p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="relative my-4 max-h-[90vh] w-full max-w-[1320px] overflow-y-auto rounded-[20px] bg-white p-5 shadow-[var(--shadow-pop)] sm:p-6">
         <button
           onClick={onClose}
           aria-label="Fechar"
@@ -191,9 +225,7 @@ export function NodeConfigModal({ node, onClose }: { node: string | null; onClos
                     <Toggle
                       label="Selecionar todos"
                       checked={allSelected}
-                      onChange={() =>
-                        setDepSel(allSelected ? new Set() : new Set(outros))
-                      }
+                      onChange={() => setDepSel(allSelected ? new Set() : new Set(outros))}
                     />
                   </div>
                 </div>
@@ -241,7 +273,7 @@ export function NodeConfigModal({ node, onClose }: { node: string | null; onClos
                   Tipo de contagem
                   <Combo
                     value={contagem}
-                    onChange={setContagem}
+                    onChange={(v) => setContagem(v as ContagemPrazo)}
                     options={['Dias corridos', 'Dias úteis']}
                     placeholder="Selecione:"
                   />
@@ -327,7 +359,7 @@ export function NodeConfigModal({ node, onClose }: { node: string | null; onClos
         </div>
 
         <button
-          onClick={onClose}
+          onClick={salvar}
           className="mt-4 w-full rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] py-3 text-sm font-bold uppercase tracking-wide text-white"
         >
           Salvar configurações

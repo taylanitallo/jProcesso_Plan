@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { CalendarClock, FileCheck2, FilePen, FileSignature, Settings, X } from 'lucide-react'
 import { Combo } from '../../components/common/Combo'
+import { useWorkflows, type ContagemPrazo } from '../../store/workflows'
 
 function Toggle({
   label,
@@ -70,25 +71,45 @@ function Card({
   )
 }
 
-export function ControleGeralModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function ControleGeralModal({
+  open,
+  workflowId,
+  onClose,
+}: {
+  open: boolean
+  workflowId: string
+  onClose: () => void
+}) {
+  const aplicarControleGeral = useWorkflows((s) => s.aplicarControleGeral)
   const [prazo, setPrazo] = useState(false)
   const [revisao, setRevisao] = useState(false)
   const [aprovacao, setAprovacao] = useState(false)
   const [assinatura, setAssinatura] = useState(false)
   const [duracao, setDuracao] = useState('')
-  const [contagem, setContagem] = useState('')
+  const [contagem, setContagem] = useState<ContagemPrazo>('')
 
   if (!open) return null
+
+  const salvar = () => {
+    aplicarControleGeral(workflowId, {
+      prazoAtivo: prazo,
+      duracao: prazo ? Number(duracao) || 0 : 0,
+      contagem: prazo ? contagem : '',
+      revisao,
+      aprovacao,
+      assinatura,
+    })
+    onClose()
+  }
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[rgba(9,21,44,0.6)] p-3 backdrop-blur-sm sm:p-4"
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
     >
-      <div
-        className="relative my-4 max-h-[90vh] w-full max-w-[1320px] overflow-y-auto rounded-[20px] bg-white p-5 shadow-[var(--shadow-pop)] sm:p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="relative my-4 max-h-[90vh] w-full max-w-[1320px] overflow-y-auto rounded-[20px] bg-white p-5 shadow-[var(--shadow-pop)] sm:p-6">
         <button
           onClick={onClose}
           aria-label="Fechar"
@@ -141,7 +162,7 @@ export function ControleGeralModal({ open, onClose }: { open: boolean; onClose: 
                     Tipo de contagem
                     <Combo
                       value={contagem}
-                      onChange={setContagem}
+                      onChange={(v) => setContagem(v as ContagemPrazo)}
                       options={['Dias corridos', 'Dias úteis']}
                       placeholder="Selecione:"
                     />
@@ -194,7 +215,7 @@ export function ControleGeralModal({ open, onClose }: { open: boolean; onClose: 
         </p>
 
         <button
-          onClick={onClose}
+          onClick={salvar}
           className="mt-4 w-full rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] py-3 text-sm font-bold uppercase tracking-wide text-white"
         >
           Salvar para todos

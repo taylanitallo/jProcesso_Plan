@@ -1,27 +1,51 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Plus, X } from 'lucide-react'
 import { Combo } from '../../components/common/Combo'
 import { PROCESSO_LEGISLACOES, PROCESSO_TIPOS } from '../../mocks'
+import { useWorkflows } from '../../store/workflows'
 
 /** "+ Novo Fluxo" — conforme o modal real do SollAI. */
 export function NovoFluxoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const criar = useWorkflows((s) => s.criar)
+  const navigate = useNavigate()
   const [nome, setNome] = useState('')
   const [legislacao, setLegislacao] = useState('')
   const [tipo, setTipo] = useState('')
 
   if (!open) return null
 
+  const podeSalvar = Boolean(nome.trim() && legislacao && tipo)
+
+  const reset = () => {
+    setNome('')
+    setLegislacao('')
+    setTipo('')
+  }
+
+  const fechar = () => {
+    reset()
+    onClose()
+  }
+
+  const salvar = () => {
+    if (!podeSalvar) return
+    const id = criar({ nome, legislacao, tipo })
+    reset()
+    onClose()
+    navigate(`/Workflow/${id}`)
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[rgba(9,21,44,0.6)] p-3 backdrop-blur-sm sm:p-8"
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) fechar()
+      }}
     >
-      <div
-        className="relative my-4 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[20px] bg-white p-5 shadow-[var(--shadow-pop)] sm:p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="relative my-4 max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[20px] bg-white p-5 shadow-[var(--shadow-pop)] sm:p-6">
         <button
-          onClick={onClose}
+          onClick={fechar}
           aria-label="Fechar"
           className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white text-[var(--color-muted)] shadow"
         >
@@ -83,8 +107,9 @@ export function NovoFluxoModal({ open, onClose }: { open: boolean; onClose: () =
         </p>
 
         <button
-          onClick={onClose}
-          className="mt-5 w-full rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] py-3 text-sm font-bold text-white"
+          onClick={salvar}
+          disabled={!podeSalvar}
+          className="mt-5 w-full rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
         >
           Salvar Fluxo
         </button>

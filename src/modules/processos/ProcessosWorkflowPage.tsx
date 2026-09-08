@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Search, Trash2 } from 'lucide-react'
+import { Plus, Power, Search } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { Button } from '../../components/common/Button'
 import { Badge } from '../../components/common/Badge'
@@ -8,20 +8,22 @@ import { DataTable, Pagination, type Column } from '../../components/common/Data
 import { useModuleLinks } from '../../components/shell/useModuleLinks'
 import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 import { NovoFluxoModal } from './NovoFluxoModal'
-import { WORKFLOWS } from '../../mocks'
-
-type Row = (typeof WORKFLOWS)[number]
+import { useWorkflows, type Workflow } from '../../store/workflows'
 
 export function ProcessosWorkflowPage() {
   useModuleLinks(PROCESSOS_MODULE_LINKS)
   const navigate = useNavigate()
+  const workflows = useWorkflows((s) => s.workflows)
+  const definirAtivo = useWorkflows((s) => s.definirAtivo)
   const [open, setOpen] = useState(false)
 
-  const cols: Column<Row>[] = [
+  const cols: Column<Workflow>[] = [
     {
       key: 'nome',
       header: 'Nome do Fluxo',
-      render: (r) => <span className="font-semibold text-[var(--color-primary-strong)]">{r.nome}</span>,
+      render: (r) => (
+        <span className="font-semibold text-[var(--color-primary-strong)]">{r.nome}</span>
+      ),
     },
     { key: 'tipo', header: 'Tipo de Processo', align: 'center' },
     { key: 'legislacao', header: 'Legislação', align: 'center' },
@@ -46,9 +48,21 @@ export function ProcessosWorkflowPage() {
           >
             <Search size={13} /> Detalhes
           </button>
-          <button className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-[#f0c2c8] px-3 py-1.5 text-xs font-semibold text-[var(--color-danger)]">
-            <Trash2 size={13} /> Inativar
-          </button>
+          {r.ativo ? (
+            <button
+              onClick={() => definirAtivo(r.id, false)}
+              className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-[#f0c2c8] px-3 py-1.5 text-xs font-semibold text-[var(--color-danger)]"
+            >
+              <Power size={13} /> Inativar
+            </button>
+          ) : (
+            <button
+              onClick={() => definirAtivo(r.id, true)}
+              className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-[var(--color-line)] px-3 py-1.5 text-xs font-semibold text-[var(--color-primary-strong)]"
+            >
+              <Power size={13} /> Reativar
+            </button>
+          )}
         </div>
       ),
     },
@@ -67,14 +81,14 @@ export function ProcessosWorkflowPage() {
         </Button>
       </div>
 
-      <DataTable<Row>
+      <DataTable<Workflow>
         columns={cols}
-        rows={WORKFLOWS}
+        rows={workflows}
         rowKey={(r) => r.id}
         footer={
           <>
             <Pagination />
-            <span>Registros encontrados: {WORKFLOWS.length}</span>
+            <span>Registros encontrados: {workflows.length}</span>
           </>
         }
       />

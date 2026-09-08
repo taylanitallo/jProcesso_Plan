@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Combo } from '../../components/common/Combo'
-import { PROCESSO_LEGISLACOES, PROCESSO_TIPOS, WORKFLOWS } from '../../mocks'
+import { PROCESSO_LEGISLACOES, PROCESSO_TIPOS } from '../../mocks'
+import { useWorkflows } from '../../store/workflows'
 import type { ProcessoFormValue } from './processoForm'
 
 /**
@@ -15,13 +16,16 @@ export function ProcessoFields({
   value: ProcessoFormValue
   onChange: (patch: Partial<ProcessoFormValue>) => void
 }) {
+  const workflows = useWorkflows((s) => s.workflows)
   const fluxoLiberado = Boolean(value.legislacao && value.tipo)
   const fluxoOptions = useMemo(
     () =>
-      WORKFLOWS.filter((w) => w.legislacao === value.legislacao && w.tipo === value.tipo).map(
-        (w) => w.nome,
-      ),
-    [value.legislacao, value.tipo],
+      workflows
+        .filter(
+          (w) => w.ativo && w.legislacao === value.legislacao && w.tipo === value.tipo,
+        )
+        .map((w) => w.nome),
+    [workflows, value.legislacao, value.tipo],
   )
 
   return (

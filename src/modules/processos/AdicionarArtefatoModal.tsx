@@ -32,7 +32,7 @@ export function AdicionarArtefatoModal({
   open: boolean
   onClose: () => void
   nodes: string[]
-  onAdd: (nome: string, afterIndex: number) => void
+  onAdd: (nome: string, afterIndex: number, icone: string) => void
 }) {
   const [nome, setNome] = useState('')
   const [posicao, setPosicao] = useState('')
@@ -45,9 +45,10 @@ export function AdicionarArtefatoModal({
   const submit = () => {
     if (!nome.trim() || !posicao) return
     const idx = posOptions.indexOf(posicao) - 1 // -1 => primeiro
-    onAdd(nome.trim(), idx)
+    onAdd(nome.trim(), idx, icone)
     setNome('')
     setPosicao('')
+    setIcone('Documento')
     onClose()
   }
 
