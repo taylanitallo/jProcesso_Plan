@@ -365,11 +365,14 @@ export function ProcessoDetailPage() {
         </div>
       )}
 
-      <ArtefatoDetalheModal
-        artefato={artefato}
-        processo={proc}
-        onClose={() => setArtefato(null)}
-      />
+      {artefato && (
+        <ArtefatoDetalheModal
+          key={artefato}
+          artefato={artefato}
+          processo={proc}
+          onClose={() => setArtefato(null)}
+        />
+      )}
       <MapaRiscoModal open={mapaRisco} onClose={() => setMapaRisco(false)} />
       <CadastroItensModal open={itensOpen} onClose={() => setItensOpen(false)} />
 

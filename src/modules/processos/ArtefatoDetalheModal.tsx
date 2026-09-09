@@ -33,6 +33,17 @@ type Sub = null | 'form' | 'solicitar' | 'arquivo' | 'gerar' | 'upload'
 
 const USUARIO_ATUAL = 'ALEF MATHEUS TEIXEIRA DE SOUSA'
 
+/** `dd/mm/aaaa[...]` → `aaaa-mm-dd` (para o <input type="date">). */
+const brToIso = (s: string) => {
+  const m = s?.match(/^(\d{2})\/(\d{2})\/(\d{4})/)
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : ''
+}
+/** `aaaa-mm-dd` → `dd/mm/aaaa`. */
+const isoToBr = (s: string) => {
+  const m = s?.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : ''
+}
+
 /** Sobe o anexo pro dev-server; devolve a URL que o OnlyOffice consegue baixar. */
 async function enviarAnexo(file: File): Promise<string | null> {
   try {
@@ -72,7 +83,10 @@ export function ArtefatoDetalheModal({
 }) {
   const abrirRevisao = useRevisoes((s) => s.abrir)
   const atualizarArtefato = useProcessos((s) => s.atualizarArtefato)
-  const [responsavel, setResponsavel] = useState('')
+  // o pai monta o modal com `key={artefato}`, então os initializers rodam por artefato
+  const artefatoAtual = processo.artefatos.find((a) => a.completo === artefato)
+  const [responsavel, setResponsavel] = useState(artefatoAtual?.responsavel ?? '')
+  const [prazoIso, setPrazoIso] = useState(brToIso(artefatoAtual?.prazo ?? ''))
   const [sub, setSub] = useState<Sub>(null)
   const [email, setEmail] = useState('')
   const [verDoc, setVerDoc] = useState(false)
@@ -209,8 +223,20 @@ export function ArtefatoDetalheModal({
               placeholder="Selecione o responsável"
             />
           </div>
-          <input type="date" className="gt-input w-40 font-normal normal-case" />
+          <input
+            type="date"
+            value={prazoIso}
+            onChange={(e) => setPrazoIso(e.target.value)}
+            className="gt-input w-40 font-normal normal-case"
+          />
           <button
+            onClick={() => {
+              atualizarArtefato(processo.id, artefato, {
+                responsavel,
+                prazo: isoToBr(prazoIso),
+              })
+              registrar('Designação atualizada', 'Designação', `Responsável: ${responsavel || '—'}`)
+            }}
             aria-label="Salvar alterações"
             className="grid h-10 w-10 shrink-0 place-items-center rounded-[var(--radius-control)] bg-[var(--color-primary)] text-white"
           >
