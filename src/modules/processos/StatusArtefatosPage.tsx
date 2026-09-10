@@ -8,6 +8,8 @@ import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 import { ArtefatoDetalheModal } from './ArtefatoDetalheModal'
 import { MapaRiscoModal } from './MapaRiscoModal'
 import { useProcessos, type ProcessoLocal } from '../../store/processos'
+import { useWorkflows } from '../../store/workflows'
+import { exigenciasDoProcesso } from './exigencias'
 
 /** Artefatos do fluxo 14.133 — ordem e rótulos conforme o SollAI real. */
 const ARTEFATOS = [
@@ -43,11 +45,15 @@ const ARTEFATOS = [
   'Termo de Homologação',
 ]
 
+type EtapaExig = 'ok' | 'pendente' | 'na'
+
 type LinhaProcesso = {
   proc: ProcessoLocal
   responsavel: string
   prazo: string
   status: 'ENVIADO' | 'NÃO ENVIADO' | 'NÃO INICIADO'
+  aprov: EtapaExig
+  assin: EtapaExig
 }
 
 const STATUS_TONE = {
@@ -59,6 +65,7 @@ const STATUS_TONE = {
 export function StatusArtefatosPage() {
   useModuleLinks(PROCESSOS_MODULE_LINKS)
   const processos = useProcessos((s) => s.processos)
+  const workflows = useWorkflows((s) => s.workflows)
   const [sel, setSel] = useState(0)
   const [detalhe, setDetalhe] = useState<string | null>(null)
   const [detalheProc, setDetalheProc] = useState<ProcessoLocal | null>(null)
@@ -68,11 +75,16 @@ export function StatusArtefatosPage() {
 
   const linhas: LinhaProcesso[] = processos.map((p) => {
     const a = p.artefatos.find((x) => x.completo === artefatoSel || x.nome === artefatoSel)
+    const exig = a ? exigenciasDoProcesso(p, workflows).get(a.completo) : undefined
+    const marca = (exige: boolean, feito: string): EtapaExig =>
+      !exige ? 'na' : feito ? 'ok' : 'pendente'
     return {
       proc: p,
       responsavel: a?.responsavel || 'Não definido',
       prazo: a?.prazo || 'Sem prazo',
       status: !a ? 'NÃO INICIADO' : a.enviado ? 'ENVIADO' : 'NÃO ENVIADO',
+      aprov: marca(Boolean(exig?.aprovacao), a?.aprovadoEm ?? ''),
+      assin: marca(Boolean(exig?.assinatura), a?.assinadoEm ?? ''),
     }
   })
 
@@ -100,6 +112,41 @@ export function StatusArtefatosPage() {
       header: 'Status Atual',
       align: 'center',
       render: (r) => <Badge tone={STATUS_TONE[r.status]}>{r.status}</Badge>,
+    },
+    {
+      key: 'exig',
+      header: 'Aprov./Assin.',
+      align: 'center',
+      render: (r) => {
+        if (r.aprov === 'na' && r.assin === 'na')
+          return <span className="text-xs text-[var(--color-muted)]">—</span>
+        return (
+          <span className="inline-flex justify-center gap-1">
+            {r.aprov !== 'na' && (
+              <span
+                title={r.aprov === 'ok' ? 'Aprovado' : 'Aprovação pendente'}
+                className={`grid h-5 w-5 place-items-center rounded-full text-[10px] font-bold ${
+                  r.aprov === 'ok'
+                    ? 'bg-[#e4f4ec] text-[var(--color-success)]'
+                    : 'bg-[#eef2f8] text-[var(--color-muted)]'
+                }`}
+              >
+                A
+              </span>
+            )}
+            {r.assin !== 'na' && (
+              <span
+                title={r.assin === 'ok' ? 'Assinado' : 'Assinatura pendente'}
+                className={`grid h-5 w-5 place-items-center rounded-full text-[10px] font-bold ${
+                  r.assin === 'ok' ? 'bg-[#ede9fe] text-[#7c3aed]' : 'bg-[#eef2f8] text-[var(--color-muted)]'
+                }`}
+              >
+                S
+              </span>
+            )}
+          </span>
+        )
+      },
     },
     {
       key: 'acoes',

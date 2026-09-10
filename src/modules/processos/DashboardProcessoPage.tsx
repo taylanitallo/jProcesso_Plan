@@ -1,5 +1,5 @@
 import { useMemo, type ReactNode } from 'react'
-import { AlertTriangle, Clock, FolderKanban } from 'lucide-react'
+import { AlertTriangle, Clock, FileSignature, FolderKanban, ShieldCheck } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { Badge } from '../../components/common/Badge'
 import { DataTable, type Column } from '../../components/common/DataTable'
@@ -9,6 +9,8 @@ import { useModuleLinks } from '../../components/shell/useModuleLinks'
 import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 import { PROCESSO_ARTEFATOS } from '../../mocks'
 import { useProcessos, type ProcessoLocal } from '../../store/processos'
+import { useWorkflows } from '../../store/workflows'
+import { exigenciasDoProcesso } from './exigencias'
 
 const MESES_CURTOS = [
   'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
@@ -57,6 +59,7 @@ function etapaAtual(p: ProcessoLocal): string {
 export function DashboardProcessoPage() {
   useModuleLinks(PROCESSOS_MODULE_LINKS)
   const processos = useProcessos((s) => s.processos)
+  const workflows = useWorkflows((s) => s.workflows)
 
   const m = useMemo(() => {
     const hoje = new Date()
@@ -65,6 +68,21 @@ export function DashboardProcessoPage() {
     const ativos = processos.filter((p) => p.status === 'ATIVO')
     const finalizados = processos.filter((p) => p.status === 'FINALIZADO')
     const nomesArt = PROCESSO_ARTEFATOS.map((a) => a.nome)
+
+    // --- aprovações / assinaturas pendentes (pelo fluxo do processo) ---
+    let aprovacoesPendentes = 0
+    let assinaturasPendentes = 0
+    for (const p of processos) {
+      const exig = exigenciasDoProcesso(p, workflows)
+      if (exig.size === 0) continue
+      for (const a of p.artefatos) {
+        if (!a.enviado) continue
+        const e = exig.get(a.completo)
+        if (!e) continue
+        if (e.aprovacao && !a.aprovadoEm) aprovacoesPendentes += 1
+        if (e.assinatura && !a.assinadoEm) assinaturasPendentes += 1
+      }
+    }
 
     // --- TMC (ciclo dos finalizados) ---
     const ciclos = finalizados
@@ -225,8 +243,10 @@ export function DashboardProcessoPage() {
       retLabels,
       retData,
       tendencia,
+      aprovacoesPendentes,
+      assinaturasPendentes,
     }
-  }, [processos])
+  }, [processos, workflows])
 
   return (
     <div className="flex flex-col gap-8">
@@ -285,6 +305,24 @@ export function DashboardProcessoPage() {
       </Section>
 
       <Section title="Risco e Status">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Card accent="#198754">
+            <div className="flex items-center gap-4">
+              <IconBox color="#198754">
+                <ShieldCheck size={20} />
+              </IconBox>
+              <Kpi label="Aprovações pendentes" value={String(m.aprovacoesPendentes)} />
+            </div>
+          </Card>
+          <Card accent="#7c3aed">
+            <div className="flex items-center gap-4">
+              <IconBox color="#7c3aed">
+                <FileSignature size={20} />
+              </IconBox>
+              <Kpi label="Assinaturas pendentes" value={String(m.assinaturasPendentes)} />
+            </div>
+          </Card>
+        </div>
         <Card title="Artefatos Críticos de Processos (Atrasados ou Em Risco)">
           <DataTable<CriticoRow>
             columns={criticosCols}
