@@ -6,6 +6,7 @@ import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 import { ControleGeralModal } from './ControleGeralModal'
 import { NodeConfigModal } from './NodeConfigModal'
 import { AdicionarArtefatoModal } from './AdicionarArtefatoModal'
+import { iconeDoArtefato } from './artefatoIcones'
 import { PrimeiraVezModal } from './PrimeiraVezModal'
 import { useWorkflows } from '../../store/workflows'
 
@@ -336,7 +337,9 @@ export function WorkflowDetailPage() {
               </svg>
               {nodes.map((node, i) => {
                 const p = positions[node] ?? gridPos(i)
-                const cfg = wf.nos.find((n) => n.nome === node)?.config
+                const noObj = wf.nos.find((n) => n.nome === node)
+                const cfg = noObj?.config
+                const NoIcon = iconeDoArtefato(noObj?.icone ?? 'Documento')
                 const deps = cfg?.deps ?? []
                 const inativo = cfg ? !cfg.ativo : false
                 const chips: string[] = []
@@ -362,6 +365,7 @@ export function WorkflowDetailPage() {
                       <span className="grid h-5 w-5 place-items-center rounded-full border border-[#bcd0ee] bg-[var(--color-primary-soft)] text-[10px] font-bold text-[var(--color-primary-strong)]">
                         {i + 1}
                       </span>
+                      <NoIcon size={14} className="shrink-0 text-[var(--color-primary-strong)]" />
                       <p className="truncate font-display text-sm font-bold text-[#183263]">{node}</p>
                     </div>
                     <div className="flex flex-wrap gap-1.5">

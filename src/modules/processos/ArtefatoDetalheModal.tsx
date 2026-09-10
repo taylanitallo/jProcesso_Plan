@@ -19,10 +19,10 @@ import {
 import { Combo } from '../../components/common/Combo'
 import { FormularioModal } from './FormularioModal'
 import { OnlyOfficeEditorModal } from '../../components/common/OnlyOfficeEditorModal'
-import { USUARIOS_NOMES } from '../../mocks'
 import { useRevisoes } from '../../store/revisoes'
 import { useProcessos, type ProcessoLocal } from '../../store/processos'
 import { useWorkflows } from '../../store/workflows'
+import { useUsuarios } from '../../store/usuarios'
 import { exigenciasDoProcesso } from './exigencias'
 
 const ACOES = [
@@ -36,6 +36,14 @@ const ACOES = [
 type Sub = null | 'form' | 'solicitar' | 'arquivo' | 'gerar' | 'upload'
 
 const USUARIO_ATUAL = 'ALEF MATHEUS TEIXEIRA DE SOUSA'
+
+/** Nomes disponíveis no contrato: o usuário atual + os cadastrados em Gerenciar Usuários. */
+function useNomesContrato(): string[] {
+  const usuarios = useUsuarios((s) => s.usuarios)
+  return [USUARIO_ATUAL, ...usuarios.map((u) => u.nome)].filter(
+    (n, i, arr) => n && arr.indexOf(n) === i,
+  )
+}
 
 /** `dd/mm/aaaa[...]` → `aaaa-mm-dd` (para o <input type="date">). */
 const brToIso = (s: string) => {
@@ -93,6 +101,7 @@ export function ArtefatoDetalheModal({
   const abrirRevisao = useRevisoes((s) => s.abrir)
   const atualizarArtefato = useProcessos((s) => s.atualizarArtefato)
   const workflows = useWorkflows((s) => s.workflows)
+  const nomesContrato = useNomesContrato()
   // o pai monta o modal com `key={artefato}`, então os initializers rodam por artefato
   const artefatoAtual = processo.artefatos.find((a) => a.completo === artefato)
   const [responsavel, setResponsavel] = useState(artefatoAtual?.responsavel ?? '')
@@ -232,7 +241,7 @@ export function ArtefatoDetalheModal({
             <Combo
               value={responsavel}
               onChange={setResponsavel}
-              options={USUARIOS_NOMES}
+              options={nomesContrato}
               placeholder="Selecione o responsável"
             />
           </div>
@@ -670,13 +679,14 @@ function EnviarRevisaoModal({
   onClose: () => void
   onEnviar: (revisores: string[]) => void
 }) {
+  const nomesContrato = useNomesContrato()
   const [busca, setBusca] = useState('')
   const [selecionados, setSelecionados] = useState<string[]>([])
 
   const toggle = (u: string) =>
     setSelecionados((prev) => (prev.includes(u) ? prev.filter((x) => x !== u) : [...prev, u]))
 
-  const usuarios = USUARIOS_NOMES.filter((u) => u.toLowerCase().includes(busca.toLowerCase()))
+  const usuarios = nomesContrato.filter((u) => u.toLowerCase().includes(busca.toLowerCase()))
   const podeEnviar = selecionados.length > 0
 
   return (
@@ -734,7 +744,7 @@ function EnviarRevisaoModal({
               <div>
                 <p className="font-display text-sm font-bold text-[#183263]">Usuários</p>
                 <p className="text-[11px] text-[var(--color-muted)]">
-                  {USUARIOS_NOMES.length} disponíveis no contrato
+                  {nomesContrato.length} disponíveis no contrato
                 </p>
               </div>
             </div>

@@ -1,27 +1,7 @@
 import { useState } from 'react'
-import {
-  AlertTriangle,
-  FileText,
-  Fingerprint,
-  Megaphone,
-  PencilLine,
-  Search,
-  Settings2,
-  Star,
-  X,
-} from 'lucide-react'
+import { X } from 'lucide-react'
 import { Combo } from '../../components/common/Combo'
-
-const ICONES = [
-  { key: 'Documento', Icon: FileText },
-  { key: 'Pesquisa', Icon: Search },
-  { key: 'Ocorrência', Icon: AlertTriangle },
-  { key: 'Identificação', Icon: Fingerprint },
-  { key: 'Comunicação', Icon: Megaphone },
-  { key: 'Destaque', Icon: Star },
-  { key: 'Edição', Icon: PencilLine },
-  { key: 'Configuração', Icon: Settings2 },
-]
+import { ICONES } from './artefatoIcones'
 
 export function AdicionarArtefatoModal({
   open,
