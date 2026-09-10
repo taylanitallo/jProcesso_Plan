@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { PROCESSOS, PROCESSO_ARTEFATOS } from '../mocks'
+import { useAuth } from './auth'
 
 export type StatusProcesso = 'ATIVO' | 'FINALIZADO'
 export type OrigemProcesso = 'MANUAL' | 'REGISTROS' | 'SOLICITACAO'
@@ -118,6 +119,7 @@ export const useProcessos = create<State>()(
       criar: (p) => {
         const id = `proc${uid()}`
         const carimbo = agora()
+        const proprietario = useAuth.getState().user?.initials || 'AL'
         set((s) => ({
           processos: [
             ...s.processos,
@@ -132,7 +134,7 @@ export const useProcessos = create<State>()(
               descricao: p.descricao?.trim() ?? '',
               status: 'ATIVO',
               origem: p.origem ?? 'MANUAL',
-              proprietario: 'AL',
+              proprietario,
               integrantes: '',
               registroIds: p.registroIds ?? [],
               itensResumo: p.itensResumo ?? 0,

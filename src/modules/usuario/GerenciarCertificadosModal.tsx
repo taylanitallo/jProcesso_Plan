@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AlertTriangle, Award, ScrollText, ShieldCheck, X } from 'lucide-react'
 import { useAuth } from '../../store/auth'
+import { useInstituicao } from '../../store/instituicao'
 import { useCertificados, UFS, type CadastroCertificado } from '../../store/certificados'
 
 const VAZIO: CadastroCertificado = {
@@ -26,6 +27,7 @@ export function GerenciarCertificadosModal({
   onClose: () => void
 }) {
   const user = useAuth((s) => s.user)
+  const instituicao = useInstituicao((s) => s.instituicao)
   const cadastroSalvo = useCertificados((s) => s.cadastros[pessoaId])
   const certificado = useCertificados((s) => s.certificados[pessoaId])
   const salvarCadastro = useCertificados((s) => s.salvarCadastro)
@@ -34,7 +36,14 @@ export function GerenciarCertificadosModal({
 
   const [aba, setAba] = useState<'cadastro' | 'certificados'>('cadastro')
   const [form, setForm] = useState<CadastroCertificado>(
-    cadastroSalvo ?? { ...VAZIO, nome: pessoaNome, email: pessoaEmail },
+    cadastroSalvo ?? {
+      ...VAZIO,
+      nome: pessoaNome,
+      email: pessoaEmail,
+      pais: 'Brasil',
+      estado: instituicao.uf,
+      cidade: instituicao.cidade,
+    },
   )
   const [revogarOpen, setRevogarOpen] = useState(false)
 

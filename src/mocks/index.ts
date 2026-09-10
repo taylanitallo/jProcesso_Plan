@@ -69,9 +69,6 @@ export const ARTEFATO_LEGISLACOES = [
 /** Legislações disponíveis nos módulos de Processos Inteligentes (Novo Fluxo / Novo Processo). */
 export const PROCESSO_LEGISLACOES = ['14.133']
 
-/** Usuários da instituição (para seletores de responsável). */
-export const USUARIOS_NOMES = ['ALEF MATHEUS TEIXEIRA DE SOUSA']
-
 /** Tipos de processo disponíveis nos módulos de Processos Inteligentes. */
 export const PROCESSO_TIPOS = [
   'Pregão - Bens e Serviços',
