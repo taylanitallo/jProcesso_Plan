@@ -1,6 +1,7 @@
 import { AlertTriangle, Building2, Lock, Package, Send, X } from 'lucide-react'
 import { EmptyState } from '../../components/common/EmptyState'
 import { usePca } from '../../store/pca'
+import { useInstituicao, instituicaoConfigurada } from '../../store/instituicao'
 
 const brl = (v: number) =>
   `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -13,6 +14,7 @@ const brl = (v: number) =>
  */
 export function TransmitirPncpModal({ onClose }: { onClose: () => void }) {
   const pcas = usePca((s) => s.pcas)
+  const instituicao = useInstituicao((s) => s.instituicao)
   const prontos = pcas.filter((p) => p.status === 'PRONTO_PARA_ENVIO')
 
   const totalItens = prontos.reduce((s, p) => s + p.itens.length, 0)
@@ -48,6 +50,11 @@ export function TransmitirPncpModal({ onClose }: { onClose: () => void }) {
               Consolidação do administrador geral — todos os PCAs "Pronto para Envio" das Unidades
               Orçamentárias, transmitidos de uma vez só.
             </p>
+            {instituicaoConfigurada(instituicao) && (
+              <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-[var(--color-primary-strong)]">
+                <Building2 size={12} /> {instituicao.nome} — CNPJ {instituicao.cnpj}
+              </p>
+            )}
           </div>
         </div>
 

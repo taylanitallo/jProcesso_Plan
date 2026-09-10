@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AlertTriangle, Building2, CalendarDays, Hash, MapPin, Package, Search, X } from 'lucide-react'
 import { usePca, CATEGORIAS_ITEM_PCA, CRITERIOS_JULGAMENTO_PCA } from '../../store/pca'
+import { useInstituicao } from '../../store/instituicao'
 import { pcaService, type PcaCabecalho, type PcaItem } from '../../services'
 
 const brl = (v: number) =>
@@ -10,8 +11,9 @@ const brl = (v: number) =>
 export function ImportarPncpItensModal({ pcaId, onClose }: { pcaId: string; onClose: () => void }) {
   const adicionarItem = usePca((s) => s.adicionarItem)
   const pca = usePca((s) => s.pcas.find((p) => p.id === pcaId))
+  const cnpjInstituicao = useInstituicao((s) => s.instituicao.cnpj)
 
-  const [cnpj, setCnpj] = useState('')
+  const [cnpj, setCnpj] = useState(cnpjInstituicao)
   const [ano, setAno] = useState(String(new Date().getFullYear()))
   const [pcas, setPcas] = useState<PcaCabecalho[]>([])
   const [ativo, setAtivo] = useState<number | null>(null)
@@ -153,6 +155,15 @@ export function ImportarPncpItensModal({ pcaId, onClose }: { pcaId: string; onCl
                 className="gt-input !pl-9 font-normal normal-case"
               />
             </div>
+            {cnpjInstituicao && cnpj.trim() !== cnpjInstituicao.trim() && (
+              <button
+                type="button"
+                onClick={() => setCnpj(cnpjInstituicao)}
+                className="self-start font-normal normal-case text-[var(--color-primary)] hover:underline"
+              >
+                Usar o CNPJ da minha instituição
+              </button>
+            )}
           </label>
           <label className="flex w-28 flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
             Ano

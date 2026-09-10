@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AlertTriangle, CalendarRange, X } from 'lucide-react'
+import { AlertTriangle, Building2, CalendarRange, X } from 'lucide-react'
 import { Combo } from '../../components/common/Combo'
 import { usePca } from '../../store/pca'
 import { useOrganizacao } from '../../store/organizacao'
+import { useInstituicao, instituicaoConfigurada } from '../../store/instituicao'
+import { useUi } from '../../store/ui'
 import { PROCESSO_LEGISLACOES } from '../../mocks'
 
 const ANO_MIN = new Date().getFullYear() - 1
@@ -12,8 +14,6 @@ const ANO_MAX = new Date().getFullYear() + 10
 const vazio = {
   nome: '',
   anoPca: String(new Date().getFullYear()),
-  cnpjOrgao: '',
-  nomeOrgao: '',
   unidadeNome: '',
   legislacao: PROCESSO_LEGISLACOES[0],
   observacoes: '',
@@ -22,25 +22,23 @@ const vazio = {
 export function NovoPcaModal({ onCriado, onClose }: { onCriado: (id: string) => void; onClose: () => void }) {
   const criar = usePca((s) => s.criar)
   const unidades = useOrganizacao((s) => s.unidades)
+  const instituicao = useInstituicao((s) => s.instituicao)
+  const setUserModal = useUi((s) => s.setUserModal)
   const [form, setForm] = useState(vazio)
 
+  const instOk = instituicaoConfigurada(instituicao)
   const unidadeSelecionada = unidades.find((u) => u.nome === form.unidadeNome) ?? null
   const anoNum = Number(form.anoPca)
   const anoOk = Number.isInteger(anoNum) && anoNum >= ANO_MIN && anoNum <= ANO_MAX
-  const podeSalvar =
-    form.nome.trim() &&
-    form.cnpjOrgao.trim() &&
-    form.nomeOrgao.trim() &&
-    unidadeSelecionada &&
-    anoOk
+  const podeSalvar = form.nome.trim() && instOk && unidadeSelecionada && anoOk
 
   const salvar = () => {
     if (!podeSalvar || !unidadeSelecionada) return
     const id = criar({
       nome: form.nome,
       anoPca: anoNum,
-      cnpjOrgao: form.cnpjOrgao,
-      nomeOrgao: form.nomeOrgao,
+      cnpjOrgao: instituicao.cnpj,
+      nomeOrgao: instituicao.nome,
       unidadeId: unidadeSelecionada.id,
       unidadeNome: unidadeSelecionada.nome,
       legislacao: form.legislacao,
@@ -117,26 +115,41 @@ export function NovoPcaModal({ onCriado, onClose }: { onCriado: (id: string) => 
             </label>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
-              CNPJ do Órgão
-              <input
-                value={form.cnpjOrgao}
-                onChange={(e) => setForm((f) => ({ ...f, cnpjOrgao: e.target.value }))}
-                placeholder="00.000.000/0000-00"
-                className="gt-input font-normal normal-case"
-              />
-            </label>
-            <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
-              Nome do Órgão
-              <input
-                value={form.nomeOrgao}
-                onChange={(e) => setForm((f) => ({ ...f, nomeOrgao: e.target.value }))}
-                placeholder="Ex: Prefeitura Municipal de..."
-                className="gt-input font-normal normal-case"
-              />
-            </label>
-          </div>
+          {instOk ? (
+            <div className="flex items-start gap-3 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-[#f8fafd] px-3 py-2.5">
+              <Building2 size={16} className="mt-0.5 shrink-0 text-[var(--color-primary-strong)]" />
+              <div className="min-w-0 flex-1 text-sm">
+                <p className="font-semibold text-[var(--color-ink)]">{instituicao.nome}</p>
+                <p className="text-xs text-[var(--color-muted)]">
+                  CNPJ {instituicao.cnpj}
+                  {instituicao.cidade && ` • ${instituicao.cidade}`}
+                  {instituicao.uf && `/${instituicao.uf}`}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setUserModal('instituicao')}
+                className="shrink-0 text-xs font-semibold text-[var(--color-primary)] hover:underline"
+              >
+                Editar
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-start gap-2 rounded-[var(--radius-control)] border border-[#f0d79a] bg-[#fdf6e3] px-3 py-2 text-xs text-[#8a6d1a]">
+              <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+              <span>
+                Os dados da instituição (nome e CNPJ do órgão) ainda não foram cadastrados.{' '}
+                <button
+                  type="button"
+                  onClick={() => setUserModal('instituicao')}
+                  className="font-semibold underline"
+                >
+                  Cadastre em Dados da Instituição
+                </button>{' '}
+                antes de criar o PCA.
+              </span>
+            </div>
+          )}
 
           <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
             Unidade Orçamentária
