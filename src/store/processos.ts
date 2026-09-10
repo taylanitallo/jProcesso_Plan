@@ -14,6 +14,8 @@ export type ProcessoArtefato = {
   revisao: boolean
   responsavel: string // '' = não designado
   prazo: string // '' = sem prazo
+  aprovadoEm: string // '' = aprovação pendente
+  assinadoEm: string // '' = assinatura pendente
 }
 
 export type ProcessoLocal = {
@@ -84,6 +86,8 @@ const artefatosDe = (preservarEnviado = false): ProcessoArtefato[] =>
     enviado: preservarEnviado ? a.enviado : false,
     responsavel: '',
     prazo: '',
+    aprovadoEm: '',
+    assinadoEm: '',
   }))
 
 const SEED: ProcessoLocal[] = PROCESSOS.map((p) => ({
@@ -177,7 +181,7 @@ export const useProcessos = create<State>()(
     }),
     {
       name: 'sollai-processos',
-      version: 1,
+      version: 2,
       migrate: (persisted) => {
         const s = persisted as { processos?: Partial<ProcessoLocal>[] }
         return {
@@ -190,9 +194,18 @@ export const useProcessos = create<State>()(
             integrantes: '',
             registroIds: [],
             itensResumo: 0,
-            artefatos: [],
             status: 'ATIVO' as const,
             ...p,
+            artefatos: (p.artefatos ?? []).map((a) => ({
+              nome: a.nome ?? '',
+              completo: a.completo ?? '',
+              enviado: a.enviado ?? false,
+              revisao: a.revisao ?? false,
+              responsavel: a.responsavel ?? '',
+              prazo: a.prazo ?? '',
+              aprovadoEm: a.aprovadoEm ?? '',
+              assinadoEm: a.assinadoEm ?? '',
+            })),
           })),
         }
       },

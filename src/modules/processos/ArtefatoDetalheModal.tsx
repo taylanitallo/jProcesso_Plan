@@ -3,12 +3,14 @@ import {
   AlertTriangle,
   CircleUserRound,
   Download,
+  FileSignature,
   FileText,
   History,
   ListChecks,
   Save,
   Search,
   Send,
+  ShieldCheck,
   Upload,
   UploadCloud,
   UserPlus,
@@ -20,6 +22,8 @@ import { OnlyOfficeEditorModal } from '../../components/common/OnlyOfficeEditorM
 import { USUARIOS_NOMES } from '../../mocks'
 import { useRevisoes } from '../../store/revisoes'
 import { useProcessos, type ProcessoLocal } from '../../store/processos'
+import { useWorkflows } from '../../store/workflows'
+import { exigenciasDoProcesso } from './exigencias'
 
 const ACOES = [
   'Upload',
@@ -43,6 +47,11 @@ const isoToBr = (s: string) => {
   const m = s?.match(/^(\d{4})-(\d{2})-(\d{2})/)
   return m ? `${m[3]}/${m[2]}/${m[1]}` : ''
 }
+const agora = () =>
+  `${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })}`
 
 /** Sobe o anexo pro dev-server; devolve a URL que o OnlyOffice consegue baixar. */
 async function enviarAnexo(file: File): Promise<string | null> {
@@ -83,6 +92,7 @@ export function ArtefatoDetalheModal({
 }) {
   const abrirRevisao = useRevisoes((s) => s.abrir)
   const atualizarArtefato = useProcessos((s) => s.atualizarArtefato)
+  const workflows = useWorkflows((s) => s.workflows)
   // o pai monta o modal com `key={artefato}`, então os initializers rodam por artefato
   const artefatoAtual = processo.artefatos.find((a) => a.completo === artefato)
   const [responsavel, setResponsavel] = useState(artefatoAtual?.responsavel ?? '')
@@ -128,6 +138,9 @@ export function ArtefatoDetalheModal({
 
   const info = processo.artefatos.find((a) => a.completo === artefato)
   const temRevisao = Boolean(info?.revisao)
+  const exig = exigenciasDoProcesso(processo, workflows).get(artefato)
+  const precisaAprovar = Boolean(exig?.aprovacao && info?.enviado)
+  const precisaAssinar = Boolean(exig?.assinatura && info?.enviado)
 
   const painel = (
     <div className="flex h-full flex-col">
@@ -243,6 +256,43 @@ export function ArtefatoDetalheModal({
             <Save size={16} />
           </button>
         </div>
+
+        {(precisaAprovar || precisaAssinar) && (
+          <div className="mb-4 flex flex-wrap gap-2 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-[#f8fafd] p-3">
+            {precisaAprovar &&
+              (info?.aprovadoEm ? (
+                <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] bg-[#d7f5ea] px-3 py-1.5 text-xs font-bold text-[var(--color-success)]">
+                  <ShieldCheck size={14} /> Aprovado em {info.aprovadoEm}
+                </span>
+              ) : (
+                <button
+                  onClick={() => {
+                    atualizarArtefato(processo.id, artefato, { aprovadoEm: agora() })
+                    registrar('Artefato aprovado', 'Aprovação', `Aprovado por ${USUARIO_ATUAL}`)
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-success)] px-4 py-2 text-sm font-semibold text-white"
+                >
+                  <ShieldCheck size={15} /> Aprovar artefato
+                </button>
+              ))}
+            {precisaAssinar &&
+              (info?.assinadoEm ? (
+                <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] bg-[#ede9fe] px-3 py-1.5 text-xs font-bold text-[#7c3aed]">
+                  <FileSignature size={14} /> Assinado em {info.assinadoEm}
+                </span>
+              ) : (
+                <button
+                  onClick={() => {
+                    atualizarArtefato(processo.id, artefato, { assinadoEm: agora() })
+                    registrar('Artefato assinado', 'Assinatura', `Assinado por ${USUARIO_ATUAL}`)
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[#7c3aed] px-4 py-2 text-sm font-semibold text-white"
+                >
+                  <FileSignature size={15} /> Assinar artefato
+                </button>
+              ))}
+          </div>
+        )}
 
         <div className="mb-4 rounded-[var(--radius-control)] bg-[#eef3fb] p-4">
           <div className="flex flex-wrap justify-center gap-3">

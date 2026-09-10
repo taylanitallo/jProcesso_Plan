@@ -26,6 +26,9 @@ import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 import { PROCESSO_LEGISLACOES, PROCESSO_TIPOS } from '../../mocks'
 import { useRevisoes, revisoesPendentes } from '../../store/revisoes'
 import { useProcessos, statusProcessoLabel, type ProcessoLocal } from '../../store/processos'
+import { useWorkflows } from '../../store/workflows'
+import { exigenciasDoProcesso } from './exigencias'
+import type { PendingItem } from './PendingModal'
 
 const STATUS_OPCOES = ['Ativo', 'Finalizado']
 
@@ -75,6 +78,43 @@ export function ProcessosInteligentesPage() {
   const remover = useProcessos((s) => s.remover)
   const revisoes = useRevisoes((s) => s.revisoes)
   const pendentes = revisoesPendentes(revisoes)
+  const workflows = useWorkflows((s) => s.workflows)
+
+  const { aprovacoesPendentes, assinaturasPendentes } = (() => {
+    const aprov: PendingItem[] = []
+    const assin: PendingItem[] = []
+    for (const p of processos) {
+      const exig = exigenciasDoProcesso(p, workflows)
+      if (exig.size === 0) continue
+      for (const a of p.artefatos) {
+        if (!a.enviado) continue
+        const e = exig.get(a.completo)
+        if (!e) continue
+        if (e.aprovacao && !a.aprovadoEm)
+          aprov.push({
+            id: `${p.id}::${a.completo}`,
+            titulo: a.nome,
+            processo: p.nome,
+            status: 'Pendente',
+            quando: a.prazo || undefined,
+          })
+        if (e.assinatura && !a.assinadoEm)
+          assin.push({
+            id: `${p.id}::${a.completo}`,
+            titulo: a.nome,
+            processo: p.nome,
+            status: 'Pendente',
+            quando: a.prazo || undefined,
+          })
+      }
+    }
+    return { aprovacoesPendentes: aprov, assinaturasPendentes: assin }
+  })()
+
+  const abrirProcessoDoItem = (id: string) => {
+    setModal('none')
+    navigate(`/Processo/${id.split('::')[0]}`)
+  }
 
   const excluirAlvo = processos.find((p) => p.id === excluirId) ?? null
 
@@ -366,12 +406,16 @@ export function ProcessosInteligentesPage() {
         onClose={() => setModal('none')}
         title="Aprovações pendentes"
         icon={<ClipboardCheck size={20} />}
+        items={aprovacoesPendentes}
+        onOpen={abrirProcessoDoItem}
       />
       <PendingModal
         open={modal === 'assinaturas'}
         onClose={() => setModal('none')}
         title="Assinaturas pendentes"
         icon={<FileSignature size={20} />}
+        items={assinaturasPendentes}
+        onOpen={abrirProcessoDoItem}
       />
       <NovoProcessoModal open={modal === 'novo'} onClose={() => setModal('none')} />
       <ProcessoWizardModal
