@@ -1,9 +1,23 @@
 import { useState } from 'react'
-import { CheckCircle2, Crown, FileSignature, Info, Pencil, Plus, ScrollText, Users } from 'lucide-react'
+import {
+  CheckCircle2,
+  Crown,
+  FileSignature,
+  Info,
+  Pencil,
+  Plus,
+  ScrollText,
+  Trash2,
+  Users,
+} from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
+import { Badge } from '../../components/common/Badge'
 import { EmptyState } from '../../components/common/EmptyState'
-import { useAuth } from '../../store/auth'
+import { useAuth, perfilLabel } from '../../store/auth'
+import { useOrganizacao } from '../../store/organizacao'
+import { useUsuarios, LIMITE_USUARIOS, type Usuario } from '../../store/usuarios'
 import { GerenciarCertificadosModal } from './GerenciarCertificadosModal'
+import { NovoUsuarioModal } from './NovoUsuarioModal'
 
 const TABS = ['Gerenciamento de Usuários', 'Assinatura Eletrônica']
 
@@ -14,10 +28,30 @@ const LIMITS = [
   ['Analisadores Processo', '0 de 3'],
 ]
 
+const iniciais = (nome: string) =>
+  nome
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? '')
+    .join('')
+
 export function GerenciarUsuariosPage() {
   const user = useAuth((s) => s.user)
+  const usuarios = useUsuarios((s) => s.usuarios)
+  const remover = useUsuarios((s) => s.remover)
+  const unidades = useOrganizacao((s) => s.unidades)
+
   const [tab, setTab] = useState(TABS[0])
   const [certModal, setCertModal] = useState(false)
+  const [modal, setModal] = useState<'none' | 'novo'>('none')
+  const [editando, setEditando] = useState<Usuario | null>(null)
+  const [excluirId, setExcluirId] = useState<string | null>(null)
+
+  const total = 1 + usuarios.length
+  const cheio = total >= LIMITE_USUARIOS
+  const excluirAlvo = usuarios.find((u) => u.id === excluirId) ?? null
+  const nomeUnidade = (id: string) => unidades.find((u) => u.id === id)?.nome ?? ''
 
   return (
     <div>
@@ -60,8 +94,17 @@ export function GerenciarUsuariosPage() {
             <div className="text-center">
               <Users size={20} className="mx-auto text-[var(--color-muted)]" />
               <p className="text-xs text-[var(--color-muted)]">Total de Usuários</p>
-              <p className="font-display text-2xl font-extrabold text-[var(--color-primary)]">0 de 3</p>
-              <button className="mt-2 inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-4 py-2 text-sm font-semibold text-white">
+              <p className="font-display text-2xl font-extrabold text-[var(--color-primary)]">
+                {total} de {LIMITE_USUARIOS}
+              </p>
+              <button
+                onClick={() => {
+                  setEditando(null)
+                  setModal('novo')
+                }}
+                disabled={cheio}
+                className="mt-2 inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
                 <Plus size={15} /> Novo Usuário
               </button>
             </div>
@@ -101,7 +144,109 @@ export function GerenciarUsuariosPage() {
             </div>
           </div>
 
-          <EmptyState icon={Users} title="Nenhum usuário encontrado!" />
+          {usuarios.length === 0 ? (
+            <EmptyState icon={Users} title="Nenhum usuário adicional cadastrado" />
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {usuarios.map((u) => (
+                <li
+                  key={u.id}
+                  className="flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-4 shadow-[var(--shadow-card)]"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--color-primary-soft)] text-sm font-bold text-[var(--color-primary-strong)]">
+                      {iniciais(u.nome)}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-[#183263]">{u.nome}</p>
+                      <p className="truncate text-xs text-[var(--color-muted)]">{u.email}</p>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        <Badge tone={u.ativo ? 'info' : 'neutral'}>{perfilLabel(u.perfil)}</Badge>
+                        {u.unidadeId && nomeUnidade(u.unidadeId) && (
+                          <span className="text-[11px] uppercase tracking-wide text-[var(--color-muted)]">
+                            {nomeUnidade(u.unidadeId)}
+                          </span>
+                        )}
+                        {!u.ativo && (
+                          <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                            Inativo
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 gap-2">
+                    <button
+                      onClick={() => {
+                        setEditando(u)
+                        setModal('novo')
+                      }}
+                      aria-label="Editar usuário"
+                      className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      onClick={() => setExcluirId(u.id)}
+                      aria-label="Excluir usuário"
+                      className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] border border-[#f0c2c8] text-[var(--color-danger)]"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {modal === 'novo' && (
+            <NovoUsuarioModal
+              usuario={editando ?? undefined}
+              onClose={() => {
+                setModal('none')
+                setEditando(null)
+              }}
+            />
+          )}
+
+          {excluirAlvo && (
+            <div
+              className="fixed inset-0 z-[60] flex items-center justify-center bg-[rgba(9,21,44,0.4)] p-4"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) setExcluirId(null)
+              }}
+            >
+              <div className="w-full max-w-md rounded-[16px] bg-white p-6 text-center shadow-[var(--shadow-pop)]">
+                <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border-2 border-[#f0c2c8] text-[var(--color-danger)]">
+                  <Trash2 size={24} />
+                </span>
+                <p className="mt-3 font-display text-base font-bold text-[#183263]">
+                  Excluir usuário?
+                </p>
+                <p className="mt-2 text-sm text-[var(--color-muted)]">
+                  <strong>{excluirAlvo.nome}</strong> perderá o acesso ao contrato. Esta ação não pode
+                  ser desfeita.
+                </p>
+                <div className="mt-5 flex justify-center gap-2">
+                  <button
+                    onClick={() => setExcluirId(null)}
+                    className="rounded-[var(--radius-control)] bg-[#e6e9ef] px-4 py-2 text-sm font-semibold text-[var(--color-ink)]"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={() => {
+                      remover(excluirAlvo.id)
+                      setExcluirId(null)
+                    }}
+                    className="rounded-[var(--radius-control)] bg-[var(--color-danger)] px-5 py-2 text-sm font-semibold text-white"
+                  >
+                    Sim, excluir
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {certModal && (
             <GerenciarCertificadosModal
