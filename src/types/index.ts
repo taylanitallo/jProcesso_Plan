@@ -1,8 +1,11 @@
+export type Perfil = 'ADMIN_GERAL' | 'GESTOR_UNIDADE' | 'USUARIO'
+
 export interface User {
   id: string
   name: string
   email: string
   role: string
+  perfil: Perfil
   institution: string
   initials: string
 }

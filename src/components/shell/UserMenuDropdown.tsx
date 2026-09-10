@@ -12,8 +12,10 @@ import {
   UserCog,
   Workflow,
 } from 'lucide-react'
-import { useAuth } from '../../store/auth'
+import { useAuth, PERFIS } from '../../store/auth'
 import { useUi } from '../../store/ui'
+import { pode } from '../../app/permissoes'
+import type { Perfil } from '../../types'
 
 const SUPPORT_URL = 'https://gnp.negociospublicos.net.br/np/suporte'
 
@@ -21,9 +23,11 @@ export function UserMenuDropdown({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate()
   const user = useAuth((s) => s.user)
   const logout = useAuth((s) => s.logout)
+  const setPerfil = useAuth((s) => s.setPerfil)
   const setUserModal = useUi((s) => s.setUserModal)
   const theme = useUi((s) => s.theme)
   const toggleTheme = useUi((s) => s.toggleTheme)
+  const perfil = user?.perfil ?? 'USUARIO'
 
   const openModal = (m: 'perfil' | 'instituicao' | 'senha' | 'metodo') => {
     onClose()
@@ -39,6 +43,20 @@ export function UserMenuDropdown({ onClose }: { onClose: () => void }) {
       <div className="border-b border-[var(--color-line)] px-4 py-3">
         <p className="truncate text-sm font-bold text-[#183263]">{user?.name}</p>
         <p className="truncate text-xs text-[var(--color-muted)]">{user?.email}</p>
+      </div>
+      <div className="flex items-center justify-between gap-2 border-b border-[var(--color-line)] px-4 py-2.5">
+        <span className="text-xs font-semibold text-[var(--color-muted)]">Perfil ativo</span>
+        <select
+          value={perfil}
+          onChange={(e) => setPerfil(e.target.value as Perfil)}
+          className="gt-input h-8 max-w-[9.5rem] flex-1 text-xs font-normal normal-case"
+        >
+          {PERFIS.map((p) => (
+            <option key={p.value} value={p.value}>
+              {p.label}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="flex items-center justify-between border-b border-[var(--color-line)] px-4 py-2.5">
         <span className="flex items-center gap-3 text-sm text-[var(--color-ink)]">
@@ -67,15 +85,30 @@ export function UserMenuDropdown({ onClose }: { onClose: () => void }) {
         <Item icon={Building2} label="Dados da Instituição" onClick={() => openModal('instituicao')} />
         <Item icon={KeyRound} label="Mudar senha" onClick={() => openModal('senha')} />
         <Item icon={Workflow} label="Método de trabalho" onClick={() => openModal('metodo')} />
-        <Divider />
-        <Item icon={Users} label="Gerenciar Usuários" onClick={() => go('/GerenciarUsuarios')} />
-        <Item
-          icon={FileSignature}
-          label="Gerenciar Envolvidos em Assinaturas"
-          onClick={() => go('/TipoEnvolvidoAssinatura')}
-        />
-        <Item icon={Network} label="Gerenciar Unidade/Setor" onClick={() => go('/GerenciarUnidadeSetor')} />
-        <Item icon={BarChart3} label="Relatório de Uso" onClick={() => go('/RelatorioUso')} />
+        {(pode(perfil, 'gerenciarUsuarios') ||
+          pode(perfil, 'gerenciarEnvolvidos') ||
+          pode(perfil, 'gerenciarUnidadeSetor') ||
+          pode(perfil, 'relatorioUso')) && <Divider />}
+        {pode(perfil, 'gerenciarUsuarios') && (
+          <Item icon={Users} label="Gerenciar Usuários" onClick={() => go('/GerenciarUsuarios')} />
+        )}
+        {pode(perfil, 'gerenciarEnvolvidos') && (
+          <Item
+            icon={FileSignature}
+            label="Gerenciar Envolvidos em Assinaturas"
+            onClick={() => go('/TipoEnvolvidoAssinatura')}
+          />
+        )}
+        {pode(perfil, 'gerenciarUnidadeSetor') && (
+          <Item
+            icon={Network}
+            label="Gerenciar Unidade/Setor"
+            onClick={() => go('/GerenciarUnidadeSetor')}
+          />
+        )}
+        {pode(perfil, 'relatorioUso') && (
+          <Item icon={BarChart3} label="Relatório de Uso" onClick={() => go('/RelatorioUso')} />
+        )}
         <Divider />
         <a
           href={SUPPORT_URL}

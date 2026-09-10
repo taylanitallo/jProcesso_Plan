@@ -3,20 +3,22 @@ import { useNavigate } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import { Button } from '../../components/common/Button'
 import { Modal } from '../../components/common/Modal'
-import { useAuth } from '../../store/auth'
+import { useAuth, PERFIS } from '../../store/auth'
+import type { Perfil } from '../../types'
 
 export function LoginPage() {
   const navigate = useNavigate()
   const login = useAuth((s) => s.login)
   const [email, setEmail] = useState('alef.sousa@negociospublicos.com.br')
   const [password, setPassword] = useState('')
+  const [perfil, setPerfil] = useState<Perfil>('ADMIN_GERAL')
   const [showPass, setShowPass] = useState(false)
   const [error, setError] = useState('')
   const [modal, setModal] = useState<'none' | 'forgot' | 'request'>('none')
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (login(email, password)) {
+    if (login(email, password, perfil)) {
       navigate('/')
     } else {
       setError('Informe um e-mail válido e uma senha com ao menos 3 caracteres.')
@@ -85,6 +87,21 @@ export function LoginPage() {
                 </button>
               </div>
             </div>
+
+            <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--color-ink)]">
+              Perfil
+              <select
+                className="gt-input"
+                value={perfil}
+                onChange={(e) => setPerfil(e.target.value as Perfil)}
+              >
+                {PERFIS.map((p) => (
+                  <option key={p.value} value={p.value}>
+                    {p.label}
+                  </option>
+                ))}
+              </select>
+            </label>
 
             {error && <p className="text-xs font-medium text-[var(--color-danger)]">{error}</p>}
 

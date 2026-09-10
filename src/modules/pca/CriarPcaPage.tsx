@@ -7,6 +7,7 @@ import { DataTable, Pagination, type Column } from '../../components/common/Data
 import { EmptyState } from '../../components/common/EmptyState'
 import { useModuleLinks } from '../../components/shell/useModuleLinks'
 import { usePca, type PcaLocal } from '../../store/pca'
+import { usePode } from '../../app/permissoes'
 import { PCA_MODULE_LINKS } from './pcaLinks'
 import { NovoPcaModal } from './NovoPcaModal'
 import { PcaItensModal } from './PcaItensModal'
@@ -21,6 +22,7 @@ export function CriarPcaPage() {
   const pcas = usePca((s) => s.pcas)
   const remover = usePca((s) => s.remover)
   const definirStatus = usePca((s) => s.definirStatus)
+  const podeTransmitir = usePode('transmitirPncp')
 
   const [busca, setBusca] = useState('')
   const [novoOpen, setNovoOpen] = useState(false)
@@ -113,12 +115,14 @@ export function CriarPcaPage() {
           placeholder="Buscar por Nome / Órgão"
           className="gt-input min-w-40 flex-1"
         />
-        <button
-          onClick={() => setTransmitirOpen(true)}
-          className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[#7c3aed] px-4 py-2.5 text-sm font-semibold text-white"
-        >
-          <Send size={16} /> Transmitir ao PNCP
-        </button>
+        {podeTransmitir && (
+          <button
+            onClick={() => setTransmitirOpen(true)}
+            className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[#7c3aed] px-4 py-2.5 text-sm font-semibold text-white"
+          >
+            <Send size={16} /> Transmitir ao PNCP
+          </button>
+        )}
       </div>
 
       <DataTable<PcaLocal>
@@ -154,7 +158,9 @@ export function CriarPcaPage() {
       {itensAbertoId && (
         <PcaItensModal pcaId={itensAbertoId} onClose={() => setItensAbertoId(null)} />
       )}
-      {transmitirOpen && <TransmitirPncpModal onClose={() => setTransmitirOpen(false)} />}
+      {transmitirOpen && podeTransmitir && (
+        <TransmitirPncpModal onClose={() => setTransmitirOpen(false)} />
+      )}
 
       {itemConfirmar && (
         <div

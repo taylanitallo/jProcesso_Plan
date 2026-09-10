@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AppLayout } from '../components/shell/AppLayout'
 import { RequireAuth } from './RequireAuth'
+import { RequireCapability } from './RequireCapability'
 import { LoginPage } from '../modules/auth/LoginPage'
 import { HomePage } from '../modules/home/HomePage'
 import { ResearchPage } from '../modules/chat/ResearchPage'
@@ -56,10 +57,38 @@ export const router = createBrowserRouter([
       { path: 'SollAcademy', element: <SollAcademyPage /> },
       { path: 'Normativa', element: <NormativaPage /> },
 
-      { path: 'GerenciarUsuarios', element: <GerenciarUsuariosPage /> },
-      { path: 'TipoEnvolvidoAssinatura', element: <TipoEnvolvidoAssinaturaPage /> },
-      { path: 'GerenciarUnidadeSetor', element: <GerenciarUnidadeSetorPage /> },
-      { path: 'RelatorioUso', element: <RelatorioUsoPage /> },
+      {
+        path: 'GerenciarUsuarios',
+        element: (
+          <RequireCapability cap="gerenciarUsuarios">
+            <GerenciarUsuariosPage />
+          </RequireCapability>
+        ),
+      },
+      {
+        path: 'TipoEnvolvidoAssinatura',
+        element: (
+          <RequireCapability cap="gerenciarEnvolvidos">
+            <TipoEnvolvidoAssinaturaPage />
+          </RequireCapability>
+        ),
+      },
+      {
+        path: 'GerenciarUnidadeSetor',
+        element: (
+          <RequireCapability cap="gerenciarUnidadeSetor">
+            <GerenciarUnidadeSetorPage />
+          </RequireCapability>
+        ),
+      },
+      {
+        path: 'RelatorioUso',
+        element: (
+          <RequireCapability cap="relatorioUso">
+            <RelatorioUsoPage />
+          </RequireCapability>
+        ),
+      },
 
       { path: '*', element: <Navigate to="/Home" replace /> },
     ],
