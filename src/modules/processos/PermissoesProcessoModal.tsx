@@ -3,7 +3,8 @@ import { Check, Plus, ShieldCheck, Trash2, X } from 'lucide-react'
 import { Combo } from '../../components/common/Combo'
 import { DataTable, type Column } from '../../components/common/DataTable'
 import { EmptyState } from '../../components/common/EmptyState'
-import { USUARIOS_NOMES } from '../../mocks'
+import { useAuth } from '../../store/auth'
+import { useUsuarios } from '../../store/usuarios'
 
 const SETORES = ['Compras', 'Jurídico', 'Engenharia', 'Financeiro', 'TI']
 
@@ -36,6 +37,12 @@ export function PermissoesProcessoModal({
   onClose: () => void
   onSave: () => void
 }) {
+  const usuarios = useUsuarios((s) => s.usuarios)
+  const nomeAtual = useAuth((s) => s.user?.name)
+  const nomesUsuarios = [nomeAtual, ...usuarios.map((u) => u.nome)].filter(
+    (n, i, arr): n is string => Boolean(n) && arr.indexOf(n) === i,
+  )
+
   const [permissoes, setPermissoes] = useState<Permissao[]>([])
   const [formOpen, setFormOpen] = useState(false)
   const [tipo, setTipo] = useState<'Usuário' | 'Setor'>('Usuário')
@@ -193,7 +200,7 @@ export function PermissoesProcessoModal({
                 <Combo
                   value={nomeSelecionado}
                   onChange={setNomeSelecionado}
-                  options={tipo === 'Usuário' ? USUARIOS_NOMES : SETORES}
+                  options={tipo === 'Usuário' ? nomesUsuarios : SETORES}
                   placeholder="Selecione:"
                 />
               </label>

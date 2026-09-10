@@ -1,26 +1,34 @@
 import { useState } from 'react'
 import { Check, FileText, Search, X } from 'lucide-react'
-import { NORMATIVAS } from '../../mocks'
+import { useNormativas, selecaoDe } from '../../store/normativas'
 
 /**
  * "Normativas" do menu Mais Opções — associa quais normativas (já cadastradas
  * em /Normativa) se aplicam a este processo especifico.
  */
 export function NormativasProcessoModal({
+  processoId,
   onClose,
   onSave,
 }: {
+  processoId: string
   onClose: () => void
   onSave: () => void
 }) {
+  const normativas = useNormativas((s) => s.normativas)
+  const selecoes = useNormativas((s) => s.selecoes)
+  const definirSelecao = useNormativas((s) => s.definirSelecao)
+
   const [busca, setBusca] = useState('')
-  const [selecionadas, setSelecionadas] = useState<string[]>(NORMATIVAS.map((n) => n.id))
+  const [selecionadas, setSelecionadas] = useState<string[]>(() =>
+    selecaoDe(processoId, selecoes, normativas),
+  )
 
   const toggle = (id: string) => {
     setSelecionadas((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]))
   }
 
-  const filtradas = NORMATIVAS.filter((n) => n.nome.toLowerCase().includes(busca.toLowerCase()))
+  const filtradas = normativas.filter((n) => n.nome.toLowerCase().includes(busca.toLowerCase()))
 
   return (
     <div
@@ -104,12 +112,13 @@ export function NormativasProcessoModal({
 
         <button
           onClick={() => {
+            definirSelecao(processoId, selecionadas)
             onSave()
             onClose()
           }}
           className="mt-5 w-full rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] py-2.5 text-sm font-bold uppercase tracking-wide text-white"
         >
-          Salvar Seleções
+          Salvar Seleções ({selecionadas.length}/{normativas.length})
         </button>
       </div>
     </div>

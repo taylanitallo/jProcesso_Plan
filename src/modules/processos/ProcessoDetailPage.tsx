@@ -462,6 +462,7 @@ export function ProcessoDetailPage() {
       {/* Normativas do processo */}
       {normativasOpen && (
         <NormativasProcessoModal
+          processoId={proc.id}
           onClose={() => setNormativasOpen(false)}
           onSave={() => showToast('Normativas salvas com sucesso.')}
         />
