@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { Plus, X } from 'lucide-react'
-import { useNecessidades, SETORES_NECESSIDADE } from '../../store/necessidades'
+import { useNecessidades } from '../../store/necessidades'
+import { useOrganizacao } from '../../store/organizacao'
 
 const vazio = { nome: '', descricao: '', setor: 'Sem setor', dataDesejada: '' }
 
 export function NovoRegistroModal({ onClose }: { onClose: () => void }) {
   const adicionar = useNecessidades((s) => s.adicionar)
+  const setores = useOrganizacao((s) => s.setores)
   const [form, setForm] = useState(vazio)
 
   const salvar = () => {
@@ -68,9 +70,10 @@ export function NovoRegistroModal({ onClose }: { onClose: () => void }) {
                 onChange={(e) => setForm((f) => ({ ...f, setor: e.target.value }))}
                 className="gt-input font-normal normal-case"
               >
-                {SETORES_NECESSIDADE.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
+                <option value="Sem setor">Sem setor</option>
+                {setores.map((s) => (
+                  <option key={s.id} value={s.nome}>
+                    {s.nome}
                   </option>
                 ))}
               </select>

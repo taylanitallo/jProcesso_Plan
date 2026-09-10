@@ -5,8 +5,7 @@ import { DataTable, type Column } from '../../components/common/DataTable'
 import { EmptyState } from '../../components/common/EmptyState'
 import { useAuth } from '../../store/auth'
 import { useUsuarios } from '../../store/usuarios'
-
-const SETORES = ['Compras', 'Jurídico', 'Engenharia', 'Financeiro', 'TI']
+import { useOrganizacao } from '../../store/organizacao'
 
 const PERMISSOES_DISPONIVEIS = [
   { key: 'visualizacao' as const, label: 'Visualização' },
@@ -38,6 +37,8 @@ export function PermissoesProcessoModal({
   onSave: () => void
 }) {
   const usuarios = useUsuarios((s) => s.usuarios)
+  const setoresOrg = useOrganizacao((s) => s.setores)
+  const nomeSetores = setoresOrg.map((s) => s.nome)
   const nomeAtual = useAuth((s) => s.user?.name)
   const nomesUsuarios = [nomeAtual, ...usuarios.map((u) => u.nome)].filter(
     (n, i, arr): n is string => Boolean(n) && arr.indexOf(n) === i,
@@ -200,7 +201,7 @@ export function PermissoesProcessoModal({
                 <Combo
                   value={nomeSelecionado}
                   onChange={setNomeSelecionado}
-                  options={tipo === 'Usuário' ? nomesUsuarios : SETORES}
+                  options={tipo === 'Usuário' ? nomesUsuarios : nomeSetores}
                   placeholder="Selecione:"
                 />
               </label>

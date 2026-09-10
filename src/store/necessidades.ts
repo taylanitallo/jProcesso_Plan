@@ -29,6 +29,10 @@ type State = {
 
 const hoje = () => new Date().toLocaleDateString('pt-BR')
 
+/** Valor usado quando o registro não tem setor definido. Os setores em si
+ *  vêm de `useOrganizacao().setores` (Gerenciar Unidade/Setor). */
+export const SETOR_PADRAO = 'Sem setor'
+
 export const useNecessidades = create<State>()(
   persist(
     (set) => ({
@@ -42,7 +46,7 @@ export const useNecessidades = create<State>()(
               id,
               nome: r.nome.trim(),
               descricao: r.descricao?.trim() ?? '',
-              setor: r.setor || 'Sem setor',
+              setor: r.setor || SETOR_PADRAO,
               dataDesejada: r.dataDesejada ?? '',
               itens: r.itens ?? 0,
               ativo: true,
@@ -61,12 +65,3 @@ export const useNecessidades = create<State>()(
     { name: 'sollai-necessidades' },
   ),
 )
-
-export const SETORES_NECESSIDADE = [
-  'Sem setor',
-  'Compras',
-  'Engenharia',
-  'Jurídico',
-  'Financeiro',
-  'TI',
-]

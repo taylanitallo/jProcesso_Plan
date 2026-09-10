@@ -6,7 +6,8 @@ import { Badge } from '../../components/common/Badge'
 import { DataTable, Pagination, type Column } from '../../components/common/DataTable'
 import { EmptyState } from '../../components/common/EmptyState'
 import { useModuleLinks } from '../../components/shell/useModuleLinks'
-import { useNecessidades, SETORES_NECESSIDADE, type Registro } from '../../store/necessidades'
+import { useNecessidades, type Registro } from '../../store/necessidades'
+import { useOrganizacao } from '../../store/organizacao'
 import {
   useSolicitacoes,
   statusSolicitacaoLabel,
@@ -28,6 +29,7 @@ export function RegistroNecessidadePage() {
   const registros = useNecessidades((s) => s.registros)
   const remover = useNecessidades((s) => s.remover)
   const solicitacoes = useSolicitacoes((s) => s.solicitacoes)
+  const setores = useOrganizacao((s) => s.setores)
 
   const [tab, setTab] = useState<(typeof TABS)[number]>('Meus Registros')
   const [busca, setBusca] = useState('')
@@ -230,9 +232,9 @@ export function RegistroNecessidadePage() {
               className="gt-input w-48 font-normal normal-case"
             >
               <option value="">Todos os setores</option>
-              {SETORES_NECESSIDADE.filter((s) => s !== 'Sem setor').map((s) => (
-                <option key={s} value={s}>
-                  {s}
+              {setores.map((s) => (
+                <option key={s.id} value={s.nome}>
+                  {s.nome}
                 </option>
               ))}
             </select>

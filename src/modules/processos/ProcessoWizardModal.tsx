@@ -3,12 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { Plus, X } from 'lucide-react'
 import { EmptyState } from '../../components/common/EmptyState'
 import { useProcessos } from '../../store/processos'
-import { useNecessidades, SETORES_NECESSIDADE } from '../../store/necessidades'
+import { useNecessidades } from '../../store/necessidades'
+import { useOrganizacao } from '../../store/organizacao'
 import { useSolicitacoes } from '../../store/solicitacoes'
 import { ProcessoFields } from './ProcessoFields'
 import { PROCESSO_FORM_VAZIO, toNovoProcesso } from './processoForm'
-
-const SETORES_SOLICITAVEIS = SETORES_NECESSIDADE.filter((s) => s !== 'Sem setor')
 
 /**
  * Wizard multi-etapa de criação de Processo Inteligente.
@@ -34,6 +33,7 @@ export function ProcessoWizardModal({
 }) {
   const criar = useProcessos((s) => s.criar)
   const registros = useNecessidades((s) => s.registros)
+  const setores = useOrganizacao((s) => s.setores)
   const criarLote = useSolicitacoes((s) => s.criarLote)
   const navigate = useNavigate()
 
@@ -146,7 +146,7 @@ export function ProcessoWizardModal({
               Setores a solicitar preenchimento
             </p>
             <ul className="flex flex-col gap-1">
-              {SETORES_SOLICITAVEIS.map((s) => (
+              {setores.map(({ nome: s }) => (
                 <li key={s}>
                   <label className="flex items-center justify-between gap-3 rounded-[var(--radius-control)] border border-[var(--color-line)] px-3 py-2.5 hover:bg-[#f8fafd]">
                     <span className="text-sm font-semibold text-[var(--color-ink)]">{s}</span>
