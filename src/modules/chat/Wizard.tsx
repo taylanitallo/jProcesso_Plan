@@ -15,24 +15,48 @@ const DOC_COM_EDITAL: Record<string, string> = {
   'Analisador de Recursos': 'Recurso',
 }
 
+type Resultado = { titulo: string; resumo: string; corpo: string }
+
 export function Wizard({
   steps,
   finishLabel,
   resultKind,
+  onFinish,
 }: {
   steps: Step[]
   finishLabel: string
   /** shape of the completion screen */
   resultKind: 'artefato' | 'analise'
+  /** produz (e persiste) o relatório a partir das escolhas; habilita download real */
+  onFinish?: (picks: string[]) => Resultado
 }) {
   const [index, setIndex] = useState(0)
   const [answers, setAnswers] = useState<Record<number, string[]>>({})
   const [done, setDone] = useState(false)
+  const [resultado, setResultado] = useState<Resultado | null>(null)
 
   const reset = () => {
     setIndex(0)
     setAnswers({})
     setDone(false)
+    setResultado(null)
+  }
+
+  const concluir = (picks: string[]) => {
+    setResultado(onFinish ? onFinish(picks) : null)
+    setDone(true)
+  }
+
+  const baixar = () => {
+    if (!resultado) return
+    const blob = new Blob([resultado.corpo], { type: 'text/markdown;charset=utf-8' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `${resultado.titulo.replace(/[^\wÀ-ſ-]+/g, '_')}.md`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(a.href)
   }
 
   const setSingle = (i: number, v: string) => setAnswers((a) => ({ ...a, [i]: [v] }))
@@ -73,22 +97,33 @@ export function Wizard({
           <AiBubble>
             <p className="flex items-center gap-2 font-bold text-[var(--color-success)]">
               <CheckCircle2 size={16} />
-              {resultKind === 'artefato'
-                ? 'Artefato gerado com sucesso.'
-                : 'Análise concluída.'}
+              {resultKind === 'artefato' ? 'Artefato gerado com sucesso.' : 'Análise concluída.'}
             </p>
-            {picks.length > 0 && (
-              <p className="mt-1 text-[13px] text-[var(--color-muted)]">
-                Baseado em: {picks.slice(0, 4).join(', ')}
-                {picks.length > 4 ? '…' : ''}
-              </p>
+            <p className="mt-1 text-[13px] text-[var(--color-muted)]">
+              {resultado?.resumo ??
+                (picks.length > 0
+                  ? `Baseado em: ${picks.slice(0, 4).join(', ')}${picks.length > 4 ? '…' : ''}`
+                  : 'Concluído.')}
+            </p>
+            {resultado && (
+              <pre className="mt-3 max-h-64 overflow-y-auto whitespace-pre-wrap rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white p-3 text-[12px] leading-relaxed text-[var(--color-ink)]">
+                {resultado.corpo}
+              </pre>
             )}
             <div className="mt-3 flex items-center gap-2 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white px-3 py-2">
               <FileText size={18} className="text-[var(--color-primary-strong)]" />
-              <span className="text-[13px] font-semibold text-[var(--color-ink)]">
-                {resultKind === 'artefato' ? 'documento-gerado.docx' : 'relatorio-de-analise.docx'}
+              <span className="line-clamp-1 text-[13px] font-semibold text-[var(--color-ink)]">
+                {resultado
+                  ? `${resultado.titulo}.md`
+                  : resultKind === 'artefato'
+                    ? 'documento-gerado.docx'
+                    : 'relatorio-de-analise.docx'}
               </span>
-              <button className="ml-auto inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-3 py-1.5 text-xs font-semibold text-white">
+              <button
+                onClick={baixar}
+                disabled={!resultado}
+                className="ml-auto inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-3 py-1.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
                 <Download size={13} /> Baixar
               </button>
             </div>
@@ -116,7 +151,7 @@ export function Wizard({
             )}
             <button
               disabled={!stepAnswered(index)}
-              onClick={() => (last ? setDone(true) : setIndex((i) => i + 1))}
+              onClick={() => (last ? concluir(picks) : setIndex((i) => i + 1))}
               className="rounded-[var(--radius-control)] border border-[#bcd0ee] bg-white px-6 py-2 text-sm font-semibold text-[var(--color-primary-strong)] transition hover:bg-[var(--color-primary-soft)] disabled:opacity-50"
             >
               {last ? finishLabel : 'Próximo'}
