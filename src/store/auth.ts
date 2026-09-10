@@ -32,7 +32,17 @@ interface AuthState {
   login: (email: string, password: string, perfil?: Perfil) => boolean
   logout: () => void
   setPerfil: (perfil: Perfil) => void
+  atualizarUsuario: (patch: Partial<Pick<User, 'name' | 'email'>>) => void
 }
+
+/** Iniciais (até 2 letras) a partir de um nome. */
+export const iniciaisDe = (nome: string) =>
+  nome
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? '')
+    .join('')
 
 export const useAuth = create<AuthState>()(
   persist(
@@ -53,6 +63,19 @@ export const useAuth = create<AuthState>()(
         set((s) =>
           s.user ? { user: { ...s.user, perfil, role: perfilLabel(perfil) } } : s,
         ),
+      atualizarUsuario: (patch) =>
+        set((s) => {
+          if (!s.user) return s
+          const nome = patch.name?.trim() || s.user.name
+          return {
+            user: {
+              ...s.user,
+              ...patch,
+              name: nome,
+              initials: iniciaisDe(nome),
+            },
+          }
+        }),
     }),
     {
       name: 'sollai-auth',
