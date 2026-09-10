@@ -1,25 +1,105 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight, Filter, MoreVertical } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
+import { Badge } from '../../components/common/Badge'
 import { DataTable, type Column } from '../../components/common/DataTable'
 import { EmptyState } from '../../components/common/EmptyState'
 import { RELATORIO_CONSULTAS } from '../../mocks'
+import { useProcessos, statusProcessoLabel } from '../../store/processos'
 
-const TABS = ['Consultas', 'Artefatos', 'Researchs', 'Processos']
+const TABS = ['Consultas', 'Artefatos', 'Researchs', 'Processos'] as const
+type Tab = (typeof TABS)[number]
 
 type Consulta = (typeof RELATORIO_CONSULTAS)[number]
 
-const cols: Column<Consulta>[] = [
+const consultaCols: Column<Consulta>[] = [
   { key: 'legislacao', header: 'Legislação' },
   { key: 'formato', header: 'Formato' },
-  { key: 'pergunta', header: 'Pergunta', render: (r) => <span className="line-clamp-3 max-w-md">{r.pergunta}</span> },
+  {
+    key: 'pergunta',
+    header: 'Pergunta',
+    render: (r) => <span className="line-clamp-3 max-w-md">{r.pergunta}</span>,
+  },
   { key: 'usuario', header: 'Usuário' },
   { key: 'data', header: 'Data' },
 ]
 
+type LinhaProcesso = {
+  id: string
+  numero: string
+  nome: string
+  tipo: string
+  legislacao: string
+  status: string
+  inclusao: string
+}
+
+const processoCols: Column<LinhaProcesso>[] = [
+  { key: 'numero', header: 'Número', align: 'center' },
+  {
+    key: 'nome',
+    header: 'Nome',
+    render: (r) => <span className="font-semibold text-[var(--color-primary-strong)]">{r.nome}</span>,
+  },
+  { key: 'tipo', header: 'Tipo' },
+  { key: 'legislacao', header: 'Legislação', align: 'center' },
+  { key: 'status', header: 'Status', align: 'center', render: (r) => <Badge tone="info">{r.status}</Badge> },
+  { key: 'inclusao', header: 'Inclusão', align: 'center' },
+]
+
+type LinhaArtefato = {
+  id: string
+  processo: string
+  artefato: string
+  responsavel: string
+  estado: string
+}
+
+const artefatoCols: Column<LinhaArtefato>[] = [
+  {
+    key: 'processo',
+    header: 'Processo',
+    render: (r) => (
+      <span className="font-semibold text-[var(--color-primary-strong)]">{r.processo}</span>
+    ),
+  },
+  { key: 'artefato', header: 'Artefato' },
+  { key: 'responsavel', header: 'Responsável', align: 'center' },
+  {
+    key: 'estado',
+    header: 'Situação',
+    align: 'center',
+    render: (r) => (
+      <Badge tone={r.estado === 'Enviado' ? 'info' : 'success'}>{r.estado}</Badge>
+    ),
+  },
+]
+
 export function RelatorioUsoPage() {
-  const [tab, setTab] = useState(TABS[0])
-  const rows = tab === 'Consultas' ? RELATORIO_CONSULTAS : []
+  const [tab, setTab] = useState<Tab>('Consultas')
+  const processos = useProcessos((s) => s.processos)
+
+  const linhasProcesso: LinhaProcesso[] = processos.map((p) => ({
+    id: p.id,
+    numero: p.numero,
+    nome: p.nome,
+    tipo: p.tipo,
+    legislacao: p.legislacao,
+    status: statusProcessoLabel(p.status),
+    inclusao: p.inclusao,
+  }))
+
+  const linhasArtefato: LinhaArtefato[] = processos.flatMap((p) =>
+    p.artefatos
+      .filter((a) => a.enviado)
+      .map((a) => ({
+        id: `${p.id}-${a.completo}`,
+        processo: p.nome,
+        artefato: a.nome,
+        responsavel: a.responsavel || 'Não definido',
+        estado: a.assinadoEm ? 'Assinado' : a.aprovadoEm ? 'Aprovado' : 'Enviado',
+      })),
+  )
 
   return (
     <div className="flex flex-col gap-5">
@@ -79,13 +159,46 @@ export function RelatorioUsoPage() {
             <MoreVertical size={15} />
           </button>
         </div>
-        <DataTable<Consulta>
-          columns={cols}
-          rows={rows}
-          rowKey={(r) => r.pergunta.slice(0, 20)}
-          empty={<EmptyState title="Nenhum registro no período" />}
-          footer={<span>Registros encontrados: {rows.length}</span>}
-        />
+
+        {tab === 'Consultas' && (
+          <DataTable<Consulta>
+            columns={consultaCols}
+            rows={RELATORIO_CONSULTAS}
+            rowKey={(r) => r.pergunta.slice(0, 24)}
+            empty={<EmptyState title="Nenhuma consulta no período" />}
+            footer={<span>Registros encontrados: {RELATORIO_CONSULTAS.length}</span>}
+          />
+        )}
+
+        {tab === 'Processos' && (
+          <DataTable<LinhaProcesso>
+            columns={processoCols}
+            rows={linhasProcesso}
+            rowKey={(r) => r.id}
+            empty={<EmptyState title="Nenhum processo cadastrado" />}
+            footer={<span>Registros encontrados: {linhasProcesso.length}</span>}
+          />
+        )}
+
+        {tab === 'Artefatos' && (
+          <DataTable<LinhaArtefato>
+            columns={artefatoCols}
+            rows={linhasArtefato}
+            rowKey={(r) => r.id}
+            empty={<EmptyState title="Nenhum artefato enviado" />}
+            footer={<span>Registros encontrados: {linhasArtefato.length}</span>}
+          />
+        )}
+
+        {tab === 'Researchs' && (
+          <DataTable<never>
+            columns={[{ key: 'x', header: 'Pergunta' }]}
+            rows={[]}
+            rowKey={() => ''}
+            empty={<EmptyState title="Nenhum research no período" />}
+            footer={<span>Registros encontrados: 0</span>}
+          />
+        )}
       </div>
     </div>
   )
