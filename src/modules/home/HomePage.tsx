@@ -6,13 +6,18 @@ import {
   CalendarRange,
   ClipboardList,
   FileSearch,
+  FileSignature,
   FolderKanban,
   Lock,
   MessagesSquare,
+  PenLine,
   Search,
   Users,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { useProcessos } from '../../store/processos'
+import { useSolicitacoes } from '../../store/solicitacoes'
+import { useRevisoes, revisoesPendentes } from '../../store/revisoes'
 
 interface CardDef {
   title: string
@@ -110,6 +115,8 @@ export function HomePage() {
         )}
       </p>
 
+      {view === 'root' && <ResumoStrip />}
+
       <div className="mt-8 grid w-full gap-4 sm:grid-cols-2">
         {cards.map(({ title, description, icon: Icon, to, drill, locked }) => (
           <button
@@ -141,6 +148,52 @@ export function HomePage() {
           </button>
         ))}
       </div>
+    </div>
+  )
+}
+
+function ResumoStrip() {
+  const navigate = useNavigate()
+  const processos = useProcessos((s) => s.processos)
+  const solicitacoes = useSolicitacoes((s) => s.solicitacoes)
+  const revisoes = useRevisoes((s) => s.revisoes)
+
+  const ativos = processos.filter((p) => p.status === 'ATIVO')
+  const artefatosPendentes = ativos.reduce(
+    (n, p) => n + p.artefatos.filter((a) => !a.enviado).length,
+    0,
+  )
+  const solicitacoesPendentes = solicitacoes.filter((s) => s.status === 'PENDENTE').length
+  const revisoesP = revisoesPendentes(revisoes).length
+
+  const tiles: { label: string; valor: number; icon: LucideIcon; to: string }[] = [
+    { label: 'Processos ativos', valor: ativos.length, icon: FolderKanban, to: '/processosinteligentes' },
+    { label: 'Artefatos pendentes', valor: artefatosPendentes, icon: FileSignature, to: '/StatusArtefatos' },
+    { label: 'Solicitações pendentes', valor: solicitacoesPendentes, icon: ClipboardList, to: '/RegistroNecessidade' },
+    { label: 'Revisões pendentes', valor: revisoesP, icon: PenLine, to: '/processosinteligentes' },
+  ]
+
+  return (
+    <div className="mt-6 grid w-full gap-3 sm:grid-cols-4">
+      {tiles.map(({ label, valor, icon: Icon, to }) => (
+        <button
+          key={label}
+          onClick={() => navigate(to)}
+          className="flex items-center gap-3 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white px-4 py-3 text-left shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:border-[#c9d6ea] hover:shadow-[var(--shadow-pop)]"
+        >
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)]">
+            <Icon size={17} />
+          </span>
+          <span className="min-w-0">
+            <span className="block font-display text-xl font-extrabold leading-none text-[#183263]">
+              {valor}
+            </span>
+            <span className="mt-0.5 block text-[11px] uppercase tracking-wide text-[var(--color-muted)]">
+              {label}
+            </span>
+          </span>
+        </button>
+      ))}
     </div>
   )
 }
