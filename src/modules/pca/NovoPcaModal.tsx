@@ -6,6 +6,9 @@ import { usePca } from '../../store/pca'
 import { useOrganizacao } from '../../store/organizacao'
 import { PROCESSO_LEGISLACOES } from '../../mocks'
 
+const ANO_MIN = new Date().getFullYear() - 1
+const ANO_MAX = new Date().getFullYear() + 10
+
 const vazio = {
   nome: '',
   anoPca: String(new Date().getFullYear()),
@@ -22,14 +25,20 @@ export function NovoPcaModal({ onCriado, onClose }: { onCriado: (id: string) => 
   const [form, setForm] = useState(vazio)
 
   const unidadeSelecionada = unidades.find((u) => u.nome === form.unidadeNome) ?? null
+  const anoNum = Number(form.anoPca)
+  const anoOk = Number.isInteger(anoNum) && anoNum >= ANO_MIN && anoNum <= ANO_MAX
   const podeSalvar =
-    form.nome.trim() && form.cnpjOrgao.trim() && form.nomeOrgao.trim() && unidadeSelecionada
+    form.nome.trim() &&
+    form.cnpjOrgao.trim() &&
+    form.nomeOrgao.trim() &&
+    unidadeSelecionada &&
+    anoOk
 
   const salvar = () => {
     if (!podeSalvar || !unidadeSelecionada) return
     const id = criar({
       nome: form.nome,
-      anoPca: Number(form.anoPca) || new Date().getFullYear(),
+      anoPca: anoNum,
       cnpjOrgao: form.cnpjOrgao,
       nomeOrgao: form.nomeOrgao,
       unidadeId: unidadeSelecionada.id,
@@ -84,10 +93,18 @@ export function NovoPcaModal({ onCriado, onClose }: { onCriado: (id: string) => 
             <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
               Ano do PCA
               <input
+                type="number"
+                min={ANO_MIN}
+                max={ANO_MAX}
                 value={form.anoPca}
                 onChange={(e) => setForm((f) => ({ ...f, anoPca: e.target.value }))}
                 className="gt-input font-normal normal-case"
               />
+              {form.anoPca !== '' && !anoOk && (
+                <span className="font-normal normal-case text-[var(--color-danger)]">
+                  Informe um ano entre {ANO_MIN} e {ANO_MAX}.
+                </span>
+              )}
             </label>
             <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
               Legislação

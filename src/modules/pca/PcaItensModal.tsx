@@ -57,9 +57,12 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
   const [arquivo, setArquivo] = useState<File | null>(null)
   const [erroImport, setErroImport] = useState('')
   const [pncpOpen, setPncpOpen] = useState(false)
+  const [excluirItemId, setExcluirItemId] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   if (!pca) return null
+
+  const alvoExcluir = pca.itens.find((i) => i.id === excluirItemId) ?? null
 
   const totalLote = pca.itens.reduce((s, i) => s + i.valorTotalEstimado, 0)
   const totalForm = (Number(form.qtd) || 0) * (Number(form.unitario) || 0)
@@ -267,7 +270,7 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
             <FilePenLine size={14} />
           </button>
           <button
-            onClick={() => removerItem(pcaId, r.id)}
+            onClick={() => setExcluirItemId(r.id)}
             aria-label="Excluir item"
             className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] border border-[#f0c2c8] text-[var(--color-danger)]"
           >
@@ -325,7 +328,10 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
               <Plus size={14} /> Novo Item
             </button>
             <button
-              onClick={() => setView('importar')}
+              onClick={() => {
+                setForm(emptyForm)
+                setView('importar')
+              }}
               className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-success)] px-3 py-2 text-xs font-bold uppercase tracking-wide text-white"
             >
               <Upload size={14} /> Importar CSV
@@ -628,6 +634,42 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
       </div>
 
       {pncpOpen && <ImportarPncpItensModal pcaId={pcaId} onClose={() => setPncpOpen(false)} />}
+
+      {alvoExcluir && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-[rgba(9,21,44,0.4)] p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setExcluirItemId(null)
+          }}
+        >
+          <div className="w-full max-w-md rounded-[16px] bg-white p-6 text-center shadow-[var(--shadow-pop)]">
+            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border-2 border-[#f0c2c8] text-[var(--color-danger)]">
+              <Trash2 size={24} />
+            </span>
+            <p className="mt-3 font-display text-base font-bold text-[#183263]">Excluir item?</p>
+            <p className="mt-2 text-sm text-[var(--color-muted)]">
+              O item <strong>{alvoExcluir.descricao}</strong> será removido deste PCA.
+            </p>
+            <div className="mt-5 flex justify-center gap-2">
+              <button
+                onClick={() => setExcluirItemId(null)}
+                className="rounded-[var(--radius-control)] bg-[#e6e9ef] px-4 py-2 text-sm font-semibold text-[var(--color-ink)]"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  removerItem(pcaId, alvoExcluir.id)
+                  setExcluirItemId(null)
+                }}
+                className="rounded-[var(--radius-control)] bg-[var(--color-danger)] px-5 py-2 text-sm font-semibold text-white"
+              >
+                Sim, excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

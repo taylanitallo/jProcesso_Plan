@@ -17,6 +17,7 @@ export function ImportarPncpItensModal({ pcaId, onClose }: { pcaId: string; onCl
   const [ativo, setAtivo] = useState<number | null>(null)
   const [itens, setItens] = useState<PcaItem[]>([])
   const [carregando, setCarregando] = useState(false)
+  const [consultou, setConsultou] = useState(false)
   const [filtro, setFiltro] = useState('')
   const [marcados, setMarcados] = useState<Set<number>>(new Set())
 
@@ -25,11 +26,13 @@ export function ImportarPncpItensModal({ pcaId, onClose }: { pcaId: string; onCl
   const consultar = async () => {
     if (!cnpj.trim()) return
     setCarregando(true)
+    setConsultou(false)
     const lista = await pcaService.consultarPca(cnpj.trim(), Number(ano) || new Date().getFullYear())
     setPcas(lista)
     setAtivo(lista[0]?.sequencial ?? null)
     setMarcados(new Set())
     setCarregando(false)
+    setConsultou(true)
   }
 
   useEffect(() => {
@@ -163,6 +166,14 @@ export function ImportarPncpItensModal({ pcaId, onClose }: { pcaId: string; onCl
             <Search size={15} /> Consultar
           </button>
         </div>
+
+        {consultou && !carregando && pcas.length === 0 && (
+          <div className="mt-4 flex items-start gap-2 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-[#f8fafd] px-3 py-3 text-sm text-[var(--color-muted)]">
+            <AlertTriangle size={15} className="mt-0.5 shrink-0 text-[#8a6d1a]" />
+            Nenhum PCA encontrado no PNCP para o CNPJ <strong className="mx-1">{cnpj.trim()}</strong> no
+            ano {Number(ano) || new Date().getFullYear()}. Confira o CNPJ e o ano.
+          </div>
+        )}
 
         {pcas.length > 0 && (
           <>
