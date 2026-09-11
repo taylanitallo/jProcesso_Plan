@@ -1,6 +1,6 @@
 import { AlertTriangle, Building2, Lock, Package, Send, X } from 'lucide-react'
 import { EmptyState } from '../../components/common/EmptyState'
-import { usePca } from '../../store/pca'
+import { usePca, itensDoPca, valorPca } from '../../store/pca'
 import { useInstituicao, instituicaoConfigurada } from '../../store/instituicao'
 
 const brl = (v: number) =>
@@ -17,11 +17,8 @@ export function TransmitirPncpModal({ onClose }: { onClose: () => void }) {
   const instituicao = useInstituicao((s) => s.instituicao)
   const prontos = pcas.filter((p) => p.status === 'PRONTO_PARA_ENVIO')
 
-  const totalItens = prontos.reduce((s, p) => s + p.itens.length, 0)
-  const valorGeral = prontos.reduce(
-    (s, p) => s + p.itens.reduce((si, i) => si + i.valorTotalEstimado, 0),
-    0,
-  )
+  const totalItens = prontos.reduce((s, p) => s + itensDoPca(p).length, 0)
+  const valorGeral = prontos.reduce((s, p) => s + valorPca(p), 0)
   const unidades = new Set(prontos.map((p) => p.unidadeId || p.unidadeNome)).size
 
   return (
@@ -86,6 +83,7 @@ export function TransmitirPncpModal({ onClose }: { onClose: () => void }) {
                     <th className="px-3 py-2">Unidade Orçamentária</th>
                     <th className="px-3 py-2">PCA</th>
                     <th className="px-3 py-2 text-center">Ano</th>
+                    <th className="px-3 py-2 text-center">DFDs</th>
                     <th className="px-3 py-2 text-center">Itens</th>
                     <th className="px-3 py-2 text-right">Valor Total</th>
                   </tr>
@@ -96,10 +94,9 @@ export function TransmitirPncpModal({ onClose }: { onClose: () => void }) {
                       <td className="px-3 py-2 font-semibold text-[var(--color-ink)]">{p.unidadeNome}</td>
                       <td className="px-3 py-2 text-[var(--color-muted)]">{p.nome}</td>
                       <td className="px-3 py-2 text-center">{p.anoPca}</td>
-                      <td className="px-3 py-2 text-center">{p.itens.length}</td>
-                      <td className="px-3 py-2 text-right">
-                        {brl(p.itens.reduce((s, i) => s + i.valorTotalEstimado, 0))}
-                      </td>
+                      <td className="px-3 py-2 text-center">{p.dfds.length}</td>
+                      <td className="px-3 py-2 text-center">{itensDoPca(p).length}</td>
+                      <td className="px-3 py-2 text-right">{brl(valorPca(p))}</td>
                     </tr>
                   ))}
                 </tbody>

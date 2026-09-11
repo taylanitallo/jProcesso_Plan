@@ -8,12 +8,13 @@ export type GrauPrioridade = 'Alta' | 'Média' | 'Baixa'
 export const GRAUS_PRIORIDADE: GrauPrioridade[] = ['Alta', 'Média', 'Baixa']
 
 /**
- * Item de PCA criado localmente. Superset do `PcaItem` (formato de leitura do
- * PNCP) com os campos exigidos pelo DTO real de escrita
- * (`IncluirPlanoContratacaoItemDTO`, ver docs/integracao-apis.md) que a API
- * de leitura não devolve, mais os campos obrigatórios do PAC segundo o FAQ
- * do compras.gov.br (justificativa, grau de prioridade, data desejada,
- * vinculação/dependência).
+ * Item de uma DFD dentro do PCA. Superset do `PcaItem` (formato de leitura do
+ * PNCP) com os campos do DTO real de escrita (`IncluirPlanoContratacaoItemDTO`,
+ * ver docs/integracao-apis.md) que a API de leitura não devolve.
+ *
+ * O que é da **demanda** (grau de prioridade, data desejada, justificativa,
+ * departamentos) fica na `PcaDfd`, não no item — cada DFD agrupa vários itens
+ * com a mesma prioridade/prazo.
  */
 export type PcaItemLocal = {
   id: string
@@ -32,23 +33,38 @@ export type PcaItemLocal = {
   quantidadeEstimada: number
   valorUnitarioEstimado: number
   valorTotalEstimado: number
-  /** Código CatMat/CatSer — obrigatório no PAC. */
+  /** Código CatMat/CatSer — do Catálogo de Itens. */
   codigoItemCatalogo: string
-  /** Justificativa para a aquisição ou contratação — obrigatória. */
-  justificativa: string
-  /** Grau de prioridade da compra/contratação — obrigatório. */
-  grauPrioridade: GrauPrioridade
-  /** Data desejada para a compra/contratação (dd/mm/aaaa) — obrigatória. */
-  dataDesejada: string
   /** Há vinculação/dependência com outro item (define a sequência). */
   temVinculo: boolean
-  /** Nº do item deste PCA do qual este depende (0 = nenhum). */
+  /** Nº do item da mesma DFD do qual este depende (0 = nenhum). */
   vinculoNumeroItem: number
   /** Só para exibição/auditoria local — de onde o item veio. */
   origem: 'MANUAL' | 'CATALOGO' | 'PNCP'
 }
 
-/** Campos obrigatórios do PAC preenchidos? (para liberar "Pronto para Envio"). */
+/**
+ * DFD — Documento de Formalização da Demanda. Dentro de um PCA existem várias
+ * (ex.: "Material de Limpeza", "Material de Expediente", "Material Gráfico").
+ * A DFD carrega o grau de prioridade, a data desejada, a justificativa e os
+ * departamentos demandantes; os itens ficam dentro dela.
+ */
+export type PcaDfd = {
+  id: string
+  numero: number
+  objeto: string
+  grauPrioridade: GrauPrioridade
+  /** Data desejada da contratação (dd/mm/aaaa). */
+  dataDesejada: string
+  /** Departamentos/setores demandantes (nomes de useOrganizacao().setores). */
+  departamentos: string[]
+  justificativa: string
+  itens: PcaItemLocal[]
+  criadoEm: string
+  atualizadoEm: string
+}
+
+/** Item pronto? (catálogo + quantidade + valor unitário + vínculo coerente). */
 export const itemPcaCompleto = (it: PcaItemLocal): boolean =>
   Boolean(
     it.descricao.trim() &&
@@ -56,10 +72,18 @@ export const itemPcaCompleto = (it: PcaItemLocal): boolean =>
       it.unidadeFornecimento.trim() &&
       it.quantidadeEstimada > 0 &&
       it.valorUnitarioEstimado > 0 &&
-      it.justificativa.trim() &&
-      it.grauPrioridade &&
-      it.dataDesejada.trim() &&
       (!it.temVinculo || it.vinculoNumeroItem > 0),
+  )
+
+/** DFD pronta? (objeto + grau + data + ≥1 departamento + ≥1 item, todos completos). */
+export const dfdCompleta = (d: PcaDfd): boolean =>
+  Boolean(
+    d.objeto.trim() &&
+      d.grauPrioridade &&
+      d.dataDesejada.trim() &&
+      d.departamentos.length > 0 &&
+      d.itens.length > 0 &&
+      d.itens.every(itemPcaCompleto),
   )
 
 export type PcaLocal = {
@@ -74,9 +98,31 @@ export type PcaLocal = {
   legislacao: string
   observacoes: string
   status: StatusPca
-  itens: PcaItemLocal[]
+  dfds: PcaDfd[]
   criadoEm: string
   atualizadoEm: string
+}
+
+/** Todos os itens do PCA, achatando as DFDs. */
+export const itensDoPca = (p: PcaLocal): PcaItemLocal[] => p.dfds.flatMap((d) => d.itens)
+
+/** Valor estimado de uma DFD (soma dos itens). */
+export const valorDfd = (d: PcaDfd): number =>
+  d.itens.reduce((s, i) => s + i.valorTotalEstimado, 0)
+
+/** Valor estimado do PCA (soma das DFDs). */
+export const valorPca = (p: PcaLocal): number => p.dfds.reduce((s, d) => s + valorDfd(d), 0)
+
+/** Soma por departamento — uma DFD com N departamentos entra em cada um deles. */
+export const valorPorDepartamento = (p: PcaLocal): { departamento: string; valor: number }[] => {
+  const mapa = new Map<string, number>()
+  for (const d of p.dfds) {
+    const v = valorDfd(d)
+    for (const dep of d.departamentos) mapa.set(dep, (mapa.get(dep) ?? 0) + v)
+  }
+  return [...mapa.entries()]
+    .map(([departamento, valor]) => ({ departamento, valor }))
+    .sort((a, b) => b.valor - a.valor)
 }
 
 type NovoPca = {
@@ -90,17 +136,37 @@ type NovoPca = {
   observacoes?: string
 }
 
+type NovaDfd = {
+  objeto: string
+  grauPrioridade: GrauPrioridade
+  dataDesejada: string
+  departamentos: string[]
+  justificativa?: string
+}
+
 type NovoItemPca = Omit<PcaItemLocal, 'id' | 'valorTotalEstimado'>
 
 type State = {
   pcas: PcaLocal[]
   criar: (p: NovoPca) => string
-  atualizar: (id: string, patch: Partial<Omit<PcaLocal, 'id' | 'itens'>>) => void
+  atualizar: (id: string, patch: Partial<Omit<PcaLocal, 'id' | 'dfds'>>) => void
   remover: (id: string) => void
   definirStatus: (id: string, status: StatusPca) => void
-  adicionarItem: (pcaId: string, item: NovoItemPca) => void
-  atualizarItem: (pcaId: string, itemId: string, patch: Partial<Omit<PcaItemLocal, 'id'>>) => void
-  removerItem: (pcaId: string, itemId: string) => void
+  adicionarDfd: (pcaId: string, dfd: NovaDfd) => string
+  atualizarDfd: (
+    pcaId: string,
+    dfdId: string,
+    patch: Partial<Omit<PcaDfd, 'id' | 'itens' | 'numero' | 'criadoEm'>>,
+  ) => void
+  removerDfd: (pcaId: string, dfdId: string) => void
+  adicionarItem: (pcaId: string, dfdId: string, item: NovoItemPca) => void
+  atualizarItem: (
+    pcaId: string,
+    dfdId: string,
+    itemId: string,
+    patch: Partial<Omit<PcaItemLocal, 'id'>>,
+  ) => void
+  removerItem: (pcaId: string, dfdId: string, itemId: string) => void
 }
 
 /** Domínio real do PNCP (categoriaItemId) — ver docs/integracao-apis.md. */
@@ -134,6 +200,13 @@ const agora = () =>
     minute: '2-digit',
   })}`
 
+const comValorTotal = (item: NovoItemPca): Omit<PcaItemLocal, 'id'> => ({
+  ...item,
+  valorTotalEstimado: Number(
+    (item.quantidadeEstimada * item.valorUnitarioEstimado).toFixed(2),
+  ),
+})
+
 export const usePca = create<State>()(
   persist(
     (set) => ({
@@ -155,7 +228,7 @@ export const usePca = create<State>()(
               legislacao: p.legislacao ?? '14.133',
               observacoes: p.observacoes?.trim() ?? '',
               status: 'RASCUNHO',
-              itens: [],
+              dfds: [],
               criadoEm: carimbo,
               atualizadoEm: carimbo,
             },
@@ -172,7 +245,37 @@ export const usePca = create<State>()(
         set((s) => ({
           pcas: s.pcas.map((p) => (p.id === id ? { ...p, status, atualizadoEm: agora() } : p)),
         })),
-      adicionarItem: (pcaId, item) =>
+      adicionarDfd: (pcaId, dfd) => {
+        const dfdId = `dfd${uid()}`
+        set((s) => ({
+          pcas: s.pcas.map((p) => {
+            if (p.id !== pcaId) return p
+            const numero = Math.max(0, ...p.dfds.map((d) => d.numero)) + 1
+            const carimbo = agora()
+            return {
+              ...p,
+              atualizadoEm: carimbo,
+              dfds: [
+                ...p.dfds,
+                {
+                  id: dfdId,
+                  numero,
+                  objeto: dfd.objeto.trim(),
+                  grauPrioridade: dfd.grauPrioridade,
+                  dataDesejada: dfd.dataDesejada.trim(),
+                  departamentos: dfd.departamentos,
+                  justificativa: dfd.justificativa?.trim() ?? '',
+                  itens: [],
+                  criadoEm: carimbo,
+                  atualizadoEm: carimbo,
+                },
+              ],
+            }
+          }),
+        }))
+        return dfdId
+      },
+      atualizarDfd: (pcaId, dfdId, patch) =>
         set((s) => ({
           pcas: s.pcas.map((p) =>
             p.id !== pcaId
@@ -180,70 +283,153 @@ export const usePca = create<State>()(
               : {
                   ...p,
                   atualizadoEm: agora(),
-                  itens: [
-                    ...p.itens,
-                    {
-                      ...item,
-                      id: `item${uid()}`,
-                      valorTotalEstimado: Number(
-                        (item.quantidadeEstimada * item.valorUnitarioEstimado).toFixed(2),
-                      ),
-                    },
-                  ],
+                  dfds: p.dfds.map((d) =>
+                    d.id === dfdId ? { ...d, ...patch, atualizadoEm: agora() } : d,
+                  ),
                 },
           ),
         })),
-      atualizarItem: (pcaId, itemId, patch) =>
+      removerDfd: (pcaId, dfdId) =>
+        set((s) => ({
+          pcas: s.pcas.map((p) =>
+            p.id !== pcaId
+              ? p
+              : { ...p, atualizadoEm: agora(), dfds: p.dfds.filter((d) => d.id !== dfdId) },
+          ),
+        })),
+      adicionarItem: (pcaId, dfdId, item) =>
         set((s) => ({
           pcas: s.pcas.map((p) => {
             if (p.id !== pcaId) return p
             return {
               ...p,
               atualizadoEm: agora(),
-              itens: p.itens.map((it) => {
-                if (it.id !== itemId) return it
-                const mesclado = { ...it, ...patch }
+              dfds: p.dfds.map((d) =>
+                d.id !== dfdId
+                  ? d
+                  : {
+                      ...d,
+                      atualizadoEm: agora(),
+                      itens: [...d.itens, { ...comValorTotal(item), id: `item${uid()}` }],
+                    },
+              ),
+            }
+          }),
+        })),
+      atualizarItem: (pcaId, dfdId, itemId, patch) =>
+        set((s) => ({
+          pcas: s.pcas.map((p) => {
+            if (p.id !== pcaId) return p
+            return {
+              ...p,
+              atualizadoEm: agora(),
+              dfds: p.dfds.map((d) => {
+                if (d.id !== dfdId) return d
                 return {
-                  ...mesclado,
-                  valorTotalEstimado: Number(
-                    (mesclado.quantidadeEstimada * mesclado.valorUnitarioEstimado).toFixed(2),
-                  ),
+                  ...d,
+                  atualizadoEm: agora(),
+                  itens: d.itens.map((it) => {
+                    if (it.id !== itemId) return it
+                    const mesclado = { ...it, ...patch }
+                    return {
+                      ...mesclado,
+                      valorTotalEstimado: Number(
+                        (mesclado.quantidadeEstimada * mesclado.valorUnitarioEstimado).toFixed(2),
+                      ),
+                    }
+                  }),
                 }
               }),
             }
           }),
         })),
-      removerItem: (pcaId, itemId) =>
+      removerItem: (pcaId, dfdId, itemId) =>
         set((s) => ({
           pcas: s.pcas.map((p) =>
             p.id !== pcaId
               ? p
-              : { ...p, atualizadoEm: agora(), itens: p.itens.filter((it) => it.id !== itemId) },
+              : {
+                  ...p,
+                  atualizadoEm: agora(),
+                  dfds: p.dfds.map((d) =>
+                    d.id !== dfdId
+                      ? d
+                      : { ...d, atualizadoEm: agora(), itens: d.itens.filter((it) => it.id !== itemId) },
+                  ),
+                },
           ),
         })),
     }),
     {
       name: 'sollai-pca',
-      version: 3,
-      migrate: (persisted) => {
-        const state = persisted as {
-          pcas?: (Partial<PcaLocal> & { unidade?: string; itens?: Partial<PcaItemLocal>[] })[]
+      version: 4,
+      migrate: (persisted, version) => {
+        type ItemAntigo = Partial<PcaItemLocal> & {
+          justificativa?: string
+          grauPrioridade?: GrauPrioridade
+          dataDesejada?: string
         }
+        type PcaAntigo = Partial<PcaLocal> & {
+          unidade?: string
+          itens?: ItemAntigo[]
+          dfds?: PcaDfd[]
+        }
+        const state = persisted as { pcas?: PcaAntigo[] }
+        const carimbo = agora()
+
+        const normalizarItem = (it: ItemAntigo, i: number): PcaItemLocal => ({
+          id: it.id ?? `item${uid()}`,
+          numeroItem: it.numeroItem ?? i + 1,
+          materialOuServico: it.materialOuServico ?? 'MATERIAL',
+          categoriaItemId: it.categoriaItemId ?? 1,
+          categoriaItemNome: it.categoriaItemNome ?? 'Material',
+          criterioJulgamentoId: it.criterioJulgamentoId ?? 1,
+          criterioJulgamentoNome: it.criterioJulgamentoNome ?? 'Menor preço',
+          aplicabilidadeMargemPreferencia: it.aplicabilidadeMargemPreferencia ?? false,
+          exigenciaConteudoNacional: it.exigenciaConteudoNacional ?? false,
+          classificacao: it.classificacao ?? 'Material',
+          descricao: it.descricao ?? '',
+          informacaoComplementar: it.informacaoComplementar,
+          unidadeFornecimento: it.unidadeFornecimento ?? '',
+          quantidadeEstimada: it.quantidadeEstimada ?? 0,
+          valorUnitarioEstimado: it.valorUnitarioEstimado ?? 0,
+          valorTotalEstimado:
+            it.valorTotalEstimado ??
+            Number(((it.quantidadeEstimada ?? 0) * (it.valorUnitarioEstimado ?? 0)).toFixed(2)),
+          codigoItemCatalogo: it.codigoItemCatalogo ?? '',
+          temVinculo: it.temVinculo ?? false,
+          vinculoNumeroItem: it.vinculoNumeroItem ?? 0,
+          origem: it.origem ?? 'MANUAL',
+        })
+
         return {
-          pcas: (state.pcas ?? []).map((p) => ({
-            ...(p as PcaLocal),
-            unidadeId: p.unidadeId ?? '',
-            unidadeNome: p.unidadeNome ?? p.unidade ?? '',
-            itens: (p.itens ?? []).map((it) => ({
-              ...(it as PcaItemLocal),
-              codigoItemCatalogo: it.codigoItemCatalogo ?? '',
-              justificativa: it.justificativa ?? '',
-              grauPrioridade: it.grauPrioridade ?? 'Média',
-              dataDesejada: it.dataDesejada ?? '',
-              temVinculo: it.temVinculo ?? false,
-              vinculoNumeroItem: it.vinculoNumeroItem ?? 0,
-            })),
-          })),
+          pcas: (state.pcas ?? []).map((p) => {
+            const base = {
+              ...(p as PcaLocal),
+              unidadeId: p.unidadeId ?? '',
+              unidadeNome: p.unidadeNome ?? p.unidade ?? '',
+            }
+            // v4+ já tem dfds
+            if (version >= 4 && Array.isArray(p.dfds)) {
+              return { ...base, dfds: p.dfds }
+            }
+            // v3 e anteriores: envelopa os itens numa DFD única
+            const itens = (p.itens ?? []).map(normalizarItem)
+            const primeiro = (p.itens ?? [])[0]
+            const dfd: PcaDfd = {
+              id: `dfd${uid()}`,
+              numero: 1,
+              objeto: 'Demanda inicial',
+              grauPrioridade: primeiro?.grauPrioridade ?? 'Média',
+              dataDesejada: primeiro?.dataDesejada ?? '',
+              departamentos: [],
+              justificativa: primeiro?.justificativa ?? '',
+              itens,
+              criadoEm: carimbo,
+              atualizadoEm: carimbo,
+            }
+            return { ...base, dfds: itens.length > 0 ? [dfd] : [] }
+          }),
         }
       },
     },

@@ -6,11 +6,11 @@ import { Badge } from '../../components/common/Badge'
 import { DataTable, Pagination, type Column } from '../../components/common/DataTable'
 import { EmptyState } from '../../components/common/EmptyState'
 import { useModuleLinks } from '../../components/shell/useModuleLinks'
-import { usePca, itemPcaCompleto, type PcaLocal } from '../../store/pca'
+import { usePca, dfdCompleta, itensDoPca, valorPca, type PcaLocal } from '../../store/pca'
 import { usePode } from '../../app/permissoes'
 import { PCA_MODULE_LINKS } from './pcaLinks'
 import { NovoPcaModal } from './NovoPcaModal'
-import { PcaItensModal } from './PcaItensModal'
+import { PcaDfdsModal } from './PcaDfdsModal'
 import { TransmitirPncpModal } from './TransmitirPncpModal'
 
 const fmtBRL = (v: number) =>
@@ -37,8 +37,8 @@ export function CriarPcaPage() {
       definirStatus(p.id, 'RASCUNHO')
       return
     }
-    const faltam = p.itens.filter((i) => !itemPcaCompleto(i)).length
-    if (p.itens.length === 0 || faltam > 0) {
+    const faltam = p.dfds.filter((d) => !dfdCompleta(d)).length
+    if (p.dfds.length === 0 || faltam > 0) {
       setBloqueio({ nome: p.nome, faltam: faltam || 1 })
       return
     }
@@ -65,12 +65,13 @@ export function CriarPcaPage() {
     },
     { key: 'unidadeNome', header: 'Unidade Orçamentária' },
     { key: 'anoPca', header: 'Ano', align: 'center' },
-    { key: 'itens', header: 'Itens', align: 'center', render: (r) => r.itens.length },
+    { key: 'dfds', header: 'DFDs', align: 'center', render: (r) => r.dfds.length },
+    { key: 'itens', header: 'Itens', align: 'center', render: (r) => itensDoPca(r).length },
     {
       key: 'valorTotal',
       header: 'Valor Total',
       align: 'right',
-      render: (r) => fmtBRL(r.itens.reduce((s, i) => s + i.valorTotalEstimado, 0)),
+      render: (r) => fmtBRL(valorPca(r)),
     },
     {
       key: 'status',
@@ -95,7 +96,7 @@ export function CriarPcaPage() {
             onClick={() => setItensAbertoId(r.id)}
             className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-success)] px-3 py-1.5 text-xs font-semibold text-white"
           >
-            <FilePenLine size={13} /> Itens
+            <FilePenLine size={13} /> DFDs
           </button>
           <button
             onClick={() => setEditarId(r.id)}
@@ -181,7 +182,7 @@ export function CriarPcaPage() {
         />
       )}
       {itensAbertoId && (
-        <PcaItensModal pcaId={itensAbertoId} onClose={() => setItensAbertoId(null)} />
+        <PcaDfdsModal pcaId={itensAbertoId} onClose={() => setItensAbertoId(null)} />
       )}
       {transmitirOpen && podeTransmitir && (
         <TransmitirPncpModal onClose={() => setTransmitirOpen(false)} />
@@ -202,10 +203,12 @@ export function CriarPcaPage() {
               PCA ainda não está completo
             </p>
             <p className="mt-2 text-sm text-[var(--color-muted)]">
-              O PCA <strong>{bloqueio.nome}</strong> tem {bloqueio.faltam}{' '}
-              {bloqueio.faltam === 1 ? 'item pendente' : 'itens pendentes'} de campos obrigatórios
-              (código, justificativa, grau de prioridade, data desejada). Abra "Itens" e complete
-              antes de marcar como Pronto para Envio.
+              O PCA <strong>{bloqueio.nome}</strong>{' '}
+              {bloqueio.faltam === 1
+                ? 'tem 1 DFD pendente'
+                : `tem ${bloqueio.faltam} DFDs pendentes`}{' '}
+              (objeto, grau de prioridade, data desejada, ao menos um departamento e itens
+              completos). Abra "DFDs" e complete antes de marcar como Pronto para Envio.
             </p>
             <button
               onClick={() => setBloqueio(null)}

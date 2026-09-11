@@ -7,10 +7,19 @@ import { pcaService, type PcaCabecalho, type PcaItem } from '../../services'
 const brl = (v: number) =>
   `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
-/** Importa itens de um PCA já publicado no PNCP pra dentro de um PCA local (rascunho). */
-export function ImportarPncpItensModal({ pcaId, onClose }: { pcaId: string; onClose: () => void }) {
+/** Importa itens de um PCA já publicado no PNCP pra dentro de uma DFD local. */
+export function ImportarPncpItensModal({
+  pcaId,
+  dfdId,
+  onClose,
+}: {
+  pcaId: string
+  dfdId: string
+  onClose: () => void
+}) {
   const adicionarItem = usePca((s) => s.adicionarItem)
   const pca = usePca((s) => s.pcas.find((p) => p.id === pcaId))
+  const dfd = pca?.dfds.find((d) => d.id === dfdId)
   const cnpjInstituicao = useInstituicao((s) => s.instituicao.cnpj)
 
   const [cnpj, setCnpj] = useState(cnpjInstituicao)
@@ -76,15 +85,15 @@ export function ImportarPncpItensModal({ pcaId, onClose }: { pcaId: string; onCl
     })
 
   const importar = () => {
-    if (marcados.size === 0 || !pca) return
+    if (marcados.size === 0 || !pca || !dfd) return
     const escolhidos = itens.filter((i) => marcados.has(i.numeroItem))
-    let proximoNumero = Math.max(0, ...pca.itens.map((i) => i.numeroItem)) + 1
+    let proximoNumero = Math.max(0, ...dfd.itens.map((i) => i.numeroItem)) + 1
     escolhidos.forEach((i) => {
       const categoria =
         CATEGORIAS_ITEM_PCA.find((c) => c.nome === (i.materialOuServico === 'MATERIAL' ? 'Material' : 'Serviço')) ??
         CATEGORIAS_ITEM_PCA[0]
       const criterio = CRITERIOS_JULGAMENTO_PCA[0]
-      adicionarItem(pcaId, {
+      adicionarItem(pcaId, dfdId, {
         numeroItem: proximoNumero++,
         materialOuServico: i.materialOuServico,
         categoriaItemId: categoria.id,
@@ -100,9 +109,6 @@ export function ImportarPncpItensModal({ pcaId, onClose }: { pcaId: string; onCl
         quantidadeEstimada: i.quantidadeEstimada,
         valorUnitarioEstimado: i.valorUnitarioEstimado,
         codigoItemCatalogo: i.codigoItemCatalogo ?? '',
-        justificativa: 'Importado do PNCP — revisar antes do envio.',
-        grauPrioridade: 'Média',
-        dataDesejada: '',
         temVinculo: false,
         vinculoNumeroItem: 0,
         origem: 'PNCP',
@@ -142,10 +148,9 @@ export function ImportarPncpItensModal({ pcaId, onClose }: { pcaId: string; onCl
         <div className="mt-3 flex items-start gap-2 rounded-[var(--radius-control)] border border-[#f0d79a] bg-[#fdf6e3] px-3 py-2 text-xs text-[#8a6d1a]">
           <AlertTriangle size={14} className="mt-0.5 shrink-0" />
           <span>
-            Categoria, critério de julgamento, margem de preferência, conteúdo nacional,
-            justificativa, grau de prioridade e data desejada não vêm do PNCP nessa leitura —
-            entram com valores padrão e precisam ser revisados item a item antes de marcar o PCA
-            como pronto para envio.
+            Categoria, critério de julgamento, margem de preferência e conteúdo nacional não vêm do
+            PNCP nessa leitura — entram com valores padrão e precisam ser revisados item a item. O
+            grau de prioridade, a data desejada e a justificativa são da DFD.
           </span>
         </div>
 
