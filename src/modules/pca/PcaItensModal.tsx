@@ -123,6 +123,7 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
   }
 
   const escolherDoCatalogo = (c: (typeof catalogo)[number]) => {
+    const catNome = CATEGORIAS_ITEM_PCA.find((x) => x.nome === c.tipo)?.nome ?? 'Material'
     setForm((f) => ({
       ...f,
       origemItem: 'CATALOGO',
@@ -132,6 +133,12 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
       informacaoComplementar: c.especificacao,
       unidade: c.unidade,
       codigoItemCatalogo: c.codigo,
+      // Dados complementares já vêm preenchidos — usuário só informa qtd e valor.
+      categoriaNome: f.categoriaNome || catNome,
+      criterioNome: f.criterioNome || 'Menor preço',
+      justificativa:
+        f.justificativa || `Item constante do Catálogo de Itens da unidade (Cód. ${c.codigo}).`,
+      dataDesejadaIso: f.dataDesejadaIso || `${pca.anoPca}-12-31`,
     }))
   }
 
@@ -147,20 +154,25 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
       codigoItemCatalogo: '',
     }))
 
-  const formValido =
-    Boolean(form.descricao.trim()) &&
-    Boolean(form.categoriaNome) &&
-    Boolean(form.criterioNome) &&
-    Boolean(form.unidade) &&
-    Boolean(form.codigoItemCatalogo.trim()) &&
-    Boolean(form.justificativa.trim()) &&
-    Boolean(form.dataDesejadaIso) &&
-    (!form.temVinculo || Boolean(form.vinculoNumeroItem))
+  const valorOk = (Number(form.qtd) || 0) > 0 && (Number(form.unitario) || 0) > 0
+  const formValido = form.catalogoTravado
+    ? valorOk
+    : Boolean(form.descricao.trim()) &&
+      Boolean(form.categoriaNome) &&
+      Boolean(form.criterioNome) &&
+      Boolean(form.unidade) &&
+      Boolean(form.codigoItemCatalogo.trim()) &&
+      Boolean(form.justificativa.trim()) &&
+      Boolean(form.dataDesejadaIso) &&
+      valorOk &&
+      (!form.temVinculo || Boolean(form.vinculoNumeroItem))
 
   const incluirItem = () => {
-    const categoria = CATEGORIAS_ITEM_PCA.find((c) => c.nome === form.categoriaNome)
-    const criterio = CRITERIOS_JULGAMENTO_PCA.find((c) => c.nome === form.criterioNome)
-    if (!formValido || !categoria || !criterio) return
+    const categoria =
+      CATEGORIAS_ITEM_PCA.find((c) => c.nome === form.categoriaNome) ?? CATEGORIAS_ITEM_PCA[0]
+    const criterio =
+      CRITERIOS_JULGAMENTO_PCA.find((c) => c.nome === form.criterioNome) ?? CRITERIOS_JULGAMENTO_PCA[0]
+    if (!formValido) return
 
     const payload = {
       numeroItem:
@@ -376,6 +388,85 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
       c.codigo.toLowerCase().includes(buscaCatalogo.toLowerCase()),
   )
 
+  /** Campos do PNCP que não são "quantidade/valor" — editáveis nos dois modos. */
+  const camposAvancados = (
+    <>
+      <Labelled label="Categoria do item">
+        <Combo
+          value={form.categoriaNome}
+          onChange={(v) => setForm((f) => ({ ...f, categoriaNome: v }))}
+          options={CATEGORIAS_ITEM_PCA.map((c) => c.nome)}
+          placeholder="Selecione"
+        />
+      </Labelled>
+      <Labelled label="Critério de julgamento">
+        <Combo
+          value={form.criterioNome}
+          onChange={(v) => setForm((f) => ({ ...f, criterioNome: v }))}
+          options={CRITERIOS_JULGAMENTO_PCA.map((c) => c.nome)}
+          placeholder="Selecione"
+        />
+      </Labelled>
+      <Labelled label="Grau de prioridade">
+        <Combo
+          value={form.grauPrioridade}
+          onChange={(v) => setForm((f) => ({ ...f, grauPrioridade: v as GrauPrioridade }))}
+          options={GRAUS_PRIORIDADE}
+          placeholder="Selecione"
+        />
+      </Labelled>
+      <Labelled label="Margem de preferência">
+        <TogglePill value={form.margem} onChange={(v) => setForm((f) => ({ ...f, margem: v }))} />
+      </Labelled>
+      <Labelled label="Exigência de conteúdo nacional">
+        <TogglePill
+          value={form.conteudoNacional}
+          onChange={(v) => setForm((f) => ({ ...f, conteudoNacional: v }))}
+        />
+      </Labelled>
+      <Field
+        label="Data desejada"
+        type="date"
+        value={form.dataDesejadaIso}
+        onChange={(v) => setForm((f) => ({ ...f, dataDesejadaIso: v }))}
+      />
+      <div className="sm:col-span-3">
+        <TextAreaField
+          label="Justificativa da contratação"
+          placeholder="Por que este item precisa ser contratado?"
+          value={form.justificativa}
+          onChange={(v) => setForm((f) => ({ ...f, justificativa: v }))}
+        />
+      </div>
+      <Labelled label="Depende de outro item?">
+        <TogglePill
+          value={form.temVinculo}
+          onChange={(v) =>
+            setForm((f) => ({ ...f, temVinculo: v, vinculoNumeroItem: v ? f.vinculoNumeroItem : '' }))
+          }
+        />
+      </Labelled>
+      {form.temVinculo && (
+        <Labelled label="Depende do item Nº">
+          <select
+            value={form.vinculoNumeroItem}
+            onChange={(e) => setForm((f) => ({ ...f, vinculoNumeroItem: e.target.value }))}
+            className="gt-input font-normal normal-case"
+          >
+            <option value="">Selecione</option>
+            {pca.itens
+              .filter((i) => i.id !== form.editId)
+              .map((i) => (
+                <option key={i.id} value={i.numeroItem}>
+                  Nº {i.numeroItem} — {i.descricao}
+                </option>
+              ))}
+          </select>
+        </Labelled>
+      )}
+    </>
+  )
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[rgba(9,21,44,0.6)] p-3 backdrop-blur-sm sm:p-4"
@@ -500,33 +591,33 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
               <>
                 <h4 className="font-display text-sm font-bold text-[#183263]">Informações do item</h4>
                 <p className="mb-3 text-xs text-[var(--color-muted)]">
-                  Preencha os campos exigidos pelo PNCP pra este item do PCA.
+                  {form.catalogoTravado
+                    ? 'Os dados do item vêm do Catálogo de Itens. Informe apenas a quantidade e o valor unitário.'
+                    : 'Preencha os campos exigidos pelo PNCP pra este item do PCA.'}
                 </p>
 
-                {form.catalogoTravado && (
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-control)] border border-[#bcd0ee] bg-[var(--color-primary-soft)] px-4 py-3">
-                    <div className="flex items-start gap-2">
-                      <Package size={16} className="mt-0.5 shrink-0 text-[var(--color-primary-strong)]" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-[var(--color-ink)]">{form.descricao}</p>
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
-                          Item do catálogo • Cód. {form.codigoItemCatalogo || '—'} •{' '}
-                          {form.materialOuServico === 'MATERIAL' ? 'Material' : 'Serviço'} • {form.unidade}
-                        </p>
+                {form.catalogoTravado ? (
+                  <>
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-control)] border border-[#bcd0ee] bg-[var(--color-primary-soft)] px-4 py-3">
+                      <div className="flex items-start gap-2">
+                        <Package size={16} className="mt-0.5 shrink-0 text-[var(--color-primary-strong)]" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-[var(--color-ink)]">{form.descricao}</p>
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                            Item do catálogo • Cód. {form.codigoItemCatalogo || '—'} •{' '}
+                            {form.materialOuServico === 'MATERIAL' ? 'Material' : 'Serviço'} • {form.unidade}
+                          </p>
+                        </div>
                       </div>
+                      <button
+                        onClick={trocarItemDoCatalogo}
+                        className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--color-primary-strong)]"
+                      >
+                        <RefreshCw size={13} /> Trocar item do catálogo
+                      </button>
                     </div>
-                    <button
-                      onClick={trocarItemDoCatalogo}
-                      className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--color-primary-strong)]"
-                    >
-                      <RefreshCw size={13} /> Trocar item do catálogo
-                    </button>
-                  </div>
-                )}
 
-                <div className="grid gap-4 sm:grid-cols-3">
-                  {form.catalogoTravado ? (
-                    <>
+                    <div className="grid gap-4 sm:grid-cols-3">
                       <ReadOnlyField label="Descrição (do catálogo)" value={form.descricao} />
                       <ReadOnlyField
                         label="Informação complementar (do catálogo)"
@@ -536,52 +627,65 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
                         label="Material ou Serviço (do catálogo)"
                         value={form.materialOuServico === 'MATERIAL' ? 'Material' : 'Serviço'}
                       />
-                    </>
-                  ) : (
-                    <>
-                      <TextAreaField
-                        label="Descrição"
-                        placeholder="Ex: Aquisição de notebooks para o setor administrativo"
-                        value={form.descricao}
-                        onChange={(v) => setForm((f) => ({ ...f, descricao: v }))}
+                      <ReadOnlyField label="Unidade de medida (do catálogo)" value={form.unidade} />
+                      <ReadOnlyField
+                        label="Código CatMat/CatSer (do catálogo)"
+                        value={form.codigoItemCatalogo || '—'}
                       />
-                      <TextAreaField
-                        label="Informação complementar"
-                        placeholder="Especificações adicionais…"
-                        value={form.informacaoComplementar}
-                        onChange={(v) => setForm((f) => ({ ...f, informacaoComplementar: v }))}
+                      <Field
+                        label="Quantidade"
+                        type="number"
+                        placeholder="0"
+                        value={form.qtd}
+                        onChange={(v) => setForm((f) => ({ ...f, qtd: v }))}
                       />
-                      <Labelled label="Material ou Serviço">
-                        <Combo
-                          value={form.materialOuServico === 'MATERIAL' ? 'Material' : 'Serviço'}
-                          onChange={(v) =>
-                            setForm((f) => ({ ...f, materialOuServico: v === 'Serviço' ? 'SERVICO' : 'MATERIAL' }))
-                          }
-                          options={['Material', 'Serviço']}
-                          placeholder="Selecione"
+                      <Field
+                        label="Valor unitário"
+                        type="number"
+                        placeholder="0,00"
+                        value={form.unitario}
+                        onChange={(v) => setForm((f) => ({ ...f, unitario: v }))}
+                      />
+                      <Labelled label="Valor total">
+                        <input
+                          readOnly
+                          value={`R$ ${fmtBRL(totalForm)}`}
+                          className="gt-input cursor-not-allowed bg-[#f1f4f9] font-normal normal-case text-[var(--color-muted)]"
                         />
                       </Labelled>
-                    </>
-                  )}
-                  <Labelled label="Categoria do item">
-                    <Combo
-                      value={form.categoriaNome}
-                      onChange={(v) => setForm((f) => ({ ...f, categoriaNome: v }))}
-                      options={CATEGORIAS_ITEM_PCA.map((c) => c.nome)}
-                      placeholder="Selecione"
+                    </div>
+
+                    <details className="mt-4 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-[#f8fafd] px-4 py-3">
+                      <summary className="cursor-pointer text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
+                        Dados complementares do PNCP (já preenchidos — ajuste se precisar)
+                      </summary>
+                      <div className="mt-3 grid gap-4 sm:grid-cols-3">{camposAvancados}</div>
+                    </details>
+                  </>
+                ) : (
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <TextAreaField
+                      label="Descrição"
+                      placeholder="Ex: Aquisição de notebooks para o setor administrativo"
+                      value={form.descricao}
+                      onChange={(v) => setForm((f) => ({ ...f, descricao: v }))}
                     />
-                  </Labelled>
-                  <Labelled label="Critério de julgamento">
-                    <Combo
-                      value={form.criterioNome}
-                      onChange={(v) => setForm((f) => ({ ...f, criterioNome: v }))}
-                      options={CRITERIOS_JULGAMENTO_PCA.map((c) => c.nome)}
-                      placeholder="Selecione"
+                    <TextAreaField
+                      label="Informação complementar"
+                      placeholder="Especificações adicionais…"
+                      value={form.informacaoComplementar}
+                      onChange={(v) => setForm((f) => ({ ...f, informacaoComplementar: v }))}
                     />
-                  </Labelled>
-                  {form.catalogoTravado ? (
-                    <ReadOnlyField label="Unidade de medida (do catálogo)" value={form.unidade} />
-                  ) : (
+                    <Labelled label="Material ou Serviço">
+                      <Combo
+                        value={form.materialOuServico === 'MATERIAL' ? 'Material' : 'Serviço'}
+                        onChange={(v) =>
+                          setForm((f) => ({ ...f, materialOuServico: v === 'Serviço' ? 'SERVICO' : 'MATERIAL' }))
+                        }
+                        options={['Material', 'Serviço']}
+                        placeholder="Selecione"
+                      />
+                    </Labelled>
                     <Labelled label="Unidade de medida">
                       <Combo
                         value={form.unidade}
@@ -591,104 +695,36 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
                         filterable
                       />
                     </Labelled>
-                  )}
-                  <Labelled label="Margem de preferência">
-                    <TogglePill
-                      value={form.margem}
-                      onChange={(v) => setForm((f) => ({ ...f, margem: v }))}
-                    />
-                  </Labelled>
-                  <Labelled label="Exigência de conteúdo nacional">
-                    <TogglePill
-                      value={form.conteudoNacional}
-                      onChange={(v) => setForm((f) => ({ ...f, conteudoNacional: v }))}
-                    />
-                  </Labelled>
-                  <Field
-                    label="Quantidade"
-                    type="number"
-                    placeholder="0"
-                    value={form.qtd}
-                    onChange={(v) => setForm((f) => ({ ...f, qtd: v }))}
-                  />
-                  <Field
-                    label="Valor unitário"
-                    type="number"
-                    placeholder="0,00"
-                    value={form.unitario}
-                    onChange={(v) => setForm((f) => ({ ...f, unitario: v }))}
-                  />
-                  <Labelled label="Valor total">
-                    <input
-                      readOnly
-                      value={`R$ ${fmtBRL(totalForm)}`}
-                      className="gt-input cursor-not-allowed bg-[#f1f4f9] font-normal normal-case text-[var(--color-muted)]"
-                    />
-                  </Labelled>
-                  {form.catalogoTravado ? (
-                    <ReadOnlyField
-                      label="Código CatMat/CatSer (do catálogo)"
-                      value={form.codigoItemCatalogo || '—'}
-                    />
-                  ) : (
                     <Field
                       label="Código CatMat/CatSer"
                       placeholder="Ex.: 150912"
                       value={form.codigoItemCatalogo}
                       onChange={(v) => setForm((f) => ({ ...f, codigoItemCatalogo: v }))}
                     />
-                  )}
-                  <Labelled label="Grau de prioridade">
-                    <Combo
-                      value={form.grauPrioridade}
-                      onChange={(v) =>
-                        setForm((f) => ({ ...f, grauPrioridade: v as GrauPrioridade }))
-                      }
-                      options={GRAUS_PRIORIDADE}
-                      placeholder="Selecione"
+                    <Field
+                      label="Quantidade"
+                      type="number"
+                      placeholder="0"
+                      value={form.qtd}
+                      onChange={(v) => setForm((f) => ({ ...f, qtd: v }))}
                     />
-                  </Labelled>
-                  <Field
-                    label="Data desejada"
-                    type="date"
-                    value={form.dataDesejadaIso}
-                    onChange={(v) => setForm((f) => ({ ...f, dataDesejadaIso: v }))}
-                  />
-                  <div className="sm:col-span-3">
-                    <TextAreaField
-                      label="Justificativa da contratação"
-                      placeholder="Por que este item precisa ser contratado?"
-                      value={form.justificativa}
-                      onChange={(v) => setForm((f) => ({ ...f, justificativa: v }))}
+                    <Field
+                      label="Valor unitário"
+                      type="number"
+                      placeholder="0,00"
+                      value={form.unitario}
+                      onChange={(v) => setForm((f) => ({ ...f, unitario: v }))}
                     />
-                  </div>
-                  <Labelled label="Depende de outro item?">
-                    <TogglePill
-                      value={form.temVinculo}
-                      onChange={(v) =>
-                        setForm((f) => ({ ...f, temVinculo: v, vinculoNumeroItem: v ? f.vinculoNumeroItem : '' }))
-                      }
-                    />
-                  </Labelled>
-                  {form.temVinculo && (
-                    <Labelled label="Depende do item Nº">
-                      <select
-                        value={form.vinculoNumeroItem}
-                        onChange={(e) => setForm((f) => ({ ...f, vinculoNumeroItem: e.target.value }))}
-                        className="gt-input font-normal normal-case"
-                      >
-                        <option value="">Selecione</option>
-                        {pca.itens
-                          .filter((i) => i.id !== form.editId)
-                          .map((i) => (
-                            <option key={i.id} value={i.numeroItem}>
-                              Nº {i.numeroItem} — {i.descricao}
-                            </option>
-                          ))}
-                      </select>
+                    <Labelled label="Valor total">
+                      <input
+                        readOnly
+                        value={`R$ ${fmtBRL(totalForm)}`}
+                        className="gt-input cursor-not-allowed bg-[#f1f4f9] font-normal normal-case text-[var(--color-muted)]"
+                      />
                     </Labelled>
-                  )}
-                </div>
+                    {camposAvancados}
+                  </div>
+                )}
 
                 <div className="mt-5 flex justify-end gap-2">
                   <button
