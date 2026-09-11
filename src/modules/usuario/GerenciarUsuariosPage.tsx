@@ -17,7 +17,7 @@ import { EmptyState } from '../../components/common/EmptyState'
 import { useAuth, perfilLabel } from '../../store/auth'
 import { useUi } from '../../store/ui'
 import { useOrganizacao } from '../../store/organizacao'
-import { useUsuarios, LIMITE_USUARIOS, type Usuario } from '../../store/usuarios'
+import { useUsuarios, type Usuario } from '../../store/usuarios'
 import { useAssinantes, type Assinante } from '../../store/assinantes'
 import { GerenciarCertificadosModal } from './GerenciarCertificadosModal'
 import { NovoUsuarioModal } from './NovoUsuarioModal'
@@ -63,7 +63,6 @@ export function GerenciarUsuariosPage() {
   const assinanteExcluirAlvo = assinantes.find((a) => a.id === assinanteExcluirId) ?? null
 
   const total = 1 + usuarios.length
-  const cheio = total >= LIMITE_USUARIOS
   const excluirAlvo = usuarios.find((u) => u.id === excluirId) ?? null
   const nomeUnidade = (id: string) => unidades.find((u) => u.id === id)?.nome ?? ''
 
@@ -109,15 +108,14 @@ export function GerenciarUsuariosPage() {
               <Users size={20} className="mx-auto text-[var(--color-muted)]" />
               <p className="text-xs text-[var(--color-muted)]">Total de Usuários</p>
               <p className="font-display text-2xl font-extrabold text-[var(--color-primary)]">
-                {total} de {LIMITE_USUARIOS}
+                {total}
               </p>
               <button
                 onClick={() => {
                   setEditando(null)
                   setModal('novo')
                 }}
-                disabled={cheio}
-                className="mt-2 inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="mt-2 inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-4 py-2 text-sm font-semibold text-white"
               >
                 <Plus size={15} /> Novo Usuário
               </button>

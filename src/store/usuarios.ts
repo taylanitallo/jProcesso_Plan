@@ -2,9 +2,6 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Perfil } from '../types'
 
-/** Limite de assentos do contrato (conta o dono + os cadastrados). */
-export const LIMITE_USUARIOS = 3
-
 export type Usuario = {
   id: string
   nome: string
