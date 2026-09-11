@@ -92,17 +92,17 @@ export function CriarPcaPage() {
       render: (r) => (
         <div className="flex justify-end gap-2">
           <button
+            onClick={() => setItensAbertoId(r.id)}
+            className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-success)] px-3 py-1.5 text-xs font-semibold text-white"
+          >
+            <FilePenLine size={13} /> Itens
+          </button>
+          <button
             onClick={() => setEditarId(r.id)}
             aria-label="Editar PCA"
             className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)]"
           >
             <Pencil size={14} />
-          </button>
-          <button
-            onClick={() => setItensAbertoId(r.id)}
-            className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-success)] px-3 py-1.5 text-xs font-semibold text-white"
-          >
-            <FilePenLine size={13} /> Itens
           </button>
           <button
             onClick={() => setConfirmarId(r.id)}
