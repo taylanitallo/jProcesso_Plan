@@ -1,8 +1,11 @@
 import { useState } from 'react'
-import { ChevronRight } from 'lucide-react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import { ACADEMY_RAILS, TRILHA_FASE_PREPARATORIA } from '../../mocks'
 import { useAcademy, pctConcluido } from '../../store/academy'
 import { TrilhaModal } from './TrilhaModal'
+
+const slug = (s: string) => `rail-${s.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
 const TOTAL_AULAS = TRILHA_FASE_PREPARATORIA.aulas.reduce((n, a) => n + a.aulas, 0)
 
@@ -16,8 +19,20 @@ const THUMBS = [
 
 export function SollAcademyPage() {
   const [trilha, setTrilha] = useState<{ title: string; desc: string; thumb: string } | null>(null)
+  const [expandidas, setExpandidas] = useState<Set<string>>(new Set())
   const progresso = useAcademy((s) => s.progresso)
   const iniciadas = Object.values(progresso).filter((ids) => ids.length > 0).length
+  const railComProgresso = ACADEMY_RAILS.find((r) =>
+    r.courses.some((c) => (progresso[c.title] ?? []).length > 0),
+  )
+
+  const toggleExpandida = (title: string) =>
+    setExpandidas((prev) => {
+      const next = new Set(prev)
+      if (next.has(title)) next.delete(title)
+      else next.add(title)
+      return next
+    })
 
   return (
     <div className="flex flex-col gap-8">
@@ -37,28 +52,44 @@ export function SollAcademyPage() {
             <HeroBox
               title="Minhas Trilhas"
               cta={iniciadas > 0 ? `${iniciadas} em andamento` : 'Acessar'}
+              onClick={() => railComProgresso && scrollTo(slug(railComProgresso.title))}
             />
-            <HeroBox title="Todas as Categorias" cta="Ver tudo" />
+            <HeroBox title="Todas as Categorias" cta="Ver tudo" onClick={() => scrollTo('academy-rails')} />
           </div>
         </div>
       </header>
 
-      {ACADEMY_RAILS.map((rail, ri) => (
-        <section key={rail.title} className="flex flex-col gap-3">
+      <div id="academy-rails" className="flex flex-col gap-8">
+      {ACADEMY_RAILS.map((rail, ri) => {
+        const expandida = expandidas.has(rail.title)
+        return (
+        <section key={rail.title} id={slug(rail.title)} className="flex scroll-mt-4 flex-col gap-3">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-lg font-bold text-[#183263]">{rail.title}</h2>
-            <button className="inline-flex items-center gap-1 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--color-primary-strong)]">
-              Ver tudo <ChevronRight size={13} />
+            <button
+              onClick={() => toggleExpandida(rail.title)}
+              className="inline-flex items-center gap-1 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--color-primary-strong)]"
+            >
+              {expandida ? 'Ver menos' : 'Ver tudo'}
+              {expandida ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
             </button>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-2">
+          <div
+            className={
+              expandida
+                ? 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3'
+                : 'flex gap-4 overflow-x-auto pb-2'
+            }
+          >
             {rail.courses.map((c, ci) => {
               const thumb = THUMBS[(ri + ci) % THUMBS.length]
               return (
                 <button
                   key={c.title}
                   onClick={() => setTrilha({ title: c.title, desc: c.desc, thumb })}
-                  className="flex w-72 shrink-0 flex-col overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white text-left shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-pop)]"
+                  className={`flex flex-col overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white text-left shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-pop)] ${
+                    expandida ? 'w-full' : 'w-72 shrink-0'
+                  }`}
                 >
                   <div
                     className="flex h-32 items-end p-3 text-sm font-bold text-white"
@@ -92,7 +123,9 @@ export function SollAcademyPage() {
             })}
           </div>
         </section>
-      ))}
+        )
+      })}
+      </div>
 
       <footer className="rounded-[var(--radius-card)] bg-[linear-gradient(135deg,#12203f_0%,#1b2f57_100%)] p-8 text-center text-white">
         <h2 className="font-display text-xl font-extrabold">Aproveite todo o potencial da Soll Academy</h2>
@@ -112,11 +145,14 @@ export function SollAcademyPage() {
   )
 }
 
-function HeroBox({ title, cta }: { title: string; cta: string }) {
+function HeroBox({ title, cta, onClick }: { title: string; cta: string; onClick?: () => void }) {
   return (
     <div className="min-w-44 rounded-[var(--radius-control)] border border-white/15 bg-white/10 p-4">
       <p className="text-sm font-semibold">{title}</p>
-      <button className="mt-2 rounded-[var(--radius-control)] bg-white px-3 py-1.5 text-xs font-bold text-[#183263]">
+      <button
+        onClick={onClick}
+        className="mt-2 rounded-[var(--radius-control)] bg-white px-3 py-1.5 text-xs font-bold text-[#183263]"
+      >
         {cta}
       </button>
     </div>

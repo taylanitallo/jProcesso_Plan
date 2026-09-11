@@ -6,6 +6,7 @@ import { DataTable, type Column } from '../../components/common/DataTable'
 import { EmptyState } from '../../components/common/EmptyState'
 import { RELATORIO_CONSULTAS } from '../../mocks'
 import { useProcessos, statusProcessoLabel } from '../../store/processos'
+import { useAnalises } from '../../store/analises'
 
 const TABS = ['Consultas', 'Artefatos', 'Researchs', 'Processos'] as const
 type Tab = (typeof TABS)[number]
@@ -75,9 +76,27 @@ const artefatoCols: Column<LinhaArtefato>[] = [
   },
 ]
 
+type LinhaResearch = {
+  id: string
+  titulo: string
+  resumo: string
+  criadoEm: string
+}
+
+const researchCols: Column<LinhaResearch>[] = [
+  {
+    key: 'titulo',
+    header: 'Título',
+    render: (r) => <span className="font-semibold text-[var(--color-primary-strong)]">{r.titulo}</span>,
+  },
+  { key: 'resumo', header: 'Resumo', render: (r) => <span className="line-clamp-3 max-w-md">{r.resumo}</span> },
+  { key: 'criadoEm', header: 'Data', align: 'center' },
+]
+
 export function RelatorioUsoPage() {
   const [tab, setTab] = useState<Tab>('Consultas')
   const processos = useProcessos((s) => s.processos)
+  const analises = useAnalises((s) => s.analises)
 
   const linhasProcesso: LinhaProcesso[] = processos.map((p) => ({
     id: p.id,
@@ -100,6 +119,10 @@ export function RelatorioUsoPage() {
         estado: a.assinadoEm ? 'Assinado' : a.aprovadoEm ? 'Aprovado' : 'Enviado',
       })),
   )
+
+  const linhasResearch: LinhaResearch[] = analises
+    .filter((a) => a.kind === 'research')
+    .map((a) => ({ id: a.id, titulo: a.titulo, resumo: a.resumo, criadoEm: a.criadoEm }))
 
   return (
     <div className="flex flex-col gap-5">
@@ -191,12 +214,12 @@ export function RelatorioUsoPage() {
         )}
 
         {tab === 'Researchs' && (
-          <DataTable<never>
-            columns={[{ key: 'x', header: 'Pergunta' }]}
-            rows={[]}
-            rowKey={() => ''}
+          <DataTable<LinhaResearch>
+            columns={researchCols}
+            rows={linhasResearch}
+            rowKey={(r) => r.id}
             empty={<EmptyState title="Nenhum research no período" />}
-            footer={<span>Registros encontrados: 0</span>}
+            footer={<span>Registros encontrados: {linhasResearch.length}</span>}
           />
         )}
       </div>

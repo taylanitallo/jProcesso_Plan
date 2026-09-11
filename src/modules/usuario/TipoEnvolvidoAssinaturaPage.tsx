@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Search, Trash2, X } from 'lucide-react'
+import { Plus, Trash2, X } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { Button } from '../../components/common/Button'
 import { DataTable, type Column } from '../../components/common/DataTable'
@@ -30,9 +30,6 @@ export function TipoEnvolvidoAssinaturaPage() {
       align: 'right',
       render: (r) => (
         <div className="flex justify-end gap-2">
-          <button className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-success)] px-3 py-1.5 text-xs font-semibold text-white">
-            <Search size={13} /> Detalhes
-          </button>
           <button
             onClick={() => removeCategoria(r.nome)}
             className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] border border-[#f0c2c8] text-[var(--color-danger)]"
