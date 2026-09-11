@@ -4,11 +4,16 @@ import type { MaterialOuServico } from '../services/types'
 
 export type StatusPca = 'RASCUNHO' | 'PRONTO_PARA_ENVIO'
 
+export type GrauPrioridade = 'Alta' | 'Média' | 'Baixa'
+export const GRAUS_PRIORIDADE: GrauPrioridade[] = ['Alta', 'Média', 'Baixa']
+
 /**
  * Item de PCA criado localmente. Superset do `PcaItem` (formato de leitura do
  * PNCP) com os campos exigidos pelo DTO real de escrita
  * (`IncluirPlanoContratacaoItemDTO`, ver docs/integracao-apis.md) que a API
- * de leitura não devolve.
+ * de leitura não devolve, mais os campos obrigatórios do PAC segundo o FAQ
+ * do compras.gov.br (justificativa, grau de prioridade, data desejada,
+ * vinculação/dependência).
  */
 export type PcaItemLocal = {
   id: string
@@ -27,10 +32,35 @@ export type PcaItemLocal = {
   quantidadeEstimada: number
   valorUnitarioEstimado: number
   valorTotalEstimado: number
-  codigoItemCatalogo?: string
+  /** Código CatMat/CatSer — obrigatório no PAC. */
+  codigoItemCatalogo: string
+  /** Justificativa para a aquisição ou contratação — obrigatória. */
+  justificativa: string
+  /** Grau de prioridade da compra/contratação — obrigatório. */
+  grauPrioridade: GrauPrioridade
+  /** Data desejada para a compra/contratação (dd/mm/aaaa) — obrigatória. */
+  dataDesejada: string
+  /** Há vinculação/dependência com outro item (define a sequência). */
+  temVinculo: boolean
+  /** Nº do item deste PCA do qual este depende (0 = nenhum). */
+  vinculoNumeroItem: number
   /** Só para exibição/auditoria local — de onde o item veio. */
   origem: 'MANUAL' | 'CATALOGO' | 'PNCP'
 }
+
+/** Campos obrigatórios do PAC preenchidos? (para liberar "Pronto para Envio"). */
+export const itemPcaCompleto = (it: PcaItemLocal): boolean =>
+  Boolean(
+    it.descricao.trim() &&
+      it.codigoItemCatalogo.trim() &&
+      it.unidadeFornecimento.trim() &&
+      it.quantidadeEstimada > 0 &&
+      it.valorUnitarioEstimado > 0 &&
+      it.justificativa.trim() &&
+      it.grauPrioridade &&
+      it.dataDesejada.trim() &&
+      (!it.temVinculo || it.vinculoNumeroItem > 0),
+  )
 
 export type PcaLocal = {
   id: string
@@ -194,14 +224,25 @@ export const usePca = create<State>()(
     }),
     {
       name: 'sollai-pca',
-      version: 2,
+      version: 3,
       migrate: (persisted) => {
-        const state = persisted as { pcas?: (PcaLocal & { unidade?: string })[] }
+        const state = persisted as {
+          pcas?: (Partial<PcaLocal> & { unidade?: string; itens?: Partial<PcaItemLocal>[] })[]
+        }
         return {
           pcas: (state.pcas ?? []).map((p) => ({
-            ...p,
+            ...(p as PcaLocal),
             unidadeId: p.unidadeId ?? '',
             unidadeNome: p.unidadeNome ?? p.unidade ?? '',
+            itens: (p.itens ?? []).map((it) => ({
+              ...(it as PcaItemLocal),
+              codigoItemCatalogo: it.codigoItemCatalogo ?? '',
+              justificativa: it.justificativa ?? '',
+              grauPrioridade: it.grauPrioridade ?? 'Média',
+              dataDesejada: it.dataDesejada ?? '',
+              temVinculo: it.temVinculo ?? false,
+              vinculoNumeroItem: it.vinculoNumeroItem ?? 0,
+            })),
           })),
         }
       },

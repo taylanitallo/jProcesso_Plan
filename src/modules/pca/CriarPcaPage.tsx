@@ -6,7 +6,7 @@ import { Badge } from '../../components/common/Badge'
 import { DataTable, Pagination, type Column } from '../../components/common/DataTable'
 import { EmptyState } from '../../components/common/EmptyState'
 import { useModuleLinks } from '../../components/shell/useModuleLinks'
-import { usePca, type PcaLocal } from '../../store/pca'
+import { usePca, itemPcaCompleto, type PcaLocal } from '../../store/pca'
 import { usePode } from '../../app/permissoes'
 import { PCA_MODULE_LINKS } from './pcaLinks'
 import { NovoPcaModal } from './NovoPcaModal'
@@ -29,6 +29,20 @@ export function CriarPcaPage() {
   const [itensAbertoId, setItensAbertoId] = useState<string | null>(null)
   const [confirmarId, setConfirmarId] = useState<string | null>(null)
   const [transmitirOpen, setTransmitirOpen] = useState(false)
+  const [bloqueio, setBloqueio] = useState<{ nome: string; faltam: number } | null>(null)
+
+  const tentarPronto = (p: PcaLocal) => {
+    if (p.status === 'PRONTO_PARA_ENVIO') {
+      definirStatus(p.id, 'RASCUNHO')
+      return
+    }
+    const faltam = p.itens.filter((i) => !itemPcaCompleto(i)).length
+    if (p.itens.length === 0 || faltam > 0) {
+      setBloqueio({ nome: p.nome, faltam: faltam || 1 })
+      return
+    }
+    definirStatus(p.id, 'PRONTO_PARA_ENVIO')
+  }
 
   const filtrados = pcas.filter(
     (p) =>
@@ -62,12 +76,8 @@ export function CriarPcaPage() {
       header: 'Status',
       align: 'center',
       render: (r) => (
-        <button
-          onClick={() =>
-            definirStatus(r.id, r.status === 'RASCUNHO' ? 'PRONTO_PARA_ENVIO' : 'RASCUNHO')
-          }
-          title="Alternar status"
-        >
+        <button onClick={() => tentarPronto(r)} title="Alternar status">
+
           <Badge tone={r.status === 'RASCUNHO' ? 'neutral' : 'info'}>
             {r.status === 'RASCUNHO' ? 'Rascunho' : 'Pronto para Envio'}
           </Badge>
@@ -160,6 +170,36 @@ export function CriarPcaPage() {
       )}
       {transmitirOpen && podeTransmitir && (
         <TransmitirPncpModal onClose={() => setTransmitirOpen(false)} />
+      )}
+
+      {bloqueio && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-[rgba(9,21,44,0.4)] p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setBloqueio(null)
+          }}
+        >
+          <div className="w-full max-w-md rounded-[16px] bg-white p-6 text-center shadow-[var(--shadow-pop)]">
+            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full border-2 border-[#f0d79a] text-[#a3720c]">
+              <FilePenLine size={22} />
+            </span>
+            <p className="mt-3 font-display text-base font-bold text-[#183263]">
+              PCA ainda não está completo
+            </p>
+            <p className="mt-2 text-sm text-[var(--color-muted)]">
+              O PCA <strong>{bloqueio.nome}</strong> tem {bloqueio.faltam}{' '}
+              {bloqueio.faltam === 1 ? 'item pendente' : 'itens pendentes'} de campos obrigatórios
+              (código, justificativa, grau de prioridade, data desejada). Abra "Itens" e complete
+              antes de marcar como Pronto para Envio.
+            </p>
+            <button
+              onClick={() => setBloqueio(null)}
+              className="mt-5 rounded-[var(--radius-control)] bg-[var(--color-primary)] px-5 py-2 text-sm font-semibold text-white"
+            >
+              Entendi
+            </button>
+          </div>
+        </div>
       )}
 
       {itemConfirmar && (

@@ -20,6 +20,9 @@ import {
   usePca,
   CATEGORIAS_ITEM_PCA,
   CRITERIOS_JULGAMENTO_PCA,
+  GRAUS_PRIORIDADE,
+  itemPcaCompleto,
+  type GrauPrioridade,
   type PcaItemLocal,
 } from '../../store/pca'
 import type { MaterialOuServico } from '../../services/types'
@@ -27,6 +30,16 @@ import { ImportarPncpItensModal } from './ImportarPncpItensModal'
 
 const fmtBRL = (v: number) =>
   v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+/** ISO (aaaa-mm-dd) → dd/mm/aaaa e volta, para o <input type="date">. */
+const isoToBr = (s: string) => {
+  const m = s?.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : ''
+}
+const brToIso = (s: string) => {
+  const m = s?.match(/^(\d{2})\/(\d{2})\/(\d{4})/)
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : ''
+}
 
 const emptyForm = {
   editId: null as string | null,
@@ -42,6 +55,11 @@ const emptyForm = {
   qtd: '',
   unitario: '',
   codigoItemCatalogo: '',
+  justificativa: '',
+  grauPrioridade: 'Média' as GrauPrioridade,
+  dataDesejadaIso: '',
+  temVinculo: false,
+  vinculoNumeroItem: '',
 }
 
 export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () => void }) {
@@ -87,6 +105,11 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
       qtd: String(it.quantidadeEstimada),
       unitario: String(it.valorUnitarioEstimado),
       codigoItemCatalogo: it.codigoItemCatalogo ?? '',
+      justificativa: it.justificativa ?? '',
+      grauPrioridade: it.grauPrioridade ?? 'Média',
+      dataDesejadaIso: brToIso(it.dataDesejada ?? ''),
+      temVinculo: it.temVinculo ?? false,
+      vinculoNumeroItem: it.vinculoNumeroItem ? String(it.vinculoNumeroItem) : '',
     })
     setView('form')
   }
@@ -103,10 +126,20 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
     }))
   }
 
+  const formValido =
+    Boolean(form.descricao.trim()) &&
+    Boolean(form.categoriaNome) &&
+    Boolean(form.criterioNome) &&
+    Boolean(form.unidade) &&
+    Boolean(form.codigoItemCatalogo.trim()) &&
+    Boolean(form.justificativa.trim()) &&
+    Boolean(form.dataDesejadaIso) &&
+    (!form.temVinculo || Boolean(form.vinculoNumeroItem))
+
   const incluirItem = () => {
     const categoria = CATEGORIAS_ITEM_PCA.find((c) => c.nome === form.categoriaNome)
     const criterio = CRITERIOS_JULGAMENTO_PCA.find((c) => c.nome === form.criterioNome)
-    if (!form.descricao.trim() || !categoria || !criterio || !form.unidade) return
+    if (!formValido || !categoria || !criterio) return
 
     const payload = {
       numeroItem:
@@ -126,7 +159,12 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
       unidadeFornecimento: form.unidade,
       quantidadeEstimada: Number(form.qtd) || 0,
       valorUnitarioEstimado: Number(form.unitario) || 0,
-      codigoItemCatalogo: form.codigoItemCatalogo || undefined,
+      codigoItemCatalogo: form.codigoItemCatalogo.trim(),
+      justificativa: form.justificativa.trim(),
+      grauPrioridade: form.grauPrioridade,
+      dataDesejada: isoToBr(form.dataDesejadaIso),
+      temVinculo: form.temVinculo,
+      vinculoNumeroItem: form.temVinculo ? Number(form.vinculoNumeroItem) || 0 : 0,
       origem: form.origemItem,
     }
 
@@ -138,13 +176,16 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
   const exportarCsv = () => {
     const linhas = [
       [
-        'Nº', 'Descrição', 'Material/Serviço', 'Categoria', 'Critério de Julgamento',
-        'Margem de Preferência', 'Conteúdo Nacional', 'Unidade', 'Qtd.', 'Valor Unit. (R$)', 'Valor Total (R$)',
+        'Nº', 'Descrição', 'Material/Serviço', 'Código CatMat/CatSer', 'Categoria',
+        'Critério de Julgamento', 'Margem de Preferência', 'Conteúdo Nacional', 'Unidade',
+        'Qtd.', 'Valor Unit. (R$)', 'Valor Total (R$)', 'Justificativa', 'Grau de Prioridade',
+        'Data Desejada', 'Depende do Item Nº',
       ],
       ...pca.itens.map((i) => [
         String(i.numeroItem),
         i.descricao,
         i.materialOuServico === 'MATERIAL' ? 'Material' : 'Serviço',
+        i.codigoItemCatalogo,
         i.categoriaItemNome,
         i.criterioJulgamentoNome,
         i.aplicabilidadeMargemPreferencia ? 'Sim' : 'Não',
@@ -153,6 +194,10 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
         String(i.quantidadeEstimada),
         i.valorUnitarioEstimado.toFixed(2),
         i.valorTotalEstimado.toFixed(2),
+        i.justificativa,
+        i.grauPrioridade,
+        i.dataDesejada,
+        i.temVinculo ? String(i.vinculoNumeroItem) : '',
       ]),
     ]
     const csv = linhas.map((l) => l.map((c) => `"${c.replace(/"/g, '""')}"`).join(';')).join('\r\n')
@@ -179,14 +224,20 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
       let proximoNumero = Math.max(0, ...pca.itens.map((i) => i.numeroItem)) + 1
       linhas.slice(1).forEach((linha) => {
         const cols = linha.split(/[;,]/).map((c) => c.replace(/^"|"$/g, '').trim())
-        const [, descricao, materialServico, categoriaNome, criterioNome, margem, conteudo, unidade, qtd, unitario] =
-          cols
+        const [
+          , descricao, materialServico, codigo, categoriaNome, criterioNome, margem, conteudo,
+          unidade, qtd, unitario, , justificativa, grau, dataDesejada, dependeDe,
+        ] = cols
         const categoria =
           CATEGORIAS_ITEM_PCA.find((c) => c.nome === categoriaNome) ?? CATEGORIAS_ITEM_PCA[0]
         const criterio =
           CRITERIOS_JULGAMENTO_PCA.find((c) => c.nome === criterioNome) ?? CRITERIOS_JULGAMENTO_PCA[0]
         const q = Number(qtd) || 0
         const u = Number(unitario) || 0
+        const grauNorm = GRAUS_PRIORIDADE.find(
+          (g) => g.toLowerCase() === (grau ?? '').trim().toLowerCase(),
+        ) ?? 'Média'
+        const depende = Number(dependeDe) || 0
         adicionarItem(pcaId, {
           numeroItem: proximoNumero++,
           materialOuServico: materialServico?.trim().toLowerCase().startsWith('serv')
@@ -203,6 +254,12 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
           unidadeFornecimento: unidade || 'Unidade (UN)',
           quantidadeEstimada: q,
           valorUnitarioEstimado: u,
+          codigoItemCatalogo: codigo?.trim() ?? '',
+          justificativa: justificativa?.trim() ?? '',
+          grauPrioridade: grauNorm,
+          dataDesejada: dataDesejada?.trim() ?? '',
+          temVinculo: depende > 0,
+          vinculoNumeroItem: depende,
           origem: 'MANUAL',
         })
       })
@@ -221,9 +278,20 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
       header: 'Descrição',
       render: (r) => (
         <div className="max-w-[380px]">
-          <p className="font-bold text-[var(--color-ink)]">{r.descricao}</p>
+          <p className="flex items-center gap-1.5 font-bold text-[var(--color-ink)]">
+            {r.descricao}
+            {!itemPcaCompleto(r) && (
+              <span
+                title="Faltam campos obrigatórios do PAC"
+                className="rounded-[var(--radius-pill)] bg-[#fdf1dc] px-1.5 py-0.5 text-[9px] font-bold uppercase text-[#a3720c]"
+              >
+                Incompleto
+              </span>
+            )}
+          </p>
           <p className="mt-0.5 text-xs text-[var(--color-muted)]">
-            {r.categoriaItemNome} • {r.criterioJulgamentoNome}
+            Cód. {r.codigoItemCatalogo || '—'} • {r.grauPrioridade} • {r.dataDesejada || 'sem data'}
+            {r.temVinculo && r.vinculoNumeroItem ? ` • depende do item nº ${r.vinculoNumeroItem}` : ''}
           </p>
         </div>
       ),
@@ -525,6 +593,62 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
                       className="gt-input cursor-not-allowed bg-[#f1f4f9] font-normal normal-case text-[var(--color-muted)]"
                     />
                   </Labelled>
+                  <Field
+                    label="Código CatMat/CatSer"
+                    placeholder="Ex.: 150912"
+                    value={form.codigoItemCatalogo}
+                    onChange={(v) => setForm((f) => ({ ...f, codigoItemCatalogo: v }))}
+                  />
+                  <Labelled label="Grau de prioridade">
+                    <Combo
+                      value={form.grauPrioridade}
+                      onChange={(v) =>
+                        setForm((f) => ({ ...f, grauPrioridade: v as GrauPrioridade }))
+                      }
+                      options={GRAUS_PRIORIDADE}
+                      placeholder="Selecione"
+                    />
+                  </Labelled>
+                  <Field
+                    label="Data desejada"
+                    type="date"
+                    value={form.dataDesejadaIso}
+                    onChange={(v) => setForm((f) => ({ ...f, dataDesejadaIso: v }))}
+                  />
+                  <div className="sm:col-span-3">
+                    <TextAreaField
+                      label="Justificativa da contratação"
+                      placeholder="Por que este item precisa ser contratado?"
+                      value={form.justificativa}
+                      onChange={(v) => setForm((f) => ({ ...f, justificativa: v }))}
+                    />
+                  </div>
+                  <Labelled label="Depende de outro item?">
+                    <TogglePill
+                      value={form.temVinculo}
+                      onChange={(v) =>
+                        setForm((f) => ({ ...f, temVinculo: v, vinculoNumeroItem: v ? f.vinculoNumeroItem : '' }))
+                      }
+                    />
+                  </Labelled>
+                  {form.temVinculo && (
+                    <Labelled label="Depende do item Nº">
+                      <select
+                        value={form.vinculoNumeroItem}
+                        onChange={(e) => setForm((f) => ({ ...f, vinculoNumeroItem: e.target.value }))}
+                        className="gt-input font-normal normal-case"
+                      >
+                        <option value="">Selecione</option>
+                        {pca.itens
+                          .filter((i) => i.id !== form.editId)
+                          .map((i) => (
+                            <option key={i.id} value={i.numeroItem}>
+                              Nº {i.numeroItem} — {i.descricao}
+                            </option>
+                          ))}
+                      </select>
+                    </Labelled>
+                  )}
                 </div>
 
                 <div className="mt-5 flex justify-end gap-2">
@@ -536,7 +660,7 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
                   </button>
                   <button
                     onClick={incluirItem}
-                    disabled={!form.descricao.trim() || !form.categoriaNome || !form.criterioNome || !form.unidade}
+                    disabled={!formValido}
                     className="rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-6 py-2 text-sm font-bold uppercase tracking-wide text-white disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {form.editId != null ? 'Salvar item' : 'Incluir item'}
@@ -551,9 +675,10 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
           <div>
             <h4 className="font-display text-sm font-bold text-[#183263]">Importar itens de uma planilha</h4>
             <p className="mb-3 text-xs text-[var(--color-muted)]">
-              Envie um arquivo .csv com as colunas: Nº, Descrição, Material/Serviço, Categoria,
-              Critério de Julgamento, Margem de Preferência, Conteúdo Nacional, Unidade, Qtd.,
-              Valor Unitário.
+              Envie um arquivo .csv no mesmo formato do "Exportar CSV": Nº, Descrição,
+              Material/Serviço, Código CatMat/CatSer, Categoria, Critério de Julgamento, Margem de
+              Preferência, Conteúdo Nacional, Unidade, Qtd., Valor Unit., Valor Total,
+              Justificativa, Grau de Prioridade, Data Desejada, Depende do Item Nº.
             </p>
 
             <label className="flex cursor-pointer flex-col items-center gap-2 rounded-[var(--radius-control)] border-2 border-dashed border-[#c9d6ea] bg-[#f7f9fc] px-4 py-10 text-center">
