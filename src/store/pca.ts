@@ -30,7 +30,14 @@ export type PcaItemLocal = {
   descricao: string
   informacaoComplementar?: string
   unidadeFornecimento: string
+  /** Quantidade total estimada (soma dos departamentos quando houver rateio). */
   quantidadeEstimada: number
+  /**
+   * Rateio da quantidade por departamento demandante da DFD. Ausente/vazio =
+   * quantidade geral (um número só). Quando presente, `quantidadeEstimada` é a
+   * soma dos valores.
+   */
+  quantidades?: Record<string, number>
   valorUnitarioEstimado: number
   valorTotalEstimado: number
   /** Código CatMat/CatSer — do Catálogo de Itens. */
@@ -113,12 +120,32 @@ export const valorDfd = (d: PcaDfd): number =>
 /** Valor estimado do PCA (soma das DFDs). */
 export const valorPca = (p: PcaLocal): number => p.dfds.reduce((s, d) => s + valorDfd(d), 0)
 
-/** Soma por departamento — uma DFD com N departamentos entra em cada um deles. */
+/**
+ * Contribuição de um item para um departamento: usa o rateio por departamento
+ * quando o item tem `quantidades`; senão divide o valor do item igualmente
+ * entre os departamentos da DFD. A soma sobre todos os departamentos bate com
+ * o valor do item.
+ */
+const contribuicaoItemDepartamento = (
+  it: PcaItemLocal,
+  departamento: string,
+  dfd: PcaDfd,
+): number => {
+  if (it.quantidades && Object.keys(it.quantidades).length > 0) {
+    return Number(((it.quantidades[departamento] ?? 0) * it.valorUnitarioEstimado).toFixed(2))
+  }
+  const n = dfd.departamentos.length || 1
+  return Number((it.valorTotalEstimado / n).toFixed(2))
+}
+
+/** Soma por departamento — rateio exato quando o item o tem, senão divisão igual. */
 export const valorPorDepartamento = (p: PcaLocal): { departamento: string; valor: number }[] => {
   const mapa = new Map<string, number>()
   for (const d of p.dfds) {
-    const v = valorDfd(d)
-    for (const dep of d.departamentos) mapa.set(dep, (mapa.get(dep) ?? 0) + v)
+    for (const dep of d.departamentos) {
+      const v = d.itens.reduce((s, it) => s + contribuicaoItemDepartamento(it, dep, d), 0)
+      mapa.set(dep, (mapa.get(dep) ?? 0) + v)
+    }
   }
   return [...mapa.entries()]
     .map(([departamento, valor]) => ({ departamento, valor }))

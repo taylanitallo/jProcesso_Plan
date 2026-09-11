@@ -72,7 +72,9 @@ const itemVazio = {
   margem: false,
   conteudoNacional: false,
   unidade: '',
+  modoQtd: 'geral' as 'geral' | 'departamento',
   qtd: '',
+  qtdDepto: {} as Record<string, string>,
   unitario: '',
   codigoItemCatalogo: '',
   temVinculo: false,
@@ -110,7 +112,12 @@ export function PcaDfdsModal({ pcaId, onClose }: { pcaId: string; onClose: () =>
   const alvoExcluirDfd = pca.dfds.find((d) => d.id === excluirDfdId) ?? null
   const alvoExcluirItem = dfdAtivo?.itens.find((i) => i.id === excluirItemId) ?? null
 
-  const totalForm = (Number(itemForm.qtd) || 0) * (Number(itemForm.unitario) || 0)
+  const deptosDaDfd = dfdAtivo?.departamentos ?? []
+  const usarRateio = itemForm.modoQtd === 'departamento' && deptosDaDfd.length > 0
+  const qtdTotalForm = usarRateio
+    ? deptosDaDfd.reduce((s, d) => s + (Number(itemForm.qtdDepto[d]) || 0), 0)
+    : Number(itemForm.qtd) || 0
+  const totalForm = qtdTotalForm * (Number(itemForm.unitario) || 0)
   const setoresNomes = setores.map((s) => s.nome)
   const resumoDepto = valorPorDepartamento(pca)
 
@@ -182,7 +189,11 @@ export function PcaDfdsModal({ pcaId, onClose }: { pcaId: string; onClose: () =>
       margem: it.aplicabilidadeMargemPreferencia,
       conteudoNacional: it.exigenciaConteudoNacional,
       unidade: it.unidadeFornecimento,
+      modoQtd: it.quantidades && Object.keys(it.quantidades).length > 0 ? 'departamento' : 'geral',
       qtd: String(it.quantidadeEstimada),
+      qtdDepto: Object.fromEntries(
+        Object.entries(it.quantidades ?? {}).map(([k, v]) => [k, String(v)]),
+      ),
       unitario: String(it.valorUnitarioEstimado),
       codigoItemCatalogo: it.codigoItemCatalogo ?? '',
       temVinculo: it.temVinculo ?? false,
@@ -218,7 +229,7 @@ export function PcaDfdsModal({ pcaId, onClose }: { pcaId: string; onClose: () =>
       codigoItemCatalogo: '',
     }))
 
-  const valorOk = (Number(itemForm.qtd) || 0) > 0 && (Number(itemForm.unitario) || 0) > 0
+  const valorOk = qtdTotalForm > 0 && (Number(itemForm.unitario) || 0) > 0
   const itemFormValido = itemForm.catalogoTravado
     ? valorOk
     : Boolean(itemForm.descricao.trim()) &&
@@ -253,7 +264,10 @@ export function PcaDfdsModal({ pcaId, onClose }: { pcaId: string; onClose: () =>
       descricao: itemForm.descricao.trim(),
       informacaoComplementar: itemForm.informacaoComplementar.trim() || undefined,
       unidadeFornecimento: itemForm.unidade,
-      quantidadeEstimada: Number(itemForm.qtd) || 0,
+      quantidadeEstimada: qtdTotalForm,
+      quantidades: usarRateio
+        ? Object.fromEntries(deptosDaDfd.map((d) => [d, Number(itemForm.qtdDepto[d]) || 0]))
+        : undefined,
       valorUnitarioEstimado: Number(itemForm.unitario) || 0,
       codigoItemCatalogo: itemForm.codigoItemCatalogo.trim(),
       temVinculo: itemForm.temVinculo,
@@ -447,6 +461,12 @@ export function PcaDfdsModal({ pcaId, onClose }: { pcaId: string; onClose: () =>
           </p>
           <p className="mt-0.5 text-xs text-[var(--color-muted)]">
             Cód. {r.codigoItemCatalogo || '—'}
+            {r.quantidades && Object.keys(r.quantidades).length > 0
+              ? ` • ${Object.entries(r.quantidades)
+                  .filter(([, v]) => v > 0)
+                  .map(([k, v]) => `${k}: ${v}`)
+                  .join(' · ')}`
+              : ''}
             {r.temVinculo && r.vinculoNumeroItem ? ` • depende do item nº ${r.vinculoNumeroItem}` : ''}
           </p>
         </div>
@@ -509,6 +529,60 @@ export function PcaDfdsModal({ pcaId, onClose }: { pcaId: string; onClose: () =>
     (c) =>
       c.nome.toLowerCase().includes(buscaCatalogo.toLowerCase()) ||
       c.codigo.toLowerCase().includes(buscaCatalogo.toLowerCase()),
+  )
+
+  const campoQuantidade = (
+    <>
+      {deptosDaDfd.length > 0 && (
+        <Labelled label="Quantidade">
+          <div className="flex rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white p-1">
+            {(['geral', 'departamento'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setItemForm((f) => ({ ...f, modoQtd: m }))}
+                className={`flex-1 rounded-[8px] px-3 py-1.5 text-xs font-semibold transition ${
+                  itemForm.modoQtd === m ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-muted)]'
+                }`}
+              >
+                {m === 'geral' ? 'Geral' : 'Por departamento'}
+              </button>
+            ))}
+          </div>
+        </Labelled>
+      )}
+      {usarRateio ? (
+        <>
+          {deptosDaDfd.map((d) => (
+            <Field
+              key={d}
+              label={`Qtd — ${d}`}
+              type="number"
+              placeholder="0"
+              value={itemForm.qtdDepto[d] ?? ''}
+              onChange={(v) =>
+                setItemForm((f) => ({ ...f, qtdDepto: { ...f.qtdDepto, [d]: v } }))
+              }
+            />
+          ))}
+          <Labelled label="Quantidade total">
+            <input
+              readOnly
+              value={String(qtdTotalForm)}
+              className="gt-input cursor-not-allowed bg-[#f1f4f9] font-normal normal-case text-[var(--color-muted)]"
+            />
+          </Labelled>
+        </>
+      ) : (
+        <Field
+          label="Quantidade"
+          type="number"
+          placeholder="0"
+          value={itemForm.qtd}
+          onChange={(v) => setItemForm((f) => ({ ...f, qtd: v }))}
+        />
+      )}
+    </>
   )
 
   const camposAvancados = (
@@ -648,7 +722,8 @@ export function PcaDfdsModal({ pcaId, onClose }: { pcaId: string; onClose: () =>
                     </tbody>
                   </table>
                   <p className="px-4 py-1.5 text-[10px] text-[var(--color-muted)]">
-                    Uma DFD com vários departamentos aparece em cada um.
+                    Itens com quantidade por departamento usam o rateio informado; os demais dividem
+                    o valor igualmente entre os departamentos da DFD.
                   </p>
                 </div>
               )}
@@ -907,13 +982,7 @@ export function PcaDfdsModal({ pcaId, onClose }: { pcaId: string; onClose: () =>
                             label="Código CatMat/CatSer (do catálogo)"
                             value={itemForm.codigoItemCatalogo || '—'}
                           />
-                          <Field
-                            label="Quantidade"
-                            type="number"
-                            placeholder="0"
-                            value={itemForm.qtd}
-                            onChange={(v) => setItemForm((f) => ({ ...f, qtd: v }))}
-                          />
+                          {campoQuantidade}
                           <Field
                             label="Valor unitário"
                             type="number"
@@ -976,13 +1045,7 @@ export function PcaDfdsModal({ pcaId, onClose }: { pcaId: string; onClose: () =>
                           value={itemForm.codigoItemCatalogo}
                           onChange={(v) => setItemForm((f) => ({ ...f, codigoItemCatalogo: v }))}
                         />
-                        <Field
-                          label="Quantidade"
-                          type="number"
-                          placeholder="0"
-                          value={itemForm.qtd}
-                          onChange={(v) => setItemForm((f) => ({ ...f, qtd: v }))}
-                        />
+                        {campoQuantidade}
                         <Field
                           label="Valor unitário"
                           type="number"
