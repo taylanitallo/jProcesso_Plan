@@ -8,6 +8,8 @@ export interface User {
   perfil: Perfil
   institution: string
   initials: string
+  /** Unidade Orçamentária vinculada a esta sessão — '' = nenhuma (típico do Admin Geral, que enxerga todas). */
+  unidadeId: string
 }
 
 export interface AppNotification {

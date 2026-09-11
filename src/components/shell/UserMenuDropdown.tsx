@@ -13,6 +13,7 @@ import {
   Workflow,
 } from 'lucide-react'
 import { useAuth, PERFIS } from '../../store/auth'
+import { useOrganizacao } from '../../store/organizacao'
 import { useUi } from '../../store/ui'
 import { pode } from '../../app/permissoes'
 import type { Perfil } from '../../types'
@@ -24,6 +25,8 @@ export function UserMenuDropdown({ onClose }: { onClose: () => void }) {
   const user = useAuth((s) => s.user)
   const logout = useAuth((s) => s.logout)
   const setPerfil = useAuth((s) => s.setPerfil)
+  const setUnidade = useAuth((s) => s.setUnidade)
+  const unidades = useOrganizacao((s) => s.unidades)
   const setUserModal = useUi((s) => s.setUserModal)
   const theme = useUi((s) => s.theme)
   const toggleTheme = useUi((s) => s.toggleTheme)
@@ -58,6 +61,26 @@ export function UserMenuDropdown({ onClose }: { onClose: () => void }) {
           ))}
         </select>
       </div>
+      {perfil !== 'ADMIN_GERAL' && (
+        <div className="flex items-center justify-between gap-2 border-b border-[var(--color-line)] px-4 py-2.5">
+          <span className="text-xs font-semibold text-[var(--color-muted)]">Unidade ativa</span>
+          <select
+            value={user?.unidadeId ?? ''}
+            onChange={(e) => setUnidade(e.target.value)}
+            disabled={unidades.length === 0}
+            className="gt-input h-8 max-w-[9.5rem] flex-1 text-xs font-normal normal-case disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <option value="">
+              {unidades.length === 0 ? 'Nenhuma cadastrada' : 'Nenhuma vinculada'}
+            </option>
+            {unidades.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.nome}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
       <div className="flex items-center justify-between border-b border-[var(--color-line)] px-4 py-2.5">
         <span className="flex items-center gap-3 text-sm text-[var(--color-ink)]">
           <Moon size={16} className="text-[var(--color-muted)]" />

@@ -2,21 +2,37 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, X } from 'lucide-react'
 import { useProcessos } from '../../store/processos'
+import { useOrganizacao } from '../../store/organizacao'
+import { useAuth } from '../../store/auth'
 import { PROCESSO_LEGISLACOES } from '../../mocks'
 import { ProcessoFields } from './ProcessoFields'
 import { PROCESSO_FORM_VAZIO, toNovoProcesso } from './processoForm'
-
-const vazio = { ...PROCESSO_FORM_VAZIO, legislacao: PROCESSO_LEGISLACOES[0] }
 
 /** "+ Novo" → "Processo com preenchimento manual". Campos conforme o modal real do SollAI. */
 export function NovoProcessoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const criar = useProcessos((s) => s.criar)
   const navigate = useNavigate()
+  const user = useAuth((s) => s.user)
+  const unidades = useOrganizacao((s) => s.unidades)
+  const isAdmin = user?.perfil === 'ADMIN_GERAL'
+  const minhaUnidade = unidades.find((u) => u.id === user?.unidadeId)
+  const vazio = {
+    ...PROCESSO_FORM_VAZIO,
+    legislacao: PROCESSO_LEGISLACOES[0],
+    unidadeId: isAdmin ? '' : (minhaUnidade?.id ?? ''),
+    unidadeNome: isAdmin ? '' : (minhaUnidade?.nome ?? ''),
+  }
   const [form, setForm] = useState(vazio)
 
   if (!open) return null
 
-  const podeSalvar = Boolean(form.nome.trim() && form.numero.trim() && form.tipo && form.legislacao)
+  const podeSalvar = Boolean(
+    form.nome.trim() &&
+      form.numero.trim() &&
+      form.tipo &&
+      form.legislacao &&
+      (unidades.length === 0 || form.unidadeId),
+  )
 
   const fechar = () => {
     setForm(vazio)

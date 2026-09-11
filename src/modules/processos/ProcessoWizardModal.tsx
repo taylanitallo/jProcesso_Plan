@@ -6,8 +6,9 @@ import { useProcessos } from '../../store/processos'
 import { useNecessidades } from '../../store/necessidades'
 import { useOrganizacao } from '../../store/organizacao'
 import { useSolicitacoes } from '../../store/solicitacoes'
+import { useAuth } from '../../store/auth'
 import { ProcessoFields } from './ProcessoFields'
-import { PROCESSO_FORM_VAZIO, toNovoProcesso } from './processoForm'
+import { PROCESSO_FORM_VAZIO, toNovoProcesso, type ProcessoFormValue } from './processoForm'
 
 /**
  * Wizard multi-etapa de criação de Processo Inteligente.
@@ -34,11 +35,23 @@ export function ProcessoWizardModal({
   const criar = useProcessos((s) => s.criar)
   const registros = useNecessidades((s) => s.registros)
   const setores = useOrganizacao((s) => s.setores)
+  const unidades = useOrganizacao((s) => s.unidades)
   const criarLote = useSolicitacoes((s) => s.criarLote)
+  const user = useAuth((s) => s.user)
   const navigate = useNavigate()
 
+  const isAdmin = user?.perfil === 'ADMIN_GERAL'
+  const formInicial = (): ProcessoFormValue => {
+    const minhaUnidade = unidades.find((u) => u.id === user?.unidadeId)
+    return {
+      ...PROCESSO_FORM_VAZIO,
+      unidadeId: isAdmin ? '' : (minhaUnidade?.id ?? ''),
+      unidadeNome: isAdmin ? '' : (minhaUnidade?.nome ?? ''),
+    }
+  }
+
   const [tab, setTab] = useState(0)
-  const [form, setForm] = useState(PROCESSO_FORM_VAZIO)
+  const [form, setForm] = useState<ProcessoFormValue>(formInicial)
   const [registrosSel, setRegistrosSel] = useState<string[]>([])
   const [setoresSel, setSetoresSel] = useState<string[]>([])
   const [nota, setNota] = useState('')
@@ -49,7 +62,13 @@ export function ProcessoWizardModal({
   const itensResumo = registros
     .filter((r) => registrosSel.includes(r.id))
     .reduce((s, r) => s + r.itens, 0)
-  const formOk = Boolean(form.nome.trim() && form.numero.trim() && form.tipo && form.legislacao)
+  const formOk = Boolean(
+    form.nome.trim() &&
+      form.numero.trim() &&
+      form.tipo &&
+      form.legislacao &&
+      (unidades.length === 0 || form.unidadeId),
+  )
   const podeConcluir = formOk && (modo === 'solicitacao' ? setoresSel.length > 0 : true)
 
   const toggleRegistro = (id: string) =>
@@ -59,7 +78,7 @@ export function ProcessoWizardModal({
 
   const resetar = () => {
     setTab(0)
-    setForm(PROCESSO_FORM_VAZIO)
+    setForm(formInicial())
     setRegistrosSel([])
     setSetoresSel([])
     setNota('')

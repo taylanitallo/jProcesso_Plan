@@ -27,6 +27,8 @@ import { PROCESSO_LEGISLACOES, PROCESSO_TIPOS } from '../../mocks'
 import { useRevisoes, revisoesPendentes } from '../../store/revisoes'
 import { useProcessos, statusProcessoLabel, type ProcessoLocal } from '../../store/processos'
 import { useWorkflows } from '../../store/workflows'
+import { useOrganizacao } from '../../store/organizacao'
+import { useAuth } from '../../store/auth'
 import { exigenciasDoProcesso } from './exigencias'
 import type { PendingItem } from './PendingModal'
 
@@ -72,13 +74,23 @@ export function ProcessosInteligentesPage() {
   const [tipoFiltro, setTipoFiltro] = useState('Todos')
   const [legislacaoFiltro, setLegislacaoFiltro] = useState('Todas')
   const [ativoFiltro, setAtivoFiltro] = useState('Todos')
+  const [unidadeFiltro, setUnidadeFiltro] = useState('Todas')
   const [excluirId, setExcluirId] = useState<string | null>(null)
 
-  const processos = useProcessos((s) => s.processos)
+  const todosProcessos = useProcessos((s) => s.processos)
   const remover = useProcessos((s) => s.remover)
   const revisoes = useRevisoes((s) => s.revisoes)
   const pendentes = revisoesPendentes(revisoes)
   const workflows = useWorkflows((s) => s.workflows)
+  const unidades = useOrganizacao((s) => s.unidades)
+  const user = useAuth((s) => s.user)
+  const isAdmin = user?.perfil === 'ADMIN_GERAL'
+
+  /** Escopo por unidade: Admin Geral vê tudo; os demais só a própria unidade
+   *  (processos sem unidade definida ficam visíveis a todos — dado legado). */
+  const processos = isAdmin
+    ? todosProcessos
+    : todosProcessos.filter((p) => !p.unidadeId || p.unidadeId === user?.unidadeId)
 
   const { aprovacoesPendentes, assinaturasPendentes } = (() => {
     const aprov: PendingItem[] = []
@@ -119,13 +131,18 @@ export function ProcessosInteligentesPage() {
   const excluirAlvo = processos.find((p) => p.id === excluirId) ?? null
 
   const filtrosAtivos =
-    busca !== '' || tipoFiltro !== 'Todos' || legislacaoFiltro !== 'Todas' || ativoFiltro !== 'Todos'
+    busca !== '' ||
+    tipoFiltro !== 'Todos' ||
+    legislacaoFiltro !== 'Todas' ||
+    ativoFiltro !== 'Todos' ||
+    unidadeFiltro !== 'Todas'
 
   const limparFiltros = () => {
     setBusca('')
     setTipoFiltro('Todos')
     setLegislacaoFiltro('Todas')
     setAtivoFiltro('Todos')
+    setUnidadeFiltro('Todas')
   }
 
   const linhas = processos.filter(
@@ -133,7 +150,8 @@ export function ProcessosInteligentesPage() {
       (busca === '' || p.nome.toLowerCase().includes(busca.toLowerCase())) &&
       (tipoFiltro === 'Todos' || p.tipo === tipoFiltro) &&
       (legislacaoFiltro === 'Todas' || p.legislacao === legislacaoFiltro) &&
-      (ativoFiltro === 'Todos' || statusProcessoLabel(p.status) === ativoFiltro),
+      (ativoFiltro === 'Todos' || statusProcessoLabel(p.status) === ativoFiltro) &&
+      (unidadeFiltro === 'Todas' || p.unidadeNome === unidadeFiltro),
   )
 
   useEffect(() => {
@@ -150,6 +168,7 @@ export function ProcessosInteligentesPage() {
     { key: 'numero', header: 'Número', render: (r) => <Pill muted>{r.numero}</Pill> },
     { key: 'tipo', header: 'Tipo' },
     { key: 'nome', header: 'Nome' },
+    { key: 'unidadeNome', header: 'Unidade Orçamentária', render: (r) => r.unidadeNome || '—' },
     {
       key: 'proprietario',
       header: 'Proprietário',
@@ -281,7 +300,7 @@ export function ProcessosInteligentesPage() {
 
       {filtroOpen && (
         <div className="mb-4 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-4 shadow-[var(--shadow-card)]">
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-4">
             <label className="flex flex-col gap-1.5 text-xs font-semibold text-[var(--color-muted)]">
               Tipo de Processo
               <select
@@ -318,6 +337,19 @@ export function ProcessosInteligentesPage() {
                 <option>Todos</option>
                 {STATUS_OPCOES.map((s) => (
                   <option key={s}>{s}</option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1.5 text-xs font-semibold text-[var(--color-muted)]">
+              Unidade Orçamentária
+              <select
+                value={unidadeFiltro}
+                onChange={(e) => setUnidadeFiltro(e.target.value)}
+                className="gt-input font-normal normal-case"
+              >
+                <option>Todas</option>
+                {unidades.map((u) => (
+                  <option key={u.id}>{u.nome}</option>
                 ))}
               </select>
             </label>

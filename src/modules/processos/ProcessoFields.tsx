@@ -1,7 +1,11 @@
 import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
+import { AlertTriangle } from 'lucide-react'
 import { Combo } from '../../components/common/Combo'
 import { PROCESSO_LEGISLACOES, PROCESSO_TIPOS } from '../../mocks'
 import { useWorkflows } from '../../store/workflows'
+import { useOrganizacao } from '../../store/organizacao'
+import { useAuth } from '../../store/auth'
 import type { ProcessoFormValue } from './processoForm'
 
 /**
@@ -17,6 +21,9 @@ export function ProcessoFields({
   onChange: (patch: Partial<ProcessoFormValue>) => void
 }) {
   const workflows = useWorkflows((s) => s.workflows)
+  const unidades = useOrganizacao((s) => s.unidades)
+  const user = useAuth((s) => s.user)
+  const isAdmin = user?.perfil === 'ADMIN_GERAL'
   const fluxoLiberado = Boolean(value.legislacao && value.tipo)
   const fluxoOptions = useMemo(
     () =>
@@ -67,6 +74,37 @@ export function ProcessoFields({
             {!fluxoLiberado && (
               <span className="font-normal normal-case text-[var(--color-muted)]">
                 O campo será liberado após a escolha da legislação e do tipo de processo.
+              </span>
+            )}
+          </Labelled>
+        </div>
+        <div className="sm:col-span-2">
+          <Labelled label="UNIDADE ORÇAMENTÁRIA">
+            {isAdmin ? (
+              <Combo
+                value={value.unidadeNome}
+                onChange={(v) =>
+                  onChange({ unidadeNome: v, unidadeId: unidades.find((u) => u.nome === v)?.id ?? '' })
+                }
+                options={unidades.map((u) => u.nome)}
+                placeholder={unidades.length === 0 ? 'Nenhuma cadastrada' : 'Selecione a unidade'}
+                disabled={unidades.length === 0}
+              />
+            ) : value.unidadeNome ? (
+              <input
+                readOnly
+                value={value.unidadeNome}
+                className="gt-input cursor-not-allowed bg-[#f1f4f9] font-normal normal-case text-[var(--color-muted)]"
+              />
+            ) : (
+              <span className="flex items-start gap-2 rounded-[var(--radius-control)] border border-[#f0d79a] bg-[#fdf6e3] px-3 py-2 text-xs font-normal normal-case text-[#8a6d1a]">
+                <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+                Sua conta não tem Unidade Orçamentária vinculada. Peça ao administrador geral pra
+                vincular em{' '}
+                <Link to="/GerenciarUsuarios" className="font-semibold underline">
+                  Gerenciar Usuários
+                </Link>
+                .
               </span>
             )}
           </Labelled>

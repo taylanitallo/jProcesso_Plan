@@ -9,6 +9,8 @@ export type ProcessoFormValue = {
   nome: string
   lote: string
   descricao: string
+  unidadeId: string
+  unidadeNome: string
 }
 
 export const PROCESSO_FORM_VAZIO: ProcessoFormValue = {
@@ -19,6 +21,8 @@ export const PROCESSO_FORM_VAZIO: ProcessoFormValue = {
   nome: '',
   lote: 'Não',
   descricao: '',
+  unidadeId: '',
+  unidadeNome: '',
 }
 
 /** ProcessoFormValue → parte comum de NovoProcesso. */
@@ -31,5 +35,7 @@ export function toNovoProcesso(v: ProcessoFormValue): NovoProcesso {
     fluxo: v.fluxo,
     loteUnico: v.lote === 'Sim' ? 'Sim' : 'Não',
     descricao: v.descricao,
+    unidadeId: v.unidadeId,
+    unidadeNome: v.unidadeNome,
   }
 }

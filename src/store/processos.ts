@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { PROCESSOS, PROCESSO_ARTEFATOS } from '../mocks'
 import { useAuth } from './auth'
+import { useOrganizacao } from './organizacao'
 
 export type StatusProcesso = 'ATIVO' | 'FINALIZADO'
 export type OrigemProcesso = 'MANUAL' | 'REGISTROS' | 'SOLICITACAO'
@@ -30,6 +31,9 @@ export type ProcessoLocal = {
   descricao: string
   status: StatusProcesso
   origem: OrigemProcesso
+  /** Unidade Orçamentária dona do processo — '' = sem unidade (visível a todos). */
+  unidadeId: string
+  unidadeNome: string
   proprietario: string
   integrantes: string
   registroIds: string[]
@@ -51,6 +55,8 @@ export type NovoProcesso = {
   origem?: OrigemProcesso
   registroIds?: string[]
   itensResumo?: number
+  unidadeId?: string
+  unidadeNome?: string
 }
 
 type State = {
@@ -102,6 +108,8 @@ const SEED: ProcessoLocal[] = PROCESSOS.map((p) => ({
   descricao: '',
   status: 'ATIVO' as const,
   origem: 'MANUAL' as const,
+  unidadeId: '',
+  unidadeNome: '',
   proprietario: p.proprietario,
   integrantes: p.integrantes,
   registroIds: [],
@@ -119,7 +127,13 @@ export const useProcessos = create<State>()(
       criar: (p) => {
         const id = `proc${uid()}`
         const carimbo = agora()
-        const proprietario = useAuth.getState().user?.initials || 'AL'
+        const usuario = useAuth.getState().user
+        const proprietario = usuario?.initials || 'AL'
+        const unidadeId = p.unidadeId ?? usuario?.unidadeId ?? ''
+        const unidadeNome =
+          p.unidadeNome ??
+          useOrganizacao.getState().unidades.find((u) => u.id === unidadeId)?.nome ??
+          ''
         set((s) => ({
           processos: [
             ...s.processos,
@@ -134,6 +148,8 @@ export const useProcessos = create<State>()(
               descricao: p.descricao?.trim() ?? '',
               status: 'ATIVO',
               origem: p.origem ?? 'MANUAL',
+              unidadeId,
+              unidadeNome,
               proprietario,
               integrantes: '',
               registroIds: p.registroIds ?? [],
@@ -183,7 +199,7 @@ export const useProcessos = create<State>()(
     }),
     {
       name: 'sollai-processos',
-      version: 2,
+      version: 3,
       migrate: (persisted) => {
         const s = persisted as { processos?: Partial<ProcessoLocal>[] }
         return {
@@ -192,6 +208,8 @@ export const useProcessos = create<State>()(
             loteUnico: 'Não' as const,
             descricao: '',
             origem: 'MANUAL' as const,
+            unidadeId: '',
+            unidadeNome: '',
             proprietario: 'AL',
             integrantes: '',
             registroIds: [],

@@ -24,6 +24,7 @@ export const MOCK_USER: User = {
   perfil: 'ADMIN_GERAL',
   institution: 'Grupo Negócios Públicos',
   initials: 'AM',
+  unidadeId: '',
 }
 
 interface AuthState {
@@ -32,6 +33,7 @@ interface AuthState {
   login: (email: string, password: string, perfil?: Perfil) => boolean
   logout: () => void
   setPerfil: (perfil: Perfil) => void
+  setUnidade: (unidadeId: string) => void
   atualizarUsuario: (patch: Partial<Pick<User, 'name' | 'email'>>) => void
 }
 
@@ -63,6 +65,8 @@ export const useAuth = create<AuthState>()(
         set((s) =>
           s.user ? { user: { ...s.user, perfil, role: perfilLabel(perfil) } } : s,
         ),
+      setUnidade: (unidadeId) =>
+        set((s) => (s.user ? { user: { ...s.user, unidadeId } } : s)),
       atualizarUsuario: (patch) =>
         set((s) => {
           if (!s.user) return s
@@ -83,7 +87,14 @@ export const useAuth = create<AuthState>()(
       migrate: (persisted) => {
         const s = persisted as { user?: Partial<User> | null; isAuthenticated?: boolean }
         return {
-          user: s.user ? { ...MOCK_USER, ...s.user, perfil: s.user.perfil ?? 'ADMIN_GERAL' } : null,
+          user: s.user
+            ? {
+                ...MOCK_USER,
+                ...s.user,
+                perfil: s.user.perfil ?? 'ADMIN_GERAL',
+                unidadeId: s.user.unidadeId ?? '',
+              }
+            : null,
           isAuthenticated: Boolean(s.isAuthenticated),
         }
       },

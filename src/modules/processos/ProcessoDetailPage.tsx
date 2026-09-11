@@ -29,6 +29,7 @@ import { NormativasProcessoModal } from './NormativasProcessoModal'
 import { PermissoesProcessoModal } from './PermissoesProcessoModal'
 import { useProcessos, type ProcessoArtefato } from '../../store/processos'
 import { useSolicitacoes, statusSolicitacaoLabel } from '../../store/solicitacoes'
+import { useAuth } from '../../store/auth'
 import { Badge } from '../../components/common/Badge'
 
 const EDIT_VAZIO = { nome: '', numero: '', loteUnico: 'Não' as 'Sim' | 'Não', descricao: '' }
@@ -40,6 +41,7 @@ export function ProcessoDetailPage() {
   const proc = useProcessos((s) => s.processos.find((p) => p.id === id))
   const atualizar = useProcessos((s) => s.atualizar)
   const finalizar = useProcessos((s) => s.finalizar)
+  const user = useAuth((s) => s.user)
   const solicitacoes = useSolicitacoes((s) => s.solicitacoes)
   const solicitacoesProc = solicitacoes.filter((x) => x.processoId === id)
 
@@ -80,6 +82,32 @@ export function ProcessoDetailPage() {
           <p className="font-display text-lg font-bold text-[#183263]">Processo não encontrado</p>
           <p className="mt-1 text-sm text-[var(--color-muted)]">
             Ele pode ter sido excluído ou o link está incorreto.
+          </p>
+          <button
+            onClick={() => navigate('/processosinteligentes')}
+            className="mt-4 rounded-[var(--radius-control)] bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white"
+          >
+            Voltar para Processos
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  const isAdmin = user?.perfil === 'ADMIN_GERAL'
+  const semAcesso = !isAdmin && Boolean(proc.unidadeId) && proc.unidadeId !== user?.unidadeId
+
+  if (semAcesso) {
+    return (
+      <div className="grid min-h-[60vh] place-items-center px-4 text-center">
+        <div>
+          <Lock size={28} className="mx-auto mb-2 text-[var(--color-muted)]" />
+          <p className="font-display text-lg font-bold text-[#183263]">
+            Sem acesso a este processo
+          </p>
+          <p className="mt-1 text-sm text-[var(--color-muted)]">
+            O processo <strong>{proc.numero}</strong> pertence à unidade{' '}
+            <strong>{proc.unidadeNome}</strong>, diferente da sua.
           </p>
           <button
             onClick={() => navigate('/processosinteligentes')}
@@ -239,6 +267,11 @@ export function ProcessoDetailPage() {
         <span className="rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-[#f1f4f9] px-2 py-0.5 text-[11px] font-semibold text-[var(--color-muted)]">
           {tipo}
         </span>
+        {proc.unidadeNome && (
+          <span className="rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-[#f1f4f9] px-2 py-0.5 text-[11px] font-semibold text-[var(--color-muted)]">
+            {proc.unidadeNome}
+          </span>
+        )}
         {finalizado && (
           <span className="rounded-[var(--radius-pill)] border border-[#a9d9c1] bg-[#eefaf3] px-2 py-0.5 text-[11px] font-semibold text-[var(--color-success)]">
             Finalizado
