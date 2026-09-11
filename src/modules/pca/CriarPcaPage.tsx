@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CalendarRange, FilePenLine, Plus, Send, Trash2 } from 'lucide-react'
+import { CalendarRange, FilePenLine, Pencil, Plus, Send, Trash2 } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { Button } from '../../components/common/Button'
 import { Badge } from '../../components/common/Badge'
@@ -26,6 +26,7 @@ export function CriarPcaPage() {
 
   const [busca, setBusca] = useState('')
   const [novoOpen, setNovoOpen] = useState(false)
+  const [editarId, setEditarId] = useState<string | null>(null)
   const [itensAbertoId, setItensAbertoId] = useState<string | null>(null)
   const [confirmarId, setConfirmarId] = useState<string | null>(null)
   const [transmitirOpen, setTransmitirOpen] = useState(false)
@@ -90,6 +91,13 @@ export function CriarPcaPage() {
       align: 'right',
       render: (r) => (
         <div className="flex justify-end gap-2">
+          <button
+            onClick={() => setEditarId(r.id)}
+            aria-label="Editar PCA"
+            className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+          >
+            <Pencil size={14} />
+          </button>
           <button
             onClick={() => setItensAbertoId(r.id)}
             className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-success)] px-3 py-1.5 text-xs font-semibold text-white"
@@ -163,6 +171,13 @@ export function CriarPcaPage() {
             setItensAbertoId(id)
           }}
           onClose={() => setNovoOpen(false)}
+        />
+      )}
+      {editarId && (
+        <NovoPcaModal
+          pcaId={editarId}
+          onCriado={() => setEditarId(null)}
+          onClose={() => setEditarId(null)}
         />
       )}
       {itensAbertoId && (

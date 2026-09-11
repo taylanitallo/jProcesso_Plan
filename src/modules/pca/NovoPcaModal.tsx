@@ -19,12 +19,32 @@ const vazio = {
   observacoes: '',
 }
 
-export function NovoPcaModal({ onCriado, onClose }: { onCriado: (id: string) => void; onClose: () => void }) {
+export function NovoPcaModal({
+  pcaId,
+  onCriado,
+  onClose,
+}: {
+  pcaId?: string
+  onCriado: (id: string) => void
+  onClose: () => void
+}) {
   const criar = usePca((s) => s.criar)
+  const atualizar = usePca((s) => s.atualizar)
+  const pcaExistente = usePca((s) => s.pcas.find((p) => p.id === pcaId))
   const unidades = useOrganizacao((s) => s.unidades)
   const instituicao = useInstituicao((s) => s.instituicao)
   const setUserModal = useUi((s) => s.setUserModal)
-  const [form, setForm] = useState(vazio)
+  const editar = Boolean(pcaExistente)
+  const inicial = pcaExistente
+    ? {
+        nome: pcaExistente.nome,
+        anoPca: String(pcaExistente.anoPca),
+        unidadeNome: pcaExistente.unidadeNome,
+        legislacao: pcaExistente.legislacao,
+        observacoes: pcaExistente.observacoes,
+      }
+    : vazio
+  const [form, setForm] = useState(inicial)
 
   const instOk = instituicaoConfigurada(instituicao)
   const unidadeSelecionada = unidades.find((u) => u.nome === form.unidadeNome) ?? null
@@ -34,6 +54,20 @@ export function NovoPcaModal({ onCriado, onClose }: { onCriado: (id: string) => 
 
   const salvar = () => {
     if (!podeSalvar || !unidadeSelecionada) return
+    if (editar && pcaExistente) {
+      atualizar(pcaExistente.id, {
+        nome: form.nome.trim(),
+        anoPca: anoNum,
+        cnpjOrgao: instituicao.cnpj,
+        nomeOrgao: instituicao.nome,
+        unidadeId: unidadeSelecionada.id,
+        unidadeNome: unidadeSelecionada.nome,
+        legislacao: form.legislacao,
+        observacoes: form.observacoes.trim(),
+      })
+      onClose()
+      return
+    }
     const id = criar({
       nome: form.nome,
       anoPca: anoNum,
@@ -68,10 +102,13 @@ export function NovoPcaModal({ onCriado, onClose }: { onCriado: (id: string) => 
             <CalendarRange size={22} />
           </span>
           <div>
-            <h3 className="font-display text-base font-bold text-[#183263]">Novo PCA</h3>
+            <h3 className="font-display text-base font-bold text-[#183263]">
+              {editar ? 'Editar PCA' : 'Novo PCA'}
+            </h3>
             <p className="text-xs text-[var(--color-muted)]">
-              Informe os dados do Plano de Contratação Anual. Os itens são adicionados na
-              próxima tela.
+              {editar
+                ? 'Atualize os dados do Plano de Contratação Anual. Os itens não são alterados aqui.'
+                : 'Informe os dados do Plano de Contratação Anual. Os itens são adicionados na próxima tela.'}
             </p>
           </div>
         </div>
@@ -193,17 +230,17 @@ export function NovoPcaModal({ onCriado, onClose }: { onCriado: (id: string) => 
 
         <div className="mt-5 flex items-center justify-between">
           <button
-            onClick={() => setForm(vazio)}
+            onClick={() => setForm(inicial)}
             className="rounded-[var(--radius-control)] bg-[#e6e9ef] px-4 py-2 text-sm font-semibold text-[var(--color-ink)]"
           >
-            Limpar
+            {editar ? 'Desfazer' : 'Limpar'}
           </button>
           <button
             onClick={salvar}
             disabled={!podeSalvar}
             className="rounded-[var(--radius-control)] bg-[var(--color-primary)] px-5 py-2 text-sm font-bold uppercase tracking-wide text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Salvar e Adicionar Itens
+            {editar ? 'Salvar alterações' : 'Salvar e Adicionar Itens'}
           </button>
         </div>
       </div>
