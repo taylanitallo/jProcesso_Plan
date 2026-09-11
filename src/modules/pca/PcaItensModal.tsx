@@ -1,10 +1,12 @@
 import { useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Download,
   FilePenLine,
   Info,
   Package,
   Plus,
+  RefreshCw,
   Search,
   Trash2,
   Upload,
@@ -43,7 +45,9 @@ const brToIso = (s: string) => {
 
 const emptyForm = {
   editId: null as string | null,
-  origemItem: 'MANUAL' as PcaItemLocal['origem'],
+  origemItem: 'CATALOGO' as PcaItemLocal['origem'],
+  /** Item veio do Catálogo de Itens → campos do catálogo ficam só leitura. */
+  catalogoTravado: false,
   materialOuServico: 'MATERIAL' as MaterialOuServico,
   descricao: '',
   informacaoComplementar: '',
@@ -91,9 +95,13 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
   }
 
   const abrirEditar = (it: PcaItemLocal) => {
+    const noCatalogo = Boolean(
+      it.codigoItemCatalogo && catalogo.some((c) => c.codigo === it.codigoItemCatalogo),
+    )
     setForm({
       editId: it.id,
       origemItem: it.origem,
+      catalogoTravado: noCatalogo,
       materialOuServico: it.materialOuServico,
       descricao: it.descricao,
       informacaoComplementar: it.informacaoComplementar ?? '',
@@ -118,6 +126,7 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
     setForm((f) => ({
       ...f,
       origemItem: 'CATALOGO',
+      catalogoTravado: true,
       materialOuServico: c.tipo === 'Serviço' ? 'SERVICO' : 'MATERIAL',
       descricao: c.nome,
       informacaoComplementar: c.especificacao,
@@ -125,6 +134,18 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
       codigoItemCatalogo: c.codigo,
     }))
   }
+
+  /** Volta pro seletor do catálogo, mantendo os dados que são do PCA (qtd, valor, etc.). */
+  const trocarItemDoCatalogo = () =>
+    setForm((f) => ({
+      ...f,
+      catalogoTravado: false,
+      materialOuServico: 'MATERIAL',
+      descricao: '',
+      informacaoComplementar: '',
+      unidade: '',
+      codigoItemCatalogo: '',
+    }))
 
   const formValido =
     Boolean(form.descricao.trim()) &&
@@ -424,46 +445,12 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
 
         {view === 'form' && (
           <div>
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-[#f8fafd] p-4">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
-                  Origem do Item
-                </p>
-                <p className="text-sm text-[var(--color-ink)]">
-                  {form.origemItem === 'CATALOGO'
-                    ? 'Selecione um item já existente no catálogo.'
-                    : 'Você vai cadastrar um novo item.'}
-                </p>
-              </div>
-              <div className="flex rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white p-1">
-                <button
-                  onClick={() => setForm((f) => ({ ...f, origemItem: 'MANUAL' }))}
-                  className={`rounded-[8px] px-4 py-1.5 text-xs font-semibold transition ${
-                    form.origemItem !== 'CATALOGO'
-                      ? 'bg-[var(--color-primary)] text-white'
-                      : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
-                  }`}
-                >
-                  Novo item
-                </button>
-                <button
-                  onClick={() => setForm((f) => ({ ...f, origemItem: 'CATALOGO' }))}
-                  className={`rounded-[8px] px-4 py-1.5 text-xs font-semibold transition ${
-                    form.origemItem === 'CATALOGO'
-                      ? 'bg-[var(--color-primary)] text-white'
-                      : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
-                  }`}
-                >
-                  Catálogo
-                </button>
-              </div>
-            </div>
-
-            {form.origemItem === 'CATALOGO' && !form.descricao ? (
+            {form.editId == null && !form.catalogoTravado ? (
               <div>
                 <h4 className="font-display text-sm font-bold text-[#183263]">Escolha no catálogo</h4>
                 <p className="mb-2 text-xs text-[var(--color-muted)]">
-                  Selecione um item de referência para preencher o formulário.
+                  Todo item do PCA vem do <strong>Catálogo de Itens</strong>. Selecione um; depois
+                  informe quantidade, valor unitário e os demais dados do PCA.
                 </p>
                 <div className="relative mb-3">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)]" />
@@ -477,7 +464,11 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
                 <ul className="flex max-h-64 flex-col gap-2 overflow-y-auto">
                   {catalogoFiltrado.length === 0 && (
                     <li className="py-4 text-center text-xs text-[var(--color-muted)]">
-                      Nenhum item no catálogo. Cadastre em Catálogo de Itens.
+                      Nenhum item no catálogo.{' '}
+                      <Link to="/CatalogoItens" className="font-semibold text-[var(--color-primary-strong)] underline">
+                        Cadastre no Catálogo de Itens
+                      </Link>
+                      .
                     </li>
                   )}
                   {catalogoFiltrado.map((c) => (
@@ -512,29 +503,66 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
                   Preencha os campos exigidos pelo PNCP pra este item do PCA.
                 </p>
 
+                {form.catalogoTravado && (
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-control)] border border-[#bcd0ee] bg-[var(--color-primary-soft)] px-4 py-3">
+                    <div className="flex items-start gap-2">
+                      <Package size={16} className="mt-0.5 shrink-0 text-[var(--color-primary-strong)]" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-[var(--color-ink)]">{form.descricao}</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+                          Item do catálogo • Cód. {form.codigoItemCatalogo || '—'} •{' '}
+                          {form.materialOuServico === 'MATERIAL' ? 'Material' : 'Serviço'} • {form.unidade}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={trocarItemDoCatalogo}
+                      className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--color-primary-strong)]"
+                    >
+                      <RefreshCw size={13} /> Trocar item do catálogo
+                    </button>
+                  </div>
+                )}
+
                 <div className="grid gap-4 sm:grid-cols-3">
-                  <TextAreaField
-                    label="Descrição"
-                    placeholder="Ex: Aquisição de notebooks para o setor administrativo"
-                    value={form.descricao}
-                    onChange={(v) => setForm((f) => ({ ...f, descricao: v }))}
-                  />
-                  <TextAreaField
-                    label="Informação complementar"
-                    placeholder="Especificações adicionais…"
-                    value={form.informacaoComplementar}
-                    onChange={(v) => setForm((f) => ({ ...f, informacaoComplementar: v }))}
-                  />
-                  <Labelled label="Material ou Serviço">
-                    <Combo
-                      value={form.materialOuServico === 'MATERIAL' ? 'Material' : 'Serviço'}
-                      onChange={(v) =>
-                        setForm((f) => ({ ...f, materialOuServico: v === 'Serviço' ? 'SERVICO' : 'MATERIAL' }))
-                      }
-                      options={['Material', 'Serviço']}
-                      placeholder="Selecione"
-                    />
-                  </Labelled>
+                  {form.catalogoTravado ? (
+                    <>
+                      <ReadOnlyField label="Descrição (do catálogo)" value={form.descricao} />
+                      <ReadOnlyField
+                        label="Informação complementar (do catálogo)"
+                        value={form.informacaoComplementar || '—'}
+                      />
+                      <ReadOnlyField
+                        label="Material ou Serviço (do catálogo)"
+                        value={form.materialOuServico === 'MATERIAL' ? 'Material' : 'Serviço'}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <TextAreaField
+                        label="Descrição"
+                        placeholder="Ex: Aquisição de notebooks para o setor administrativo"
+                        value={form.descricao}
+                        onChange={(v) => setForm((f) => ({ ...f, descricao: v }))}
+                      />
+                      <TextAreaField
+                        label="Informação complementar"
+                        placeholder="Especificações adicionais…"
+                        value={form.informacaoComplementar}
+                        onChange={(v) => setForm((f) => ({ ...f, informacaoComplementar: v }))}
+                      />
+                      <Labelled label="Material ou Serviço">
+                        <Combo
+                          value={form.materialOuServico === 'MATERIAL' ? 'Material' : 'Serviço'}
+                          onChange={(v) =>
+                            setForm((f) => ({ ...f, materialOuServico: v === 'Serviço' ? 'SERVICO' : 'MATERIAL' }))
+                          }
+                          options={['Material', 'Serviço']}
+                          placeholder="Selecione"
+                        />
+                      </Labelled>
+                    </>
+                  )}
                   <Labelled label="Categoria do item">
                     <Combo
                       value={form.categoriaNome}
@@ -551,15 +579,19 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
                       placeholder="Selecione"
                     />
                   </Labelled>
-                  <Labelled label="Unidade de medida">
-                    <Combo
-                      value={form.unidade}
-                      onChange={(v) => setForm((f) => ({ ...f, unidade: v }))}
-                      options={UNIDADES}
-                      placeholder="Selecione ou digite para filtrar"
-                      filterable
-                    />
-                  </Labelled>
+                  {form.catalogoTravado ? (
+                    <ReadOnlyField label="Unidade de medida (do catálogo)" value={form.unidade} />
+                  ) : (
+                    <Labelled label="Unidade de medida">
+                      <Combo
+                        value={form.unidade}
+                        onChange={(v) => setForm((f) => ({ ...f, unidade: v }))}
+                        options={UNIDADES}
+                        placeholder="Selecione ou digite para filtrar"
+                        filterable
+                      />
+                    </Labelled>
+                  )}
                   <Labelled label="Margem de preferência">
                     <TogglePill
                       value={form.margem}
@@ -593,12 +625,19 @@ export function PcaItensModal({ pcaId, onClose }: { pcaId: string; onClose: () =
                       className="gt-input cursor-not-allowed bg-[#f1f4f9] font-normal normal-case text-[var(--color-muted)]"
                     />
                   </Labelled>
-                  <Field
-                    label="Código CatMat/CatSer"
-                    placeholder="Ex.: 150912"
-                    value={form.codigoItemCatalogo}
-                    onChange={(v) => setForm((f) => ({ ...f, codigoItemCatalogo: v }))}
-                  />
+                  {form.catalogoTravado ? (
+                    <ReadOnlyField
+                      label="Código CatMat/CatSer (do catálogo)"
+                      value={form.codigoItemCatalogo || '—'}
+                    />
+                  ) : (
+                    <Field
+                      label="Código CatMat/CatSer"
+                      placeholder="Ex.: 150912"
+                      value={form.codigoItemCatalogo}
+                      onChange={(v) => setForm((f) => ({ ...f, codigoItemCatalogo: v }))}
+                    />
+                  )}
                   <Labelled label="Grau de prioridade">
                     <Combo
                       value={form.grauPrioridade}
@@ -845,6 +884,19 @@ function Field({
         onChange={(e) => onChange(e.target.value)}
         className="gt-input min-w-0 font-normal normal-case"
         {...rest}
+      />
+    </label>
+  )
+}
+
+function ReadOnlyField({ label, value }: { label: string; value: string }) {
+  return (
+    <label className="flex min-w-0 flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
+      {label}
+      <input
+        readOnly
+        value={value}
+        className="gt-input min-w-0 cursor-not-allowed bg-[#f1f4f9] font-normal normal-case text-[var(--color-muted)]"
       />
     </label>
   )
