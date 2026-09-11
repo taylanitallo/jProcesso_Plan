@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import {
+  Ban,
   CheckCircle2,
   Crown,
   FileSignature,
@@ -14,6 +15,7 @@ import { PageHeader } from '../../components/common/PageHeader'
 import { Badge } from '../../components/common/Badge'
 import { EmptyState } from '../../components/common/EmptyState'
 import { useAuth, perfilLabel } from '../../store/auth'
+import { useUi } from '../../store/ui'
 import { useOrganizacao } from '../../store/organizacao'
 import { useUsuarios, LIMITE_USUARIOS, type Usuario } from '../../store/usuarios'
 import { useAssinantes, type Assinante } from '../../store/assinantes'
@@ -42,6 +44,8 @@ export function GerenciarUsuariosPage() {
   const user = useAuth((s) => s.user)
   const usuarios = useUsuarios((s) => s.usuarios)
   const remover = useUsuarios((s) => s.remover)
+  const definirAtivo = useUsuarios((s) => s.definirAtivo)
+  const setUserModal = useUi((s) => s.setUserModal)
   const unidades = useOrganizacao((s) => s.unidades)
   const assinantes = useAssinantes((s) => s.assinantes)
   const removerAssinante = useAssinantes((s) => s.remover)
@@ -135,7 +139,11 @@ export function GerenciarUsuariosPage() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] border border-[var(--color-line)] text-[var(--color-muted)]">
+                  <button
+                    onClick={() => setUserModal('perfil')}
+                    title="Editar meus dados"
+                    className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] border border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+                  >
                     <Pencil size={14} />
                   </button>
                   <button
@@ -186,6 +194,18 @@ export function GerenciarUsuariosPage() {
                     </div>
                   </div>
                   <div className="flex shrink-0 gap-2">
+                    <button
+                      onClick={() => definirAtivo(u.id, !u.ativo)}
+                      aria-label={u.ativo ? 'Desativar usuário' : 'Ativar usuário'}
+                      title={u.ativo ? 'Desativar usuário' : 'Ativar usuário'}
+                      className={`grid h-8 w-8 place-items-center rounded-[var(--radius-control)] border ${
+                        u.ativo
+                          ? 'border-[var(--color-line)] text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                          : 'border-[#a9d9c1] text-[var(--color-success)]'
+                      }`}
+                    >
+                      {u.ativo ? <Ban size={14} /> : <CheckCircle2 size={14} />}
+                    </button>
                     <button
                       onClick={() => {
                         setEditando(u)
