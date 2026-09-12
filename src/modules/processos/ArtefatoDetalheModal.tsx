@@ -399,6 +399,7 @@ export function ArtefatoDetalheModal({
 
       <FormularioModal
         artefato={sub === 'form' ? artefato : null}
+        processoId={processo.id}
         onClose={() => setSub(null)}
         onSalvar={() =>
           registrar('Artefato atualizado', 'Preenchimento manual', 'Formulário preenchido')

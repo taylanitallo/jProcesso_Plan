@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Search, Sparkles, X } from 'lucide-react'
+import { DfdManualFormulario } from './DfdManualFormulario'
 
 type Secao = { titulo: string; perguntas: { n: number; texto: string; obrigatoria?: boolean }[] }
 
@@ -81,10 +82,12 @@ const DFD_SECOES: Secao[] = [
 
 export function FormularioModal({
   artefato,
+  processoId,
   onClose,
   onSalvar,
 }: {
   artefato: string | null
+  processoId: string
   onClose: () => void
   onSalvar?: () => void
 }) {
@@ -93,8 +96,44 @@ export function FormularioModal({
 
   if (!artefato) return null
 
+  const ehDfd = /DFD/i.test(artefato)
   const secao = secoes[step]
   const last = step === secoes.length - 1
+
+  if (ehDfd) {
+    return (
+      <div
+        className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-[rgba(9,21,44,0.6)] p-3 backdrop-blur-sm sm:p-4"
+        onClick={onClose}
+      >
+        <div
+          className="relative my-4 max-h-[90vh] w-full max-w-[1320px] overflow-y-auto rounded-[20px] bg-white p-5 shadow-[var(--shadow-pop)] sm:p-6"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={onClose}
+            aria-label="Fechar"
+            className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white text-[var(--color-muted)] shadow"
+          >
+            <X size={16} />
+          </button>
+
+          <h3 className="font-display text-base font-bold text-[#183263] sm:text-lg">
+            DFD — Documento de Formalização da Demanda
+          </h3>
+          <p className="mb-4 text-xs text-[var(--color-muted)]">
+            Preencha os dados da demanda — Secretaria, Setor, responsáveis, objeto e itens.
+          </p>
+
+          <DfdManualFormulario
+            chave={`${processoId}::${artefato}`}
+            onClose={onClose}
+            onSalvar={onSalvar}
+          />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
