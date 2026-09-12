@@ -8,6 +8,7 @@ import { ResearchPage } from '../modules/chat/ResearchPage'
 import { AnalisadoresPage } from '../modules/analisadores/AnalisadoresPage'
 import { CatalogoItensPage } from '../modules/catalogo/CatalogoItensPage'
 import { PesquisaPrecosPage } from '../modules/catalogo/PesquisaPrecosPage'
+import { ConsultaPncpPage } from '../modules/pncp/ConsultaPncpPage'
 import { RegistroNecessidadePage } from '../modules/necessidades/RegistroNecessidadePage'
 import { CriarPcaPage } from '../modules/pca/CriarPcaPage'
 import { ProcessosInteligentesPage } from '../modules/processos/ProcessosInteligentesPage'
@@ -45,6 +46,7 @@ export const router = createBrowserRouter([
 
       { path: 'CatalogoItens', element: <CatalogoItensPage /> },
       { path: 'PesquisaPrecos', element: <PesquisaPrecosPage /> },
+      { path: 'ConsultaPncp', element: <ConsultaPncpPage /> },
       { path: 'RegistroNecessidade', element: <RegistroNecessidadePage /> },
       { path: 'CriarPca', element: <CriarPcaPage /> },
       { path: 'processosinteligentes', element: <ProcessosInteligentesPage /> },

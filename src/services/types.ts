@@ -79,3 +79,61 @@ export interface Pagina<T> {
   itens: T[]
   total: number
 }
+
+/** Contratação (licitação/contratação direta) publicada no PNCP — busca nacional. */
+export interface ContratacaoPncp {
+  numeroControlePNCP: string
+  numeroCompra: string
+  anoCompra: number
+  processo: string
+  modalidadeNome: string
+  situacaoCompraNome: string
+  objetoCompra: string
+  valorTotalEstimado: number
+  valorTotalHomologado: number
+  dataAberturaProposta: string
+  dataEncerramentoProposta: string
+  dataPublicacaoPncp: string
+  srp: boolean
+  cnpjOrgao: string
+  nomeOrgao: string
+  nomeUnidade: string
+  municipio: string
+  uf: string
+}
+
+/** Ata de Registro de Preço publicada no PNCP — busca nacional. */
+export interface AtaPncp {
+  numeroControlePNCPAta: string
+  numeroControlePNCPCompra: string
+  numeroAtaRegistroPreco: string
+  anoAta: number
+  dataAssinatura: string
+  vigenciaInicio: string
+  vigenciaFim: string
+  cancelado: boolean
+  objetoContratacao: string
+  cnpjOrgao: string
+  nomeOrgao: string
+  nomeUnidadeOrgao: string
+}
+
+/** Contrato ou empenho com força de contrato publicado no PNCP — busca nacional. */
+export interface ContratoPncp {
+  numeroControlePNCP: string
+  numeroContratoEmpenho: string
+  anoContrato: number
+  tipoContratoNome: string
+  objetoContrato: string
+  cnpjOrgao: string
+  nomeOrgao: string
+  nomeUnidade: string
+  niFornecedor: string
+  nomeFornecedor: string
+  valorInicial: number
+  valorGlobal: number
+  dataAssinatura: string
+  dataVigenciaInicio: string
+  dataVigenciaFim: string
+  dataPublicacaoPncp: string
+}

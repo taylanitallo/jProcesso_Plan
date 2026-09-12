@@ -9,6 +9,7 @@ import {
   FileSearch,
   FileSignature,
   FolderKanban,
+  Landmark,
   Lock,
   MessagesSquare,
   PenLine,
@@ -72,6 +73,12 @@ const PROCESSOS: CardDef[] = [
     description: 'Consulte preços praticados em compras públicas pra fundamentar sua estimativa.',
     icon: Coins,
     to: '/PesquisaPrecos',
+  },
+  {
+    title: 'Consulta PNCP',
+    description: 'Busque contratações, atas de registro de preço e contratos reais publicados por qualquer órgão do Brasil.',
+    icon: Landmark,
+    to: '/ConsultaPncp',
   },
   {
     title: 'Registro de Necessidades',

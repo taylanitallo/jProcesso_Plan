@@ -11,6 +11,7 @@ import {
   DatabaseBackup,
   FilePenLine,
   FileSearch,
+  Landmark,
   ListChecks,
   Scale,
   Search,
@@ -35,6 +36,7 @@ const ICONS: Record<string, LucideIcon> = {
   normativa: DatabaseBackup,
   pca: CalendarRange,
   precos: Coins,
+  pncp: Landmark,
 }
 
 export function TopBar() {
