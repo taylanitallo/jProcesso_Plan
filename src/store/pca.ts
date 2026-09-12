@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { MaterialOuServico } from '../services/types'
 
-export type StatusPca = 'RASCUNHO' | 'PRONTO_PARA_ENVIO'
+export type StatusPca = 'RASCUNHO' | 'PRONTO_PARA_ENVIO' | 'TRANSMITIDO'
 
 export type GrauPrioridade = 'Alta' | 'Média' | 'Baixa'
 export const GRAUS_PRIORIDADE: GrauPrioridade[] = ['Alta', 'Média', 'Baixa']
@@ -108,6 +108,10 @@ export type PcaLocal = {
   dfds: PcaDfd[]
   criadoEm: string
   atualizadoEm: string
+  /** Preenchidos só depois de uma transmissão real bem-sucedida ao PNCP. */
+  numeroControlePNCP?: string
+  ambienteTransmissao?: 'homologacao' | 'producao'
+  dataTransmissao?: string
 }
 
 /** Todos os itens do PCA, achatando as DFDs. */
@@ -179,6 +183,10 @@ type State = {
   atualizar: (id: string, patch: Partial<Omit<PcaLocal, 'id' | 'dfds'>>) => void
   remover: (id: string) => void
   definirStatus: (id: string, status: StatusPca) => void
+  registrarTransmissao: (
+    id: string,
+    info: { numeroControlePNCP: string; ambiente: 'homologacao' | 'producao' },
+  ) => void
   adicionarDfd: (pcaId: string, dfd: NovaDfd) => string
   atualizarDfd: (
     pcaId: string,
@@ -271,6 +279,21 @@ export const usePca = create<State>()(
       definirStatus: (id, status) =>
         set((s) => ({
           pcas: s.pcas.map((p) => (p.id === id ? { ...p, status, atualizadoEm: agora() } : p)),
+        })),
+      registrarTransmissao: (id, info) =>
+        set((s) => ({
+          pcas: s.pcas.map((p) =>
+            p.id === id
+              ? {
+                  ...p,
+                  status: 'TRANSMITIDO',
+                  numeroControlePNCP: info.numeroControlePNCP,
+                  ambienteTransmissao: info.ambiente,
+                  dataTransmissao: agora(),
+                  atualizadoEm: agora(),
+                }
+              : p,
+          ),
         })),
       adicionarDfd: (pcaId, dfd) => {
         const dfdId = `dfd${uid()}`

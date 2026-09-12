@@ -8,3 +8,15 @@ export {
   type FiltroContratacoes,
   type FiltroPeriodoOrgao,
 } from './pncpConsultaService'
+export {
+  autenticarPncp,
+  prepararEnvioPca,
+  enviarPca,
+  type AmbientePncp,
+  type CredencialPncp,
+  type ItemParaEnvio,
+  type ItemPreparado,
+  type PreparoPca,
+  type ResultadoAuth,
+  type ResultadoEnvio,
+} from './pncpEnvioService'

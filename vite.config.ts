@@ -62,6 +62,15 @@ export default defineConfig({
         secure: true,
         rewrite: (p) => p.replace(/^\/pncp-api/, ''),
       },
+      // Ambiente de Treinamento/Homologação do PNCP — único onde dá pra
+      // testar envio (login/senha de teste, órgãos autocadastráveis) sem
+      // credenciamento formal junto ao Ministério da Gestão.
+      '/pncp-homolog-api': {
+        target: 'https://treina.pncp.gov.br',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (p) => p.replace(/^\/pncp-homolog-api/, ''),
+      },
       '/compras-api': {
         target: 'https://dadosabertos.compras.gov.br',
         changeOrigin: true,

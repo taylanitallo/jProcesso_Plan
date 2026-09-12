@@ -33,6 +33,7 @@ export function CriarPcaPage() {
   const [bloqueio, setBloqueio] = useState<{ nome: string; faltam: number } | null>(null)
 
   const tentarPronto = (p: PcaLocal) => {
+    if (p.status === 'TRANSMITIDO') return
     if (p.status === 'PRONTO_PARA_ENVIO') {
       definirStatus(p.id, 'RASCUNHO')
       return
@@ -78,10 +79,24 @@ export function CriarPcaPage() {
       header: 'Status',
       align: 'center',
       render: (r) => (
-        <button onClick={() => tentarPronto(r)} title="Alternar status">
-
-          <Badge tone={r.status === 'RASCUNHO' ? 'neutral' : 'info'}>
-            {r.status === 'RASCUNHO' ? 'Rascunho' : 'Pronto para Envio'}
+        <button
+          onClick={() => tentarPronto(r)}
+          disabled={r.status === 'TRANSMITIDO'}
+          title={
+            r.status === 'TRANSMITIDO'
+              ? `Transmitido ao PNCP (${r.ambienteTransmissao}) em ${r.dataTransmissao}`
+              : 'Alternar status'
+          }
+          className={r.status === 'TRANSMITIDO' ? 'cursor-default' : ''}
+        >
+          <Badge
+            tone={r.status === 'RASCUNHO' ? 'neutral' : r.status === 'TRANSMITIDO' ? 'success' : 'info'}
+          >
+            {r.status === 'RASCUNHO'
+              ? 'Rascunho'
+              : r.status === 'TRANSMITIDO'
+                ? 'Transmitido'
+                : 'Pronto para Envio'}
           </Badge>
         </button>
       ),
