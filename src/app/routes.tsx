@@ -7,6 +7,7 @@ import { HomePage } from '../modules/home/HomePage'
 import { ResearchPage } from '../modules/chat/ResearchPage'
 import { AnalisadoresPage } from '../modules/analisadores/AnalisadoresPage'
 import { CatalogoItensPage } from '../modules/catalogo/CatalogoItensPage'
+import { PesquisaPrecosPage } from '../modules/catalogo/PesquisaPrecosPage'
 import { RegistroNecessidadePage } from '../modules/necessidades/RegistroNecessidadePage'
 import { CriarPcaPage } from '../modules/pca/CriarPcaPage'
 import { ProcessosInteligentesPage } from '../modules/processos/ProcessosInteligentesPage'
@@ -43,6 +44,7 @@ export const router = createBrowserRouter([
       { path: 'AnalisadoresProcesso', element: <AnalisadoresPage /> },
 
       { path: 'CatalogoItens', element: <CatalogoItensPage /> },
+      { path: 'PesquisaPrecos', element: <PesquisaPrecosPage /> },
       { path: 'RegistroNecessidade', element: <RegistroNecessidadePage /> },
       { path: 'CriarPca', element: <CriarPcaPage /> },
       { path: 'processosinteligentes', element: <ProcessosInteligentesPage /> },

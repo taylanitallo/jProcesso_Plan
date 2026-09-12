@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft,
+  Coins,
   Download,
   FilePenLine,
   FolderTree,
@@ -983,13 +984,19 @@ export function PcaDfdsModal({ pcaId, onClose }: { pcaId: string; onClose: () =>
                             value={itemForm.codigoItemCatalogo || '—'}
                           />
                           {campoQuantidade}
-                          <Field
-                            label="Valor unitário"
-                            type="number"
-                            placeholder="0,00"
-                            value={itemForm.unitario}
-                            onChange={(v) => setItemForm((f) => ({ ...f, unitario: v }))}
-                          />
+                          <div className="flex flex-col gap-1">
+                            <Field
+                              label="Valor unitário"
+                              type="number"
+                              placeholder="0,00"
+                              value={itemForm.unitario}
+                              onChange={(v) => setItemForm((f) => ({ ...f, unitario: v }))}
+                            />
+                            <LinkPesquisaPreco
+                              codigo={itemForm.codigoItemCatalogo}
+                              tipo={itemForm.materialOuServico}
+                            />
+                          </div>
                           <Labelled label="Valor total">
                             <input
                               readOnly
@@ -1046,13 +1053,19 @@ export function PcaDfdsModal({ pcaId, onClose }: { pcaId: string; onClose: () =>
                           onChange={(v) => setItemForm((f) => ({ ...f, codigoItemCatalogo: v }))}
                         />
                         {campoQuantidade}
-                        <Field
-                          label="Valor unitário"
-                          type="number"
-                          placeholder="0,00"
-                          value={itemForm.unitario}
-                          onChange={(v) => setItemForm((f) => ({ ...f, unitario: v }))}
-                        />
+                        <div className="flex flex-col gap-1">
+                          <Field
+                            label="Valor unitário"
+                            type="number"
+                            placeholder="0,00"
+                            value={itemForm.unitario}
+                            onChange={(v) => setItemForm((f) => ({ ...f, unitario: v }))}
+                          />
+                          <LinkPesquisaPreco
+                            codigo={itemForm.codigoItemCatalogo}
+                            tipo={itemForm.materialOuServico}
+                          />
+                        </div>
                         <Labelled label="Valor total">
                           <input
                             readOnly
@@ -1273,6 +1286,20 @@ function TogglePill({ value, onChange }: { value: boolean; onChange: (v: boolean
         </button>
       ))}
     </div>
+  )
+}
+
+/** Atalho pra Pesquisa de Preços já filtrada pelo código do item, em nova aba. */
+function LinkPesquisaPreco({ codigo, tipo }: { codigo: string; tipo: MaterialOuServico }) {
+  if (!codigo.trim()) return null
+  return (
+    <Link
+      to={`/PesquisaPrecos?codigo=${encodeURIComponent(codigo.trim())}&tipo=${tipo}`}
+      target="_blank"
+      className="inline-flex items-center gap-1 text-[11px] font-semibold normal-case text-[var(--color-primary)] hover:underline"
+    >
+      <Coins size={12} /> Pesquisar preço de mercado
+    </Link>
   )
 }
 

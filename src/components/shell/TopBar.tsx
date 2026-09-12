@@ -6,6 +6,7 @@ import {
   BookText,
   CalendarRange,
   ClipboardList,
+  Coins,
   Database,
   DatabaseBackup,
   FilePenLine,
@@ -33,6 +34,7 @@ const ICONS: Record<string, LucideIcon> = {
   modelo: FilePenLine,
   normativa: DatabaseBackup,
   pca: CalendarRange,
+  precos: Coins,
 }
 
 export function TopBar() {

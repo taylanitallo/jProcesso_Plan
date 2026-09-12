@@ -5,6 +5,7 @@ import {
   Boxes,
   CalendarRange,
   ClipboardList,
+  Coins,
   FileSearch,
   FileSignature,
   FolderKanban,
@@ -65,6 +66,12 @@ const PROCESSOS: CardDef[] = [
     description: 'Gerencie seus itens ligados ao CatMat/CatSer.',
     icon: Boxes,
     to: '/CatalogoItens',
+  },
+  {
+    title: 'Pesquisa de Preços',
+    description: 'Consulte preços praticados em compras públicas pra fundamentar sua estimativa.',
+    icon: Coins,
+    to: '/PesquisaPrecos',
   },
   {
     title: 'Registro de Necessidades',

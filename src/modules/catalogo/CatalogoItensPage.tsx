@@ -14,7 +14,10 @@ import { ImportarExcelModal } from './ImportarExcelModal'
 const vazio = { nome: '', especificacao: '', unidade: '', tipo: '', codigo: '' }
 
 export function CatalogoItensPage() {
-  useModuleLinks([{ key: 'base', label: 'Catálogo', to: '/CatalogoItens', icon: 'database' }])
+  useModuleLinks([
+    { key: 'base', label: 'Catálogo', to: '/CatalogoItens', icon: 'database' },
+    { key: 'precos', label: 'Pesquisa de Preços', to: '/PesquisaPrecos', icon: 'precos' },
+  ])
 
   const itens = useCatalogo((s) => s.itens)
   const adicionar = useCatalogo((s) => s.adicionar)
