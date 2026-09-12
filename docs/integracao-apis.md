@@ -68,9 +68,17 @@ proxy não existe (build sem dev-server) ou a rede falha.
   (`PcaCabecalho`) é derivado dos itens do sequencial.
 - `pcaService` varre os sequenciais 1..30 em paralelo e mantém em cache
   (`cnpj|ano`) os itens de cada PCA.
-- **Escrita** (módulo futuro "Criar PCA"): PNCP
-  `POST /v1/orgaos/{cnpj}/pca/{ano}/{sequencial}/itens` (até 2000 itens/req),
-  `PATCH`/`DELETE` no mesmo path.
+- **Escrita real, implementada** (`pncpEnvioService.ts`, `TransmitirPncpModal`):
+  `POST /v1/usuarios/login` (token JWT no header `Authorization`, não no
+  corpo) → `POST /v1/orgaos/{cnpj}/pca` `{codigoUnidade, anoPca, itensPlano}`
+  cria cabeçalho + até 1000 itens numa chamada só (schema real via swagger
+  `/api/pncp/v3/api-docs`, diferente do que a doc antiga desta seção supunha).
+  Exige autenticação de **plataforma** (credenciamento junto ao Ministério da
+  Gestão em produção; ambiente de Homologação/`treina.pncp.gov.br` aceita
+  login de teste sem credenciamento formal — proxy `/pncp-homolog-api`).
+  Login/senha nunca persistidos. `classificacaoSuperiorCodigo/Nome` de cada
+  item é buscado ao vivo no CatMat/CatSer (nunca inventado); item sem
+  confirmação no catálogo bloqueia o envio daquele PCA com erro explícito.
 
 Campos do item do PCA (PNCP `IncluirPlanoContratacaoItemDTO`):
 `numeroItem`, `materialOuServico`, `categoriaItemId`, `criterioJulgamentoId`,
