@@ -266,15 +266,18 @@ export function DfdManualFormulario({
           >
             <Pencil size={13} />
           </button>
-          {!r.origemItemId && (
-            <button
-              onClick={() => removerItem(r.id)}
-              aria-label="Remover item"
-              className="grid h-7 w-7 place-items-center rounded-[var(--radius-control)] text-[var(--color-danger)] hover:bg-[#fbeff1]"
-            >
-              <Trash2 size={13} />
-            </button>
-          )}
+          <button
+            onClick={() => removerItem(r.id)}
+            aria-label="Remover item"
+            title={
+              r.origemItemId
+                ? 'Remove só desta DFD de execução — não precisa usar todos os itens do PCA aqui'
+                : undefined
+            }
+            className="grid h-7 w-7 place-items-center rounded-[var(--radius-control)] text-[var(--color-danger)] hover:bg-[#fbeff1]"
+          >
+            <Trash2 size={13} />
+          </button>
         </div>
       ),
     },
@@ -314,8 +317,8 @@ export function DfdManualFormulario({
           <Link2 size={14} className="mt-0.5 shrink-0" />
           DFD de execução puxada do PCA {pcaOrigem?.nome ?? ''}
           {dfdOrigem ? ` — DFD #${dfdOrigem.numero}` : ''}. Não dá pra adicionar item novo aqui; só
-          ajustar especificação, valor e reduzir quantidade — sem ultrapassar o total da DFD
-          do PCA.
+          ajustar especificação, valor, remover o que não vai usar nesta execução e reduzir
+          quantidade — sem ultrapassar o total da DFD do PCA.
         </p>
       )}
 
@@ -389,12 +392,21 @@ export function DfdManualFormulario({
       <Secao icon={Tags} titulo="Classificação e responsáveis" accent="teal">
         <div className="grid gap-3 sm:grid-cols-3">
           <Campo label="Categoria">
-            <Combo
-              value={dados.categoria}
-              onChange={(v) => set('categoria', v)}
-              options={CATEGORIAS_ITEM_PCA.map((c) => c.nome)}
-              placeholder="Selecione"
-            />
+            {travado ? (
+              <input
+                readOnly
+                value={dados.categoria}
+                title="Categoria vem do PCA de origem — não dá pra trocar aqui"
+                className="gt-input cursor-not-allowed bg-[#f1f4f9] font-normal normal-case text-[var(--color-muted)]"
+              />
+            ) : (
+              <Combo
+                value={dados.categoria}
+                onChange={(v) => set('categoria', v)}
+                options={CATEGORIAS_ITEM_PCA.map((c) => c.nome)}
+                placeholder="Selecione"
+              />
+            )}
           </Campo>
           <Campo label="Tipo de contratação">
             <select
@@ -481,8 +493,8 @@ export function DfdManualFormulario({
           <Link2 size={14} className="mt-0.5 shrink-0" />
           DFD de execução puxada do PCA {pcaOrigem?.nome ?? ''}
           {dfdOrigem ? ` — DFD #${dfdOrigem.numero}` : ''}. Não dá pra adicionar item novo aqui; só
-          ajustar especificação, valor e reduzir quantidade — sem ultrapassar o total da DFD
-          do PCA.
+          ajustar especificação, valor, remover o que não vai usar nesta execução e reduzir
+          quantidade — sem ultrapassar o total da DFD do PCA.
         </p>
       )}
 
@@ -621,7 +633,8 @@ export function DfdManualFormulario({
         {travado && !editandoId && (
           <p className="mb-3 rounded-[var(--radius-control)] border border-dashed border-[var(--color-line)] px-3 py-2 text-xs text-[var(--color-muted)]">
             Itens vêm da DFD do PCA de origem — clique no lápis de um item pra ajustar especificação,
-            valor ou reduzir a quantidade.
+            valor ou reduzir a quantidade. Não precisa usar todos aqui: pode remover o que não fizer
+            parte desta execução.
           </p>
         )}
 
