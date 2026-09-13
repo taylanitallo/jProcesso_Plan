@@ -26,7 +26,10 @@ export const TIPOS_CONTRATACAO_DFD: TipoContratacaoDfd[] = [
 export type ItemDfdManual = {
   id: string
   codigoItemCatalogo: string
+  /** Nome do item — vem do catálogo, não muda depois de escolhido. */
   descricao: string
+  /** Especificação/detalhe complementar — texto livre, editável a qualquer momento, não mexe no nome do item. */
+  especificacao?: string
   unidadeFornecimento: string
   quantidade: number
   valorUnitario: number
@@ -124,6 +127,7 @@ export function dfdManualDoPca(
         id: `it${uid()}`,
         codigoItemCatalogo: it.codigoItemCatalogo,
         descricao: it.descricao,
+        especificacao: it.informacaoComplementar,
         unidadeFornecimento: it.unidadeFornecimento,
         quantidade: Math.min(it.quantidadeEstimada, disponivel),
         valorUnitario: it.valorUnitarioEstimado,

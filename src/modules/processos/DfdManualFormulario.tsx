@@ -39,6 +39,7 @@ const fmtBRL = (v: number) =>
 const itemVazio = {
   codigo: '',
   descricao: '',
+  especificacao: '',
   unidade: '',
   qtd: '',
   unitario: '',
@@ -121,7 +122,13 @@ export function DfdManualFormulario({
     setItemCatalogoNome(nome)
     const item = catalogo.find((c) => `${c.codigo} — ${c.nome}` === nome)
     if (item) {
-      setItemForm((f) => ({ ...f, codigo: item.codigo, descricao: item.nome, unidade: item.unidade }))
+      setItemForm((f) => ({
+        ...f,
+        codigo: item.codigo,
+        descricao: item.nome,
+        especificacao: item.especificacao || f.especificacao,
+        unidade: item.unidade,
+      }))
     }
   }
 
@@ -152,6 +159,7 @@ export function DfdManualFormulario({
       id: editandoId ?? `it${uid()}`,
       codigoItemCatalogo: itemForm.codigo.trim(),
       descricao: itemForm.descricao.trim(),
+      especificacao: itemForm.especificacao.trim() || undefined,
       unidadeFornecimento: itemForm.unidade.trim(),
       quantidade: qtdEfetiva,
       valorUnitario: Number(itemForm.unitario),
@@ -173,6 +181,7 @@ export function DfdManualFormulario({
     setItemForm({
       codigo: it.codigoItemCatalogo,
       descricao: it.descricao,
+      especificacao: it.especificacao ?? '',
       unidade: it.unidadeFornecimento,
       qtd: String(it.quantidade),
       unitario: String(it.valorUnitario),
@@ -196,7 +205,20 @@ export function DfdManualFormulario({
 
   const cols: Column<ItemDfdManual>[] = [
     { key: 'codigo', header: 'Código', render: (r) => r.codigoItemCatalogo },
-    { key: 'descricao', header: 'Descrição' },
+    {
+      key: 'descricao',
+      header: 'Descrição',
+      render: (r) => (
+        <div className="flex flex-col">
+          <span>{r.descricao}</span>
+          {r.especificacao && (
+            <span className="text-xs font-normal normal-case text-[var(--color-muted)]">
+              {r.especificacao}
+            </span>
+          )}
+        </div>
+      ),
+    },
     { key: 'unidade', header: 'Unid.', render: (r) => r.unidadeFornecimento },
     { key: 'qtd', header: 'Qtd.', align: 'center', render: (r) => r.quantidade },
     ...(dados.setores.length > 1
@@ -482,10 +504,11 @@ export function DfdManualFormulario({
                 />
               )}
               <input
+                readOnly
                 value={itemForm.descricao}
-                onChange={(e) => setItemForm((f) => ({ ...f, descricao: e.target.value }))}
-                placeholder="Descrição / especificação"
-                className="gt-input font-normal normal-case"
+                placeholder="Nome (vem do catálogo)"
+                title="Nome do item vem do catálogo — não dá pra editar. Use o campo Especificação pra detalhar."
+                className="gt-input cursor-not-allowed bg-[#f1f4f9] font-normal normal-case text-[var(--color-muted)]"
               />
               <input
                 readOnly
@@ -495,6 +518,12 @@ export function DfdManualFormulario({
                 className="gt-input cursor-not-allowed bg-[#f1f4f9] font-normal normal-case text-[var(--color-muted)]"
               />
             </div>
+            <input
+              value={itemForm.especificacao}
+              onChange={(e) => setItemForm((f) => ({ ...f, especificacao: e.target.value }))}
+              placeholder="Especificação / detalhe adicional (opcional) — não muda o nome do item"
+              className="gt-input font-normal normal-case"
+            />
             {usarRateioSetor && (
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 <p className="text-[11px] font-semibold text-[var(--color-muted)] sm:col-span-2 lg:col-span-3">
