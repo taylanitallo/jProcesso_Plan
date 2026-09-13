@@ -91,13 +91,18 @@ const uid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(
  * prontos. A partir daqui a lista de itens fica travada (não dá pra
  * acrescentar item novo — `origemPca` marca isso), mas cada item continua
  * editável (descrição/valor) e a quantidade pode ser reduzida, nunca
- * ultrapassar o que está na DFD do PCA — ver
- * `disponibilidadeItemPca`.
+ * ultrapassar o que está na DFD do PCA — ver `disponibilidadeItemPca`.
+ *
+ * A quantidade inicial de cada item já vem travada no que sobrou (`disponivel`
+ * de `disponibilidadeItemPca`, não no total da DFD do PCA): se outra DFD de
+ * execução já usou parte do item, a nova nunca nasce oferecendo mais do que
+ * realmente está livre.
  */
 export function dfdManualDoPca(
   pca: PcaLocal,
   dfd: PcaDfd,
   setoresDisponiveis: string[],
+  todasAsDfds: Record<string, DfdManual> = {},
 ): DfdManual {
   const setores = dfd.departamentos.filter((d) => setoresDisponiveis.includes(d))
   const categoria = dfd.itens[0]?.categoriaItemNome ?? ''
@@ -113,15 +118,18 @@ export function dfdManualDoPca(
     grauPrioridade: dfd.grauPrioridade,
     objeto: dfd.objeto,
     justificativa: dfd.justificativa,
-    itens: dfd.itens.map((it) => ({
-      id: `it${uid()}`,
-      codigoItemCatalogo: it.codigoItemCatalogo,
-      descricao: it.descricao,
-      unidadeFornecimento: it.unidadeFornecimento,
-      quantidade: it.quantidadeEstimada,
-      valorUnitario: it.valorUnitarioEstimado,
-      origemItemId: it.id,
-    })),
+    itens: dfd.itens.map((it) => {
+      const { disponivel } = disponibilidadeItemPca(it.id, it, todasAsDfds, '')
+      return {
+        id: `it${uid()}`,
+        codigoItemCatalogo: it.codigoItemCatalogo,
+        descricao: it.descricao,
+        unidadeFornecimento: it.unidadeFornecimento,
+        quantidade: Math.min(it.quantidadeEstimada, disponivel),
+        valorUnitario: it.valorUnitarioEstimado,
+        origemItemId: it.id,
+      }
+    }),
     atualizadoEm: '',
     origemPca: { pcaId: pca.id, dfdId: dfd.id },
   }

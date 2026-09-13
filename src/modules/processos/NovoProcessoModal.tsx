@@ -27,6 +27,7 @@ export function NovoProcessoModal({ open, onClose }: { open: boolean; onClose: (
   const setores = useOrganizacao((s) => s.setores)
   const pcas = usePca((s) => s.pcas)
   const salvarDfdManual = useDfdManual((s) => s.salvar)
+  const todasDfdsManuais = useDfdManual((s) => s.porChave)
   const isAdmin = user?.perfil === 'ADMIN_GERAL'
   const minhaUnidade = unidades.find((u) => u.id === user?.unidadeId)
   const vazio = {
@@ -84,6 +85,7 @@ export function NovoProcessoModal({ open, onClose }: { open: boolean; onClose: (
         origemSelecionada.pca,
         origemSelecionada.dfd,
         setores.map((s) => s.nome),
+        todasDfdsManuais,
       )
       salvarDfdManual(`${id}::${DFD_COMPLETO}`, dados)
     }
