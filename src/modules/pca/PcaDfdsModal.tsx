@@ -671,7 +671,7 @@ export function PcaDfdsModal({ pcaId, onClose }: { pcaId: string; onClose: () =>
           {view === 'dfds' && (
             <button
               onClick={abrirNovaDfd}
-              className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-primary)] px-3 py-2 text-xs font-bold uppercase tracking-wide text-white"
+              className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-amber)] px-3 py-2 text-xs font-bold uppercase tracking-wide text-white"
             >
               <Plus size={14} /> Nova DFD
             </button>
@@ -741,7 +741,10 @@ export function PcaDfdsModal({ pcaId, onClose }: { pcaId: string; onClose: () =>
         {/* ---------- FORM DE DFD ---------- */}
         {view === 'dfd-form' && (
           <div>
-            <h4 className="font-display text-sm font-bold text-[#183263]">
+            <h4 className="flex items-center gap-2 font-display text-sm font-bold text-[#183263]">
+              <span className="grid h-6 w-6 place-items-center rounded-[6px] bg-[var(--color-amber-soft)] text-[var(--color-amber)]">
+                <FilePenLine size={13} />
+              </span>
               {dfdForm.editId ? 'Editar DFD' : 'Nova DFD'}
             </h4>
             <p className="mb-3 text-xs text-[var(--color-muted)]">
@@ -892,7 +895,12 @@ export function PcaDfdsModal({ pcaId, onClose }: { pcaId: string; onClose: () =>
               <div className="mb-6 border-b border-[var(--color-line)] pb-5">
                 {itemForm.editId == null && !itemForm.catalogoTravado ? (
                   <div>
-                    <h4 className="font-display text-sm font-bold text-[#183263]">Escolha no catálogo</h4>
+                    <h4 className="flex items-center gap-2 font-display text-sm font-bold text-[#183263]">
+                      <span className="grid h-6 w-6 place-items-center rounded-[6px] bg-[var(--color-teal-soft)] text-[var(--color-teal)]">
+                        <Search size={13} />
+                      </span>
+                      Escolha no catálogo
+                    </h4>
                     <p className="mb-2 text-xs text-[var(--color-muted)]">
                       Todo item vem do <strong>Catálogo de Itens</strong>. Selecione um; depois
                       informe quantidade e valor unitário.
@@ -939,7 +947,12 @@ export function PcaDfdsModal({ pcaId, onClose }: { pcaId: string; onClose: () =>
                   </div>
                 ) : (
                   <>
-                    <h4 className="font-display text-sm font-bold text-[#183263]">Informações do item</h4>
+                    <h4 className="flex items-center gap-2 font-display text-sm font-bold text-[#183263]">
+                      <span className="grid h-6 w-6 place-items-center rounded-[6px] bg-[var(--color-success-soft)] text-[var(--color-success)]">
+                        <Package size={13} />
+                      </span>
+                      Informações do item
+                    </h4>
                     <p className="mb-3 text-xs text-[var(--color-muted)]">
                       {itemForm.catalogoTravado
                         ? 'Os dados do item vêm do Catálogo de Itens. Informe apenas a quantidade e o valor unitário.'
@@ -1100,7 +1113,12 @@ export function PcaDfdsModal({ pcaId, onClose }: { pcaId: string; onClose: () =>
             {/* importar csv */}
             {view === 'importar' && (
               <div className="mb-6 border-b border-[var(--color-line)] pb-5">
-                <h4 className="font-display text-sm font-bold text-[#183263]">Importar itens de uma planilha</h4>
+                <h4 className="flex items-center gap-2 font-display text-sm font-bold text-[#183263]">
+                  <span className="grid h-6 w-6 place-items-center rounded-[6px] bg-[var(--color-violet-soft)] text-[var(--color-violet)]">
+                    <Upload size={13} />
+                  </span>
+                  Importar itens de uma planilha
+                </h4>
                 <p className="mb-3 text-xs text-[var(--color-muted)]">
                   Envie um .csv no formato do "Exportar CSV": Nº, Descrição, Material/Serviço, Código
                   CatMat/CatSer, Categoria, Critério de Julgamento, Margem de Preferência, Conteúdo
@@ -1152,7 +1170,12 @@ export function PcaDfdsModal({ pcaId, onClose }: { pcaId: string; onClose: () =>
             {/* tabela de itens da DFD */}
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h4 className="font-display text-sm font-bold text-[#183263]">Itens da DFD</h4>
+                <h4 className="flex items-center gap-2 font-display text-sm font-bold text-[#183263]">
+                  <span className="grid h-6 w-6 place-items-center rounded-[6px] bg-[var(--color-success-soft)] text-[var(--color-success)]">
+                    <Package size={13} />
+                  </span>
+                  Itens da DFD
+                </h4>
                 <p className="text-xs text-[var(--color-muted)]">
                   Gerencie os itens desta DFD. Grau de prioridade e data desejada são da DFD.
                 </p>

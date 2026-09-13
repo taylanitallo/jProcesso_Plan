@@ -98,7 +98,7 @@ export function NovoPcaModal({
         </button>
 
         <div className="flex items-start gap-3 pr-8">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[12px] bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)]">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[12px] bg-[var(--color-amber-soft)] text-[var(--color-amber)]">
             <CalendarRange size={22} />
           </span>
           <div>
@@ -238,7 +238,7 @@ export function NovoPcaModal({
           <button
             onClick={salvar}
             disabled={!podeSalvar}
-            className="rounded-[var(--radius-control)] bg-[var(--color-primary)] px-5 py-2 text-sm font-bold uppercase tracking-wide text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-[var(--radius-control)] bg-[var(--color-amber)] px-5 py-2 text-sm font-bold uppercase tracking-wide text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             {editar ? 'Salvar alterações' : 'Salvar e Adicionar Itens'}
           </button>
