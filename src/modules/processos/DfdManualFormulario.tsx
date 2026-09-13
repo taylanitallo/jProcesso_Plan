@@ -460,14 +460,14 @@ export function DfdManualFormulario({
           <div className="mb-3 flex flex-col gap-2 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-[#f8fafd] p-3">
             {editandoId && (
               <p className="text-[11px] font-bold uppercase tracking-wide text-[var(--color-primary-strong)]">
-                Editando item — ajuste a especificação e salve
+                Editando item — ajuste descrição, quantidade ou valor e salve. Item do catálogo não muda.
               </p>
             )}
             <div className="grid gap-2 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_minmax(0,1fr)]">
-              {travado ? (
+              {travado || editandoId ? (
                 <div className="flex flex-col justify-center rounded-[var(--radius-control)] border border-[var(--color-line)] bg-[#eef1f7] px-3 py-2">
                   <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--color-muted)]">
-                    Código (fixo — vem do PCA)
+                    {travado ? 'Código (fixo — vem do PCA)' : 'Código (não muda ao editar)'}
                   </span>
                   <span className="text-sm text-[var(--color-ink)]">{itemForm.codigo}</span>
                 </div>
