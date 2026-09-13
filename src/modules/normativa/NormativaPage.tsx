@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ExternalLink, FileText, Plus, Search, Trash2, UploadCloud } from 'lucide-react'
+import { DatabaseBackup, ExternalLink, FileText, Plus, Search, Trash2, UploadCloud } from 'lucide-react'
 import { Badge } from '../../components/common/Badge'
 import { Button } from '../../components/common/Button'
 import { Modal } from '../../components/common/Modal'
@@ -53,9 +53,14 @@ export function NormativaPage() {
     <div className="flex min-h-[calc(100vh-8rem)] overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white shadow-[var(--shadow-card)]">
       <aside className="flex w-[340px] shrink-0 flex-col border-r border-[var(--color-line)] p-4">
         <div className="flex items-start justify-between">
-          <div>
-            <h2 className="font-display text-lg font-bold text-[#183263]">Normativas</h2>
-            <p className="text-xs text-[var(--color-muted)]">Envie suas normativas para a IA utilizar</p>
+          <div className="flex items-start gap-2.5">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] bg-[var(--color-indigo-soft)] text-[var(--color-indigo)]">
+              <DatabaseBackup size={18} />
+            </span>
+            <div>
+              <h2 className="font-display text-lg font-bold text-[#183263]">Normativas</h2>
+              <p className="text-xs text-[var(--color-muted)]">Envie suas normativas para a IA utilizar</p>
+            </div>
           </div>
           <button
             onClick={() => setOpen(true)}

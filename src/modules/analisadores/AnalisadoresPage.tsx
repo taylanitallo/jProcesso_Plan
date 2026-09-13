@@ -19,6 +19,7 @@ export function AnalisadoresPage() {
       counterValue={analises.length}
       history={analises.map((a) => ({ id: a.id, title: a.titulo, preview: a.resumo, date: a.criadoEm }))}
       itemIcon={FileSearch}
+      accent="pink"
       showTabs={false}
       searchPlaceholder="Pesquisar no histórico..."
       activeId={sel?.id ?? null}

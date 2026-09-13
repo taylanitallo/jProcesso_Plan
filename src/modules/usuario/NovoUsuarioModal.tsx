@@ -63,7 +63,7 @@ export function NovoUsuarioModal({
         </button>
 
         <div className="mb-4 flex items-start gap-3 pr-8">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[12px] bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)]">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[12px] bg-[var(--color-violet-soft)] text-[var(--color-violet)]">
             <UserPlus size={22} />
           </span>
           <div className="min-w-0">

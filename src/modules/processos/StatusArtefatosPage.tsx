@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Filter, Plus, Search } from 'lucide-react'
+import { FileSignature, Filter, Plus, Search } from 'lucide-react'
+import { PageHeader } from '../../components/common/PageHeader'
 import { Badge } from '../../components/common/Badge'
 import { DataTable, Pagination, type Column } from '../../components/common/DataTable'
 import { EmptyState } from '../../components/common/EmptyState'
@@ -167,6 +168,13 @@ export function StatusArtefatosPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <PageHeader
+        title="Status Individual de Cada Artefato"
+        subtitle="Acompanhe, por tipo de artefato, o andamento em todos os processos."
+        icon={FileSignature}
+        accent="amber"
+      />
+
       <div className="flex gap-2 overflow-x-auto pb-2">
         {ARTEFATOS.map((a, i) => (
           <button

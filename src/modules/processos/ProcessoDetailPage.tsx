@@ -8,6 +8,7 @@ import {
   Database,
   FileDown,
   FileText,
+  FolderKanban,
   Lock,
   MoreVertical,
   Package,
@@ -255,6 +256,9 @@ export function ProcessoDetailPage() {
     <div className="flex flex-col gap-4">
       {/* Cabeçalho do processo */}
       <div className="flex flex-wrap items-center gap-3 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-4 shadow-[var(--shadow-card)]">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[8px] bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)]">
+          <FolderKanban size={16} />
+        </span>
         <h3 className="border-l-4 border-[var(--color-primary)] pl-2 font-display text-sm font-bold text-[#183263]">
           Processo N.º <span className="text-base">{numero}</span>
         </h3>
@@ -284,7 +288,7 @@ export function ProcessoDetailPage() {
           </button>
           <button
             onClick={() => setItensOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-primary)] px-3 py-1.5 text-xs font-semibold text-white"
+            className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-success)] px-3 py-1.5 text-xs font-semibold text-white"
           >
             <Package size={13} /> Itens
           </button>

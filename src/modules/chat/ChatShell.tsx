@@ -3,6 +3,7 @@ import { Plus, Search } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { HistoryItem } from '../../types'
 import { useModuleLinks } from '../../components/shell/useModuleLinks'
+import { ACCENTS, type Accent } from '../../components/common/accents'
 import { CHAT_MODULE_LINKS } from './chatConstants'
 
 interface ShellProps {
@@ -18,6 +19,8 @@ interface ShellProps {
   activeId?: string | null
   onSelect?: (item: HistoryItem) => void
   onNew?: () => void
+  /** cor de destaque do módulo (ícones do histórico e item ativo) */
+  accent?: Accent
   children: ReactNode
 }
 
@@ -31,8 +34,10 @@ export function ChatShell({
   activeId,
   onSelect,
   onNew,
+  accent = 'violet',
   children,
 }: ShellProps) {
+  const a = ACCENTS[accent]
   useModuleLinks(CHAT_MODULE_LINKS)
   const [query, setQuery] = useState('')
   const filtered = history.filter((h) => h.title.toLowerCase().includes(query.toLowerCase()))
@@ -70,12 +75,10 @@ export function ChatShell({
               <button
                 onClick={() => onSelect?.(h)}
                 className={`flex w-full items-center gap-3 rounded-[10px] px-2 py-2.5 text-left transition ${
-                  activeId === h.id
-                    ? 'bg-[var(--color-primary-soft)] font-semibold'
-                    : 'hover:bg-[var(--color-primary-soft)]'
+                  activeId === h.id ? `${a.bg} font-semibold` : a.hoverBg
                 }`}
               >
-                <ItemIcon size={16} className="shrink-0 text-[var(--color-muted)]" />
+                <ItemIcon size={16} className={`shrink-0 ${a.text}`} />
                 <span className="line-clamp-1 text-[13px] text-[var(--color-ink)]">{h.title}</span>
               </button>
             </li>

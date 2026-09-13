@@ -51,7 +51,7 @@ export function NovoAssinanteModal({
         </button>
 
         <div className="mb-4 flex items-start gap-3 pr-8">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[12px] bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)]">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[12px] bg-[var(--color-pink-soft)] text-[var(--color-pink)]">
             <UserPlus size={22} />
           </span>
           <div className="min-w-0">
