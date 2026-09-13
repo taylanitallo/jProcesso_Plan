@@ -16,9 +16,12 @@ import type { ProcessoFormValue } from './processoForm'
 export function ProcessoFields({
   value,
   onChange,
+  unidadeBloqueada,
 }: {
   value: ProcessoFormValue
   onChange: (patch: Partial<ProcessoFormValue>) => void
+  /** Trava a Unidade Orçamentária (ex.: quando o DFD foi puxado de um PCA de uma unidade específica). */
+  unidadeBloqueada?: boolean
 }) {
   const workflows = useWorkflows((s) => s.workflows)
   const unidades = useOrganizacao((s) => s.unidades)
@@ -74,7 +77,18 @@ export function ProcessoFields({
         </div>
         <div className="sm:col-span-2">
           <Labelled label="UNIDADE ORÇAMENTÁRIA">
-            {isAdmin ? (
+            {unidadeBloqueada ? (
+              <>
+                <input
+                  readOnly
+                  value={value.unidadeNome}
+                  className="gt-input cursor-not-allowed bg-[#f1f4f9] font-normal normal-case text-[var(--color-muted)]"
+                />
+                <span className="font-normal normal-case text-[var(--color-muted)]">
+                  Definida pelo PCA de origem do DFD — não dá pra trocar aqui.
+                </span>
+              </>
+            ) : isAdmin ? (
               <Combo
                 value={value.unidadeNome}
                 onChange={(v) =>

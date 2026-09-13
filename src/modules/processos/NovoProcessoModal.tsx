@@ -50,6 +50,18 @@ export function NovoProcessoModal({ open, onClose }: { open: boolean; onClose: (
   )
   const origemSelecionada = origensDfd.find((o) => o.label === origemDfdLabel) ?? null
 
+  const escolherOrigemDfd = (label: string) => {
+    setOrigemDfdLabel(label)
+    const origem = origensDfd.find((o) => o.label === label)
+    if (origem) {
+      setForm((f) => ({
+        ...f,
+        unidadeId: origem.pca.unidadeId,
+        unidadeNome: origem.pca.unidadeNome,
+      }))
+    }
+  }
+
   const podeSalvar = Boolean(
     form.nome.trim() &&
       form.numero.trim() &&
@@ -119,7 +131,7 @@ export function NovoProcessoModal({ open, onClose }: { open: boolean; onClose: (
               </span>
               <Combo
                 value={origemDfdLabel}
-                onChange={setOrigemDfdLabel}
+                onChange={escolherOrigemDfd}
                 options={origensDfd.map((o) => o.label)}
                 placeholder="Nenhum — preencher DFD do zero depois"
                 filterable
@@ -135,7 +147,11 @@ export function NovoProcessoModal({ open, onClose }: { open: boolean; onClose: (
           </div>
         )}
 
-        <ProcessoFields value={form} onChange={(patch) => setForm((f) => ({ ...f, ...patch }))} />
+        <ProcessoFields
+          value={form}
+          onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
+          unidadeBloqueada={Boolean(origemSelecionada)}
+        />
 
         <div className="mt-5 flex items-center justify-between gap-3">
           <button
