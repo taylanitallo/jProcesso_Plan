@@ -6,7 +6,7 @@ import { useOrganizacao } from '../../store/organizacao'
 import { useAuth } from '../../store/auth'
 import { usePca, valorDfd } from '../../store/pca'
 import { useDfdManual, dfdManualDoPca } from '../../store/dfdManual'
-import { PROCESSO_LEGISLACOES, PROCESSO_ARTEFATOS } from '../../mocks'
+import { PROCESSO_ARTEFATOS } from '../../mocks'
 import { Combo } from '../../components/common/Combo'
 import { ProcessoFields } from './ProcessoFields'
 import { PROCESSO_FORM_VAZIO, toNovoProcesso } from './processoForm'
@@ -31,7 +31,6 @@ export function NovoProcessoModal({ open, onClose }: { open: boolean; onClose: (
   const minhaUnidade = unidades.find((u) => u.id === user?.unidadeId)
   const vazio = {
     ...PROCESSO_FORM_VAZIO,
-    legislacao: PROCESSO_LEGISLACOES[0],
     unidadeId: isAdmin ? '' : (minhaUnidade?.id ?? ''),
     unidadeNome: isAdmin ? '' : (minhaUnidade?.nome ?? ''),
   }

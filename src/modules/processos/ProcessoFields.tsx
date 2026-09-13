@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { AlertTriangle } from 'lucide-react'
 import { Combo } from '../../components/common/Combo'
-import { PROCESSO_LEGISLACOES, PROCESSO_TIPOS } from '../../mocks'
+import { PROCESSO_TIPOS } from '../../mocks'
 import { useWorkflows } from '../../store/workflows'
 import { useOrganizacao } from '../../store/organizacao'
 import { useAuth } from '../../store/auth'
@@ -46,22 +46,16 @@ export function ProcessoFields({
             onChange={(e) => onChange({ numero: e.target.value })}
           />
         </div>
-        <Labelled label="LEGISLAÇÃO">
-          <Combo
-            value={value.legislacao}
-            onChange={(v) => onChange({ legislacao: v, fluxo: '' })}
-            options={PROCESSO_LEGISLACOES}
-            placeholder="Selecione uma Legislação"
-          />
-        </Labelled>
-        <Labelled label="TIPO DE PROCESSO">
-          <Combo
-            value={value.tipo}
-            onChange={(v) => onChange({ tipo: v, fluxo: '' })}
-            options={PROCESSO_TIPOS}
-            placeholder="Selecione um Tipo"
-          />
-        </Labelled>
+        <div className="sm:col-span-2">
+          <Labelled label="TIPO DE PROCESSO">
+            <Combo
+              value={value.tipo}
+              onChange={(v) => onChange({ tipo: v, fluxo: '' })}
+              options={PROCESSO_TIPOS}
+              placeholder="Selecione um Tipo"
+            />
+          </Labelled>
+        </div>
         <div className="sm:col-span-2">
           <Labelled label="FLUXO DE TRABALHO">
             <Combo
@@ -73,7 +67,7 @@ export function ProcessoFields({
             />
             {!fluxoLiberado && (
               <span className="font-normal normal-case text-[var(--color-muted)]">
-                O campo será liberado após a escolha da legislação e do tipo de processo.
+                O campo será liberado após a escolha do tipo de processo.
               </span>
             )}
           </Labelled>

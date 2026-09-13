@@ -15,7 +15,7 @@ export type ProcessoFormValue = {
 
 export const PROCESSO_FORM_VAZIO: ProcessoFormValue = {
   numero: '',
-  legislacao: '',
+  legislacao: '14.133',
   tipo: '',
   fluxo: '',
   nome: '',

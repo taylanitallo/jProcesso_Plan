@@ -164,7 +164,6 @@ export function ProcessosInteligentesPage() {
   }, [criarOpen])
 
   const columns: Column<Row>[] = [
-    { key: 'id', header: 'ID', render: (r) => <Pill>{r.id}</Pill> },
     { key: 'numero', header: 'Número', render: (r) => <Pill muted>{r.numero}</Pill> },
     { key: 'tipo', header: 'Tipo' },
     { key: 'nome', header: 'Nome' },
