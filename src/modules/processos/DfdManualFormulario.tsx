@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Pencil, Plus, Trash2, X as XIcon } from 'lucide-react'
+import { Link2, Pencil, Plus, Trash2, X as XIcon } from 'lucide-react'
 import { Combo } from '../../components/common/Combo'
 import { DataTable, type Column } from '../../components/common/DataTable'
 import { EmptyState } from '../../components/common/EmptyState'
@@ -7,11 +7,13 @@ import { useOrganizacao } from '../../store/organizacao'
 import { useCatalogo } from '../../store/catalogo'
 import { useUsuarios } from '../../store/usuarios'
 import { useAuth } from '../../store/auth'
-import { GRAUS_PRIORIDADE, CATEGORIAS_ITEM_PCA, type GrauPrioridade } from '../../store/pca'
+import { usePca, GRAUS_PRIORIDADE, CATEGORIAS_ITEM_PCA, type GrauPrioridade } from '../../store/pca'
 import {
   useDfdManual,
   dfdManualVazio,
   valorTotalItens,
+  disponibilidadeItemPca,
+  encontrarItemOrigemPca,
   TIPOS_CONTRATACAO_DFD,
   type DfdManual,
   type ItemDfdManual,
@@ -20,7 +22,15 @@ import {
 const fmtBRL = (v: number) =>
   v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-const itemVazio = { codigo: '', descricao: '', unidade: '', qtd: '', unitario: '', previsaoIso: '' }
+const itemVazio = {
+  codigo: '',
+  descricao: '',
+  unidade: '',
+  qtd: '',
+  unitario: '',
+  previsaoIso: '',
+  origemItemId: undefined as string | undefined,
+}
 
 const isoToBr = (s: string) => {
   const m = s?.match(/^(\d{4})-(\d{2})-(\d{2})/)
@@ -35,6 +45,12 @@ const uid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(
  * dissertativas soltas. Campos e organização baseados no modelo real de
  * sistemas de DFD do setor (Secretaria/Setor/Ordenador/Responsável,
  * Categoria, Tipo de contratação, Grau de prioridade + itens do catálogo).
+ *
+ * Quando a DFD veio de um PCA (`dados.origemPca`), a lista de itens fica
+ * travada: não dá pra adicionar item novo, só editar especificação/valor/
+ * previsão e reduzir a quantidade — nunca ultrapassar o total da DFD do PCA,
+ * controlado junto com todas as outras "DFDs de execução" que apontam pro
+ * mesmo item (`disponibilidadeItemPca`).
  */
 export function DfdManualFormulario({
   chave,
@@ -47,8 +63,10 @@ export function DfdManualFormulario({
 }) {
   const salvarStore = useDfdManual((s) => s.salvar)
   const existente = useDfdManual((s) => s.porChave[chave])
+  const todasDfds = useDfdManual((s) => s.porChave)
+  const pcas = usePca((s) => s.pcas)
   const unidades = useOrganizacao((s) => s.unidades)
-  const setores = useOrganizacao((s) => s.setores)
+  const setoresCadastrados = useOrganizacao((s) => s.setores)
   const catalogo = useCatalogo((s) => s.itens)
   const usuarios = useUsuarios((s) => s.usuarios)
   const usuarioAtual = useAuth((s) => s.user)
@@ -63,8 +81,24 @@ export function DfdManualFormulario({
   const [itemCatalogoNome, setItemCatalogoNome] = useState('')
   const [editandoId, setEditandoId] = useState<string | null>(null)
 
+  const travado = Boolean(dados.origemPca)
+  const pcaOrigem = dados.origemPca ? pcas.find((p) => p.id === dados.origemPca?.pcaId) : undefined
+  const dfdOrigem = pcaOrigem?.dfds.find((d) => d.id === dados.origemPca?.dfdId)
+
+  const disponibilidadePara = (origemItemId: string) => {
+    const origem = encontrarItemOrigemPca(origemItemId, pcas)
+    if (!origem) return null
+    return disponibilidadeItemPca(origemItemId, origem, todasDfds, chave)
+  }
+
   const set = <K extends keyof DfdManual>(campo: K, valor: DfdManual[K]) =>
     setDados((d) => ({ ...d, [campo]: valor }))
+
+  const toggleSetor = (nome: string) =>
+    setDados((d) => ({
+      ...d,
+      setores: d.setores.includes(nome) ? d.setores.filter((s) => s !== nome) : [...d.setores, nome],
+    }))
 
   const escolherItemCatalogo = (nome: string) => {
     setItemCatalogoNome(nome)
@@ -74,11 +108,15 @@ export function DfdManualFormulario({
     }
   }
 
+  const infoEdicao = itemForm.origemItemId ? disponibilidadePara(itemForm.origemItemId) : null
+  const excedeLimite = infoEdicao ? Number(itemForm.qtd) > infoEdicao.disponivel : false
+
   const podeSalvarItem =
     itemForm.codigo.trim() &&
     itemForm.descricao.trim() &&
     Number(itemForm.qtd) > 0 &&
-    Number(itemForm.unitario) > 0
+    Number(itemForm.unitario) > 0 &&
+    !excedeLimite
 
   const cancelarEdicaoItem = () => {
     setEditandoId(null)
@@ -96,6 +134,7 @@ export function DfdManualFormulario({
       quantidade: Number(itemForm.qtd),
       valorUnitario: Number(itemForm.unitario),
       previsao: isoToBr(itemForm.previsaoIso),
+      origemItemId: itemForm.origemItemId,
     }
     setDados((d) => ({
       ...d,
@@ -114,6 +153,7 @@ export function DfdManualFormulario({
       qtd: String(it.quantidade),
       unitario: String(it.valorUnitario),
       previsaoIso: isoDe(it.previsao),
+      origemItemId: it.origemItemId,
     })
   }
 
@@ -133,6 +173,16 @@ export function DfdManualFormulario({
     { key: 'descricao', header: 'Descrição' },
     { key: 'unidade', header: 'Unid.', render: (r) => r.unidadeFornecimento },
     { key: 'qtd', header: 'Qtd.', align: 'center', render: (r) => r.quantidade },
+    {
+      key: 'disponivel',
+      header: 'Disponível (PCA)',
+      align: 'center',
+      render: (r) => {
+        if (!r.origemItemId) return '—'
+        const info = disponibilidadePara(r.origemItemId)
+        return info ? `${info.disponivel} de ${info.totalPca}` : '—'
+      },
+    },
     { key: 'valor', header: 'Valor (R$)', align: 'right', render: (r) => fmtBRL(r.valorUnitario) },
     {
       key: 'total',
@@ -154,13 +204,15 @@ export function DfdManualFormulario({
           >
             <Pencil size={13} />
           </button>
-          <button
-            onClick={() => removerItem(r.id)}
-            aria-label="Remover item"
-            className="grid h-7 w-7 place-items-center rounded-[var(--radius-control)] text-[var(--color-danger)] hover:bg-[#fbeff1]"
-          >
-            <Trash2 size={13} />
-          </button>
+          {!r.origemItemId && (
+            <button
+              onClick={() => removerItem(r.id)}
+              aria-label="Remover item"
+              className="grid h-7 w-7 place-items-center rounded-[var(--radius-control)] text-[var(--color-danger)] hover:bg-[#fbeff1]"
+            >
+              <Trash2 size={13} />
+            </button>
+          )}
         </div>
       ),
     },
@@ -168,6 +220,16 @@ export function DfdManualFormulario({
 
   return (
     <div className="flex flex-col gap-4">
+      {travado && (
+        <p className="flex items-start gap-2 rounded-[var(--radius-control)] border border-[#bcd0ee] bg-[var(--color-primary-soft)] px-3 py-2 text-xs text-[var(--color-primary-strong)]">
+          <Link2 size={14} className="mt-0.5 shrink-0" />
+          DFD de execução puxada do PCA {pcaOrigem?.nome ?? ''}
+          {dfdOrigem ? ` — DFD #${dfdOrigem.numero}` : ''}. Não dá pra adicionar item novo aqui; só
+          ajustar especificação, valor, previsão e reduzir quantidade — sem ultrapassar o total da DFD
+          do PCA.
+        </p>
+      )}
+
       <div className="grid gap-3 sm:grid-cols-3">
         <Campo label="Data">
           <input
@@ -196,15 +258,6 @@ export function DfdManualFormulario({
             filterable
           />
         </Campo>
-        <Campo label="Setor">
-          <Combo
-            value={dados.setor}
-            onChange={(v) => set('setor', v)}
-            options={setores.map((s) => s.nome)}
-            placeholder="Selecione"
-            filterable
-          />
-        </Campo>
         <Campo label="Categoria">
           <Combo
             value={dados.categoria}
@@ -213,7 +266,6 @@ export function DfdManualFormulario({
             placeholder="Selecione"
           />
         </Campo>
-
         <Campo label="Responsável pela demanda">
           <Combo
             value={dados.responsavel}
@@ -223,6 +275,7 @@ export function DfdManualFormulario({
             filterable
           />
         </Campo>
+
         <Campo label="Ordenador(a)">
           <Combo
             value={dados.ordenador}
@@ -246,7 +299,6 @@ export function DfdManualFormulario({
             ))}
           </select>
         </Campo>
-
         <Campo label="Grau de prioridade">
           <div className="flex rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white p-1">
             {GRAUS_PRIORIDADE.map((g: GrauPrioridade) => (
@@ -265,23 +317,33 @@ export function DfdManualFormulario({
             ))}
           </div>
         </Campo>
-        <Campo label="Demanda para o PCA?">
-          <div className="flex rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white p-1">
-            {([true, false] as const).map((v) => (
-              <button
-                key={String(v)}
-                type="button"
-                onClick={() => set('demandaParaPca', v)}
-                className={`flex-1 rounded-[8px] px-2 py-1.5 text-xs font-semibold transition ${
-                  dados.demandaParaPca === v
-                    ? 'bg-[var(--color-primary)] text-white'
-                    : 'text-[var(--color-muted)]'
-                }`}
-              >
-                {v ? 'Sim' : 'Não'}
-              </button>
-            ))}
-          </div>
+
+        <Campo label="Setores/departamentos demandantes" span={3}>
+          {setoresCadastrados.length === 0 ? (
+            <span className="rounded-[var(--radius-control)] border border-[#f0d79a] bg-[#fdf6e3] px-3 py-2 text-xs font-normal normal-case text-[#8a6d1a]">
+              Nenhum setor cadastrado em Gerenciar Unidade/Setor.
+            </span>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {setoresCadastrados.map((s) => {
+                const on = dados.setores.includes(s.nome)
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => toggleSetor(s.nome)}
+                    className={`rounded-[var(--radius-pill)] border px-3 py-1.5 text-xs font-semibold normal-case transition ${
+                      on
+                        ? 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white'
+                        : 'border-[var(--color-line)] bg-white text-[var(--color-muted)]'
+                    }`}
+                  >
+                    {s.nome}
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </Campo>
       </div>
 
@@ -306,77 +368,106 @@ export function DfdManualFormulario({
 
       <div>
         <h4 className="mb-2 font-display text-sm font-bold text-[#183263]">Itens</h4>
-        <div className="mb-3 flex flex-col gap-2 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-[#f8fafd] p-3">
-          {editandoId && (
-            <p className="text-[11px] font-bold uppercase tracking-wide text-[var(--color-primary-strong)]">
-              Editando item — ajuste a especificação e salve
-            </p>
-          )}
-          <div className="grid gap-2 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_minmax(0,1fr)]">
-            <Combo
-              value={itemCatalogoNome}
-              onChange={escolherItemCatalogo}
-              options={catalogo.map((c) => `${c.codigo} — ${c.nome}`)}
-              placeholder={catalogo.length === 0 ? 'Nenhum item no catálogo' : 'Base do catálogo'}
-              disabled={catalogo.length === 0}
-              filterable
-            />
-            <input
-              value={itemForm.descricao}
-              onChange={(e) => setItemForm((f) => ({ ...f, descricao: e.target.value }))}
-              placeholder="Descrição / especificação"
-              className="gt-input font-normal normal-case"
-            />
-            <input
-              value={itemForm.unidade}
-              onChange={(e) => setItemForm((f) => ({ ...f, unidade: e.target.value }))}
-              placeholder="Unidade"
-              className="gt-input font-normal normal-case"
-            />
-          </div>
-          <div className="grid gap-2 sm:grid-cols-[repeat(3,minmax(0,1fr))_auto_auto]">
-            <input
-              type="number"
-              min={0}
-              value={itemForm.qtd}
-              onChange={(e) => setItemForm((f) => ({ ...f, qtd: e.target.value }))}
-              placeholder="Quantidade"
-              className="gt-input font-normal normal-case"
-            />
-            <input
-              type="number"
-              min={0}
-              step="0.01"
-              value={itemForm.unitario}
-              onChange={(e) => setItemForm((f) => ({ ...f, unitario: e.target.value }))}
-              placeholder="Valor unit."
-              className="gt-input font-normal normal-case"
-            />
-            <input
-              type="date"
-              value={itemForm.previsaoIso}
-              onChange={(e) => setItemForm((f) => ({ ...f, previsaoIso: e.target.value }))}
-              className="gt-input font-normal normal-case"
-            />
+
+        {(!travado || editandoId) && (
+          <div className="mb-3 flex flex-col gap-2 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-[#f8fafd] p-3">
             {editandoId && (
+              <p className="text-[11px] font-bold uppercase tracking-wide text-[var(--color-primary-strong)]">
+                Editando item — ajuste a especificação e salve
+              </p>
+            )}
+            <div className="grid gap-2 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_minmax(0,1fr)]">
+              {travado ? (
+                <div className="flex flex-col justify-center rounded-[var(--radius-control)] border border-[var(--color-line)] bg-[#eef1f7] px-3 py-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--color-muted)]">
+                    Código (fixo — vem do PCA)
+                  </span>
+                  <span className="text-sm text-[var(--color-ink)]">{itemForm.codigo}</span>
+                </div>
+              ) : (
+                <Combo
+                  value={itemCatalogoNome}
+                  onChange={escolherItemCatalogo}
+                  options={catalogo.map((c) => `${c.codigo} — ${c.nome}`)}
+                  placeholder={catalogo.length === 0 ? 'Nenhum item no catálogo' : 'Base do catálogo'}
+                  disabled={catalogo.length === 0}
+                  filterable
+                />
+              )}
+              <input
+                value={itemForm.descricao}
+                onChange={(e) => setItemForm((f) => ({ ...f, descricao: e.target.value }))}
+                placeholder="Descrição / especificação"
+                className="gt-input font-normal normal-case"
+              />
+              <input
+                value={itemForm.unidade}
+                onChange={(e) => setItemForm((f) => ({ ...f, unidade: e.target.value }))}
+                placeholder="Unidade"
+                className="gt-input font-normal normal-case"
+              />
+            </div>
+            <div className="grid gap-2 sm:grid-cols-[repeat(3,minmax(0,1fr))_auto_auto]">
+              <input
+                type="number"
+                min={0}
+                max={infoEdicao ? infoEdicao.disponivel : undefined}
+                value={itemForm.qtd}
+                onChange={(e) => setItemForm((f) => ({ ...f, qtd: e.target.value }))}
+                placeholder="Quantidade"
+                className="gt-input font-normal normal-case"
+              />
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={itemForm.unitario}
+                onChange={(e) => setItemForm((f) => ({ ...f, unitario: e.target.value }))}
+                placeholder="Valor unit."
+                className="gt-input font-normal normal-case"
+              />
+              <input
+                type="date"
+                value={itemForm.previsaoIso}
+                onChange={(e) => setItemForm((f) => ({ ...f, previsaoIso: e.target.value }))}
+                className="gt-input font-normal normal-case"
+              />
+              {editandoId && (
+                <button
+                  type="button"
+                  onClick={cancelarEdicaoItem}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-[var(--radius-control)] border border-[var(--color-line)] px-3 py-2 text-xs font-bold text-[var(--color-muted)]"
+                >
+                  <XIcon size={14} /> Cancelar
+                </button>
+              )}
               <button
                 type="button"
-                onClick={cancelarEdicaoItem}
-                className="inline-flex items-center justify-center gap-1.5 rounded-[var(--radius-control)] border border-[var(--color-line)] px-3 py-2 text-xs font-bold text-[var(--color-muted)]"
+                onClick={salvarItem}
+                disabled={!podeSalvarItem}
+                className="inline-flex items-center justify-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-primary)] px-3 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
               >
-                <XIcon size={14} /> Cancelar
+                <Plus size={14} /> {editandoId ? 'Salvar item' : 'Adicionar'}
               </button>
+            </div>
+            {infoEdicao && (
+              <p className={`text-xs ${excedeLimite ? 'font-bold text-[var(--color-danger)]' : 'text-[var(--color-muted)]'}`}>
+                Disponível no PCA: {infoEdicao.disponivel} de {infoEdicao.totalPca}
+                {infoEdicao.usadoEmOutras > 0 ? ` (${infoEdicao.usadoEmOutras} já usado em outras execuções)` : ''}.
+                {excedeLimite
+                  ? ' Quantidade acima do disponível — reduza pra salvar.'
+                  : ` Vai sobrar pro PCA depois desta DFD: ${Math.max(0, infoEdicao.disponivel - (Number(itemForm.qtd) || 0))}.`}
+              </p>
             )}
-            <button
-              type="button"
-              onClick={salvarItem}
-              disabled={!podeSalvarItem}
-              className="inline-flex items-center justify-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-primary)] px-3 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <Plus size={14} /> {editandoId ? 'Salvar item' : 'Adicionar'}
-            </button>
           </div>
-        </div>
+        )}
+
+        {travado && !editandoId && (
+          <p className="mb-3 rounded-[var(--radius-control)] border border-dashed border-[var(--color-line)] px-3 py-2 text-xs text-[var(--color-muted)]">
+            Itens vêm da DFD do PCA de origem — clique no lápis de um item pra ajustar especificação,
+            valor, previsão ou reduzir a quantidade.
+          </p>
+        )}
 
         <DataTable<ItemDfdManual>
           columns={cols}
