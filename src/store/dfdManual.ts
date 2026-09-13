@@ -31,6 +31,13 @@ export type ItemDfdManual = {
   quantidade: number
   valorUnitario: number
   /**
+   * Rateio da quantidade entre os setores/departamentos demandantes da DFD
+   * (`DfdManual.setores`), quando há mais de um. Soma sempre igual a
+   * `quantidade`. Ausente = quantidade não rateada (um setor só, ou usuário
+   * optou por não detalhar).
+   */
+  quantidades?: Record<string, number>
+  /**
    * Id do `PcaItemLocal` de origem (quando o item veio de uma DFD do PCA).
    * Ausente = item digitado à mão, sem vínculo/limite de quantidade.
    */

@@ -42,6 +42,8 @@ const itemVazio = {
   unidade: '',
   qtd: '',
   unitario: '',
+  modoQtd: 'geral' as 'geral' | 'setor',
+  qtdPorSetor: {} as Record<string, string>,
   origemItemId: undefined as string | undefined,
 }
 
@@ -124,13 +126,18 @@ export function DfdManualFormulario({
     }
   }
 
+  const usarRateioSetor = dados.setores.length > 1 && itemForm.modoQtd === 'setor'
+  const qtdEfetiva = usarRateioSetor
+    ? dados.setores.reduce((s, nome) => s + (Number(itemForm.qtdPorSetor[nome]) || 0), 0)
+    : Number(itemForm.qtd) || 0
+
   const infoEdicao = itemForm.origemItemId ? disponibilidadePara(itemForm.origemItemId) : null
-  const excedeLimite = infoEdicao ? Number(itemForm.qtd) > infoEdicao.disponivel : false
+  const excedeLimite = infoEdicao ? qtdEfetiva > infoEdicao.disponivel : false
 
   const podeSalvarItem =
     itemForm.codigo.trim() &&
     itemForm.descricao.trim() &&
-    Number(itemForm.qtd) > 0 &&
+    qtdEfetiva > 0 &&
     Number(itemForm.unitario) > 0 &&
     !excedeLimite
 
@@ -147,8 +154,11 @@ export function DfdManualFormulario({
       codigoItemCatalogo: itemForm.codigo.trim(),
       descricao: itemForm.descricao.trim(),
       unidadeFornecimento: itemForm.unidade.trim(),
-      quantidade: Number(itemForm.qtd),
+      quantidade: qtdEfetiva,
       valorUnitario: Number(itemForm.unitario),
+      quantidades: usarRateioSetor
+        ? Object.fromEntries(dados.setores.map((nome) => [nome, Number(itemForm.qtdPorSetor[nome]) || 0]))
+        : undefined,
       origemItemId: itemForm.origemItemId,
     }
     setDados((d) => ({
@@ -167,6 +177,10 @@ export function DfdManualFormulario({
       unidade: it.unidadeFornecimento,
       qtd: String(it.quantidade),
       unitario: String(it.valorUnitario),
+      modoQtd: it.quantidades ? 'setor' : 'geral',
+      qtdPorSetor: Object.fromEntries(
+        Object.entries(it.quantidades ?? {}).map(([k, v]) => [k, String(v)]),
+      ),
       origemItemId: it.origemItemId,
     })
   }
@@ -187,6 +201,21 @@ export function DfdManualFormulario({
     { key: 'descricao', header: 'Descrição' },
     { key: 'unidade', header: 'Unid.', render: (r) => r.unidadeFornecimento },
     { key: 'qtd', header: 'Qtd.', align: 'center', render: (r) => r.quantidade },
+    ...(dados.setores.length > 1
+      ? [
+          {
+            key: 'porSetor',
+            header: 'Por setor',
+            render: (r: ItemDfdManual) =>
+              r.quantidades
+                ? Object.entries(r.quantidades)
+                    .filter(([, q]) => q > 0)
+                    .map(([nome, q]) => `${nome}: ${q}`)
+                    .join(' • ')
+                : '—',
+          } satisfies Column<ItemDfdManual>,
+        ]
+      : []),
     {
       key: 'disponivel',
       header: 'Disponível (PCA)',
@@ -468,16 +497,67 @@ export function DfdManualFormulario({
                 className="gt-input cursor-not-allowed bg-[#f1f4f9] font-normal normal-case text-[var(--color-muted)]"
               />
             </div>
+            {dados.setores.length > 1 && (
+              <div className="flex rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white p-1">
+                {(['geral', 'setor'] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setItemForm((f) => ({ ...f, modoQtd: m }))}
+                    className={`flex-1 rounded-[8px] px-3 py-1.5 text-xs font-semibold transition ${
+                      itemForm.modoQtd === m
+                        ? 'bg-[var(--color-success)] text-white'
+                        : 'text-[var(--color-muted)]'
+                    }`}
+                  >
+                    {m === 'geral' ? 'Quantidade geral' : 'Separar por setor'}
+                  </button>
+                ))}
+              </div>
+            )}
+            {usarRateioSetor && (
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {dados.setores.map((nome) => (
+                  <label
+                    key={nome}
+                    className="flex flex-col gap-1 text-[10px] font-bold uppercase tracking-wide text-[var(--color-muted)]"
+                  >
+                    Qtd. — {nome}
+                    <input
+                      type="number"
+                      min={0}
+                      value={itemForm.qtdPorSetor[nome] ?? ''}
+                      onChange={(e) =>
+                        setItemForm((f) => ({
+                          ...f,
+                          qtdPorSetor: { ...f.qtdPorSetor, [nome]: e.target.value },
+                        }))
+                      }
+                      placeholder="0"
+                      className="gt-input font-normal normal-case"
+                    />
+                  </label>
+                ))}
+              </div>
+            )}
             <div className="grid gap-2 sm:grid-cols-[repeat(2,minmax(0,1fr))_auto_auto]">
-              <input
-                type="number"
-                min={0}
-                max={infoEdicao ? infoEdicao.disponivel : undefined}
-                value={itemForm.qtd}
-                onChange={(e) => setItemForm((f) => ({ ...f, qtd: e.target.value }))}
-                placeholder="Quantidade"
-                className="gt-input font-normal normal-case"
-              />
+              {usarRateioSetor ? (
+                <input
+                  readOnly
+                  value={`Total: ${qtdEfetiva}`}
+                  className="gt-input cursor-not-allowed bg-[#f1f4f9] font-normal normal-case text-[var(--color-muted)]"
+                />
+              ) : (
+                <input
+                  type="number"
+                  min={0}
+                  max={infoEdicao ? infoEdicao.disponivel : undefined}
+                  value={itemForm.qtd}
+                  onChange={(e) => setItemForm((f) => ({ ...f, qtd: e.target.value }))}
+                  placeholder="Quantidade"
+                  className="gt-input font-normal normal-case"
+                />
+              )}
               <input
                 type="number"
                 min={0}
@@ -511,7 +591,7 @@ export function DfdManualFormulario({
                 {infoEdicao.usadoEmOutras > 0 ? ` (${infoEdicao.usadoEmOutras} já usado em outras execuções)` : ''}.
                 {excedeLimite
                   ? ' Quantidade acima do disponível — reduza pra salvar.'
-                  : ` Vai sobrar pro PCA depois desta DFD: ${Math.max(0, infoEdicao.disponivel - (Number(itemForm.qtd) || 0))}.`}
+                  : ` Vai sobrar pro PCA depois desta DFD: ${Math.max(0, infoEdicao.disponivel - qtdEfetiva)}.`}
               </p>
             )}
           </div>
