@@ -110,6 +110,13 @@ export function AgendaModal({ open, onClose }: { open: boolean; onClose: () => v
           <X size={16} />
         </button>
 
+        <div className="mb-4 flex items-center gap-3 pr-8">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-[12px] bg-[var(--color-indigo-soft)] text-[var(--color-indigo)]">
+            <Calendar size={20} />
+          </span>
+          <h3 className="font-display text-base font-bold text-[#183263]">Agenda de Prazos</h3>
+        </div>
+
         <div className="mb-3 flex items-center justify-between">
           <button
             onClick={() => setRef(new Date(now.getFullYear(), now.getMonth(), 1))}
