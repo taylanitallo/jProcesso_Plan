@@ -506,13 +506,19 @@ export function DfdManualFormulario({
                 Editando item — ajuste descrição, quantidade ou valor e salve. Item do catálogo não muda.
               </p>
             )}
-            <div className="grid gap-2 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_minmax(0,1fr)]">
+            <div
+              className={`grid gap-2 ${
+                travado || editandoId
+                  ? 'sm:grid-cols-[minmax(0,110px)_minmax(0,1fr)_minmax(0,110px)]'
+                  : 'sm:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_minmax(0,1fr)]'
+              }`}
+            >
               {travado || editandoId ? (
-                <div className="flex flex-col justify-center rounded-[var(--radius-control)] border border-[var(--color-line)] bg-[#eef1f7] px-3 py-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--color-muted)]">
-                    {travado ? 'Código (fixo — vem do PCA)' : 'Código (não muda ao editar)'}
+                <div className="flex flex-col justify-center rounded-[var(--radius-control)] border border-[var(--color-line)] bg-[#eef1f7] px-2 py-1.5">
+                  <span className="text-[9px] font-bold uppercase tracking-wide text-[var(--color-muted)]">
+                    {travado ? 'Código (fixo)' : 'Código (fixo)'}
                   </span>
-                  <span className="text-sm text-[var(--color-ink)]">{itemForm.codigo}</span>
+                  <span className="truncate text-xs text-[var(--color-ink)]">{itemForm.codigo}</span>
                 </div>
               ) : (
                 <Combo
@@ -524,12 +530,13 @@ export function DfdManualFormulario({
                   filterable
                 />
               )}
-              <input
+              <textarea
                 readOnly
+                rows={2}
                 value={itemForm.descricao}
                 placeholder="Nome (vem do catálogo)"
                 title="Nome do item vem do catálogo — não dá pra editar. Use o campo Especificação pra detalhar."
-                className="gt-input cursor-not-allowed bg-[#f1f4f9] font-normal normal-case text-[var(--color-muted)]"
+                className="gt-input cursor-not-allowed resize-y whitespace-normal bg-[#f1f4f9] font-normal normal-case text-[var(--color-muted)]"
               />
               <input
                 readOnly
@@ -539,11 +546,12 @@ export function DfdManualFormulario({
                 className="gt-input cursor-not-allowed bg-[#f1f4f9] font-normal normal-case text-[var(--color-muted)]"
               />
             </div>
-            <input
+            <textarea
+              rows={2}
               value={itemForm.especificacao}
               onChange={(e) => setItemForm((f) => ({ ...f, especificacao: e.target.value }))}
               placeholder="Especificação / detalhe adicional (opcional) — não muda o nome do item"
-              className="gt-input font-normal normal-case"
+              className="gt-input resize-y whitespace-normal font-normal normal-case"
             />
             {usarRateioSetor && (
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
