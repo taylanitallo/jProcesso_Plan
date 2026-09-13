@@ -212,7 +212,7 @@ export function TransmitirPncpModal({ onClose }: { onClose: () => void }) {
                 value={login}
                 onChange={(e) => setLogin(e.target.value)}
                 placeholder="login da plataforma"
-                className="gt-input font-normal normal-case"
+                className="gt-input font-normal normal-case disabled:cursor-not-allowed disabled:bg-[#f1f4f9] disabled:text-[var(--color-muted)]"
                 disabled={Boolean(token)}
               />
             </label>
@@ -223,7 +223,7 @@ export function TransmitirPncpModal({ onClose }: { onClose: () => void }) {
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 placeholder="senha da plataforma"
-                className="gt-input font-normal normal-case"
+                className="gt-input font-normal normal-case disabled:cursor-not-allowed disabled:bg-[#f1f4f9] disabled:text-[var(--color-muted)]"
                 disabled={Boolean(token)}
               />
             </label>
