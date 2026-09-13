@@ -1050,15 +1050,19 @@ export function PcaDfdsModal({ pcaId, onClose }: { pcaId: string; onClose: () =>
                             placeholder="Selecione"
                           />
                         </Labelled>
-                        <Labelled label="Unidade de medida">
-                          <Combo
-                            value={itemForm.unidade}
-                            onChange={(v) => setItemForm((f) => ({ ...f, unidade: v }))}
-                            options={UNIDADES}
-                            placeholder="Selecione ou digite para filtrar"
-                            filterable
-                          />
-                        </Labelled>
+                        {itemForm.editId ? (
+                          <ReadOnlyField label="Unidade de medida (não muda depois de criado)" value={itemForm.unidade} />
+                        ) : (
+                          <Labelled label="Unidade de medida">
+                            <Combo
+                              value={itemForm.unidade}
+                              onChange={(v) => setItemForm((f) => ({ ...f, unidade: v }))}
+                              options={UNIDADES}
+                              placeholder="Selecione ou digite para filtrar"
+                              filterable
+                            />
+                          </Labelled>
+                        )}
                         <Field
                           label="Código CatMat/CatSer"
                           placeholder="Ex.: 150912"

@@ -465,10 +465,11 @@ export function DfdManualFormulario({
                 className="gt-input font-normal normal-case"
               />
               <input
+                readOnly
                 value={itemForm.unidade}
-                onChange={(e) => setItemForm((f) => ({ ...f, unidade: e.target.value }))}
-                placeholder="Unidade"
-                className="gt-input font-normal normal-case"
+                placeholder="Unidade (vem do catálogo)"
+                title="Unidade de medida vem do catálogo — não dá pra editar"
+                className="gt-input cursor-not-allowed bg-[#f1f4f9] font-normal normal-case text-[var(--color-muted)]"
               />
             </div>
             <div className="grid gap-2 sm:grid-cols-[repeat(3,minmax(0,1fr))_auto_auto]">
