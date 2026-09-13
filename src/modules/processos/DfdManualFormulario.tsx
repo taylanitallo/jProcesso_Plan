@@ -1,5 +1,18 @@
 import { useState } from 'react'
-import { Building2, FileText, Link2, Package, Pencil, Plus, Save, Tags, Trash2, X as XIcon } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  Building2,
+  FileText,
+  Link2,
+  Package,
+  Pencil,
+  Plus,
+  Save,
+  Tags,
+  Trash2,
+  X as XIcon,
+} from 'lucide-react'
 import { Combo } from '../../components/common/Combo'
 import { DataTable, type Column } from '../../components/common/DataTable'
 import { EmptyState } from '../../components/common/EmptyState'
@@ -80,6 +93,7 @@ export function DfdManualFormulario({
   ].filter((n, i, arr) => n && arr.indexOf(n) === i)
 
   const [dados, setDados] = useState<DfdManual>(existente ?? dfdManualVazio())
+  const [aba, setAba] = useState<'dados' | 'itens'>('dados')
   const [itemForm, setItemForm] = useState(itemVazio)
   const [itemCatalogoNome, setItemCatalogoNome] = useState('')
   const [editandoId, setEditandoId] = useState<string | null>(null)
@@ -223,6 +237,33 @@ export function DfdManualFormulario({
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-[#f4f7fc] p-1">
+        <button
+          type="button"
+          onClick={() => setAba('dados')}
+          className={`flex-1 rounded-[var(--radius-pill)] px-4 py-2 text-xs font-bold uppercase tracking-wide transition ${
+            aba === 'dados'
+              ? 'bg-[linear-gradient(135deg,#22b8a6_0%,#1f6fd0_100%)] text-white'
+              : 'text-[var(--color-muted)]'
+          }`}
+        >
+          1. Dados da demanda
+        </button>
+        <button
+          type="button"
+          onClick={() => setAba('itens')}
+          className={`flex-1 rounded-[var(--radius-pill)] px-4 py-2 text-xs font-bold uppercase tracking-wide transition ${
+            aba === 'itens'
+              ? 'bg-[linear-gradient(135deg,#22b8a6_0%,#1f6fd0_100%)] text-white'
+              : 'text-[var(--color-muted)]'
+          }`}
+        >
+          2. Itens ({dados.itens.length})
+        </button>
+      </div>
+
+      {aba === 'dados' && (
+        <>
       {travado && (
         <p className="flex items-start gap-2 rounded-[var(--radius-control)] border border-[#bcd0ee] bg-[var(--color-primary-soft)] px-3 py-2 text-xs text-[var(--color-primary-strong)]">
           <Link2 size={14} className="mt-0.5 shrink-0" />
@@ -376,6 +417,20 @@ export function DfdManualFormulario({
           </Campo>
         </div>
       </Secao>
+        </>
+      )}
+
+      {aba === 'itens' && (
+        <>
+      {travado && (
+        <p className="flex items-start gap-2 rounded-[var(--radius-control)] border border-[#bcd0ee] bg-[var(--color-primary-soft)] px-3 py-2 text-xs text-[var(--color-primary-strong)]">
+          <Link2 size={14} className="mt-0.5 shrink-0" />
+          DFD de execução puxada do PCA {pcaOrigem?.nome ?? ''}
+          {dfdOrigem ? ` — DFD #${dfdOrigem.numero}` : ''}. Não dá pra adicionar item novo aqui; só
+          ajustar especificação, valor, previsão e reduzir quantidade — sem ultrapassar o total da DFD
+          do PCA.
+        </p>
+      )}
 
       <Secao icon={Package} titulo="Itens" accent="green">
         {(!travado || editandoId) && (
@@ -486,20 +541,40 @@ export function DfdManualFormulario({
           footer={<span>Valor total dos itens: R$ {fmtBRL(valorTotalItens(dados))}</span>}
         />
       </Secao>
+        </>
+      )}
 
-      <div className="flex justify-end gap-2 border-t border-[var(--color-line)] pt-4">
-        <button
-          onClick={onClose}
-          className="rounded-[var(--radius-control)] px-4 py-2 text-sm font-semibold text-[var(--color-muted)]"
-        >
-          Cancelar
-        </button>
-        <button
-          onClick={salvar}
-          className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-6 py-2 text-sm font-bold text-white"
-        >
-          <Save size={15} /> Salvar DFD
-        </button>
+      <div className="flex justify-between gap-2 border-t border-[var(--color-line)] pt-4">
+        {aba === 'dados' ? (
+          <button
+            onClick={onClose}
+            className="rounded-[var(--radius-control)] px-4 py-2 text-sm font-semibold text-[var(--color-muted)]"
+          >
+            Cancelar
+          </button>
+        ) : (
+          <button
+            onClick={() => setAba('dados')}
+            className="inline-flex items-center gap-2 rounded-[var(--radius-control)] border border-[var(--color-line)] px-4 py-2 text-sm font-semibold text-[var(--color-muted)]"
+          >
+            <ArrowLeft size={15} /> Voltar
+          </button>
+        )}
+        {aba === 'dados' ? (
+          <button
+            onClick={() => setAba('itens')}
+            className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-6 py-2 text-sm font-bold text-white"
+          >
+            Próximo: Itens <ArrowRight size={15} />
+          </button>
+        ) : (
+          <button
+            onClick={salvar}
+            className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-6 py-2 text-sm font-bold text-white"
+          >
+            <Save size={15} /> Salvar DFD
+          </button>
+        )}
       </div>
     </div>
   )
