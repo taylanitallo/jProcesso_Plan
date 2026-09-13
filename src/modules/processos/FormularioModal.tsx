@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Search, Sparkles, X } from 'lucide-react'
+import { FileSignature, Search, Sparkles, X } from 'lucide-react'
 import { DfdManualFormulario } from './DfdManualFormulario'
 
 type Secao = { titulo: string; perguntas: { n: number; texto: string; obrigatoria?: boolean }[] }
@@ -118,12 +118,19 @@ export function FormularioModal({
             <X size={16} />
           </button>
 
-          <h3 className="font-display text-base font-bold text-[#183263] sm:text-lg">
-            DFD — Documento de Formalização da Demanda
-          </h3>
-          <p className="mb-4 text-xs text-[var(--color-muted)]">
-            Preencha os dados da demanda — Secretaria, Setor, responsáveis, objeto e itens.
-          </p>
+          <div className="mb-4 flex items-start gap-3 pr-8">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[12px] bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)]">
+              <FileSignature size={22} />
+            </span>
+            <div>
+              <h3 className="font-display text-base font-bold text-[#183263] sm:text-lg">
+                DFD — Documento de Formalização da Demanda
+              </h3>
+              <p className="text-xs text-[var(--color-muted)]">
+                Preencha os dados da demanda — Secretaria, Setor, responsáveis, objeto e itens.
+              </p>
+            </div>
+          </div>
 
           <DfdManualFormulario
             chave={`${processoId}::${artefato}`}

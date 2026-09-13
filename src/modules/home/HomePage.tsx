@@ -20,19 +20,7 @@ import type { LucideIcon } from 'lucide-react'
 import { useProcessos } from '../../store/processos'
 import { useSolicitacoes } from '../../store/solicitacoes'
 import { useRevisoes, revisoesPendentes } from '../../store/revisoes'
-
-type Accent = 'blue' | 'teal' | 'violet' | 'pink' | 'amber' | 'green' | 'indigo'
-
-/** Fundo suave + texto forte por cor de destaque — classes literais pro Tailwind enxergar. */
-const ACCENTS: Record<Accent, { bg: string; text: string }> = {
-  blue: { bg: 'bg-[var(--color-primary-soft)]', text: 'text-[var(--color-primary-strong)]' },
-  teal: { bg: 'bg-[var(--color-teal-soft)]', text: 'text-[var(--color-teal)]' },
-  violet: { bg: 'bg-[var(--color-violet-soft)]', text: 'text-[var(--color-violet)]' },
-  pink: { bg: 'bg-[var(--color-pink-soft)]', text: 'text-[var(--color-pink)]' },
-  amber: { bg: 'bg-[var(--color-amber-soft)]', text: 'text-[var(--color-amber)]' },
-  green: { bg: 'bg-[var(--color-success-soft)]', text: 'text-[var(--color-success)]' },
-  indigo: { bg: 'bg-[var(--color-indigo-soft)]', text: 'text-[var(--color-indigo)]' },
-}
+import { ACCENTS, type Accent } from '../../components/common/accents'
 
 interface CardDef {
   title: string

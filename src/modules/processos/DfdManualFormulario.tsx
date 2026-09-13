@@ -1,8 +1,22 @@
 import { useState } from 'react'
-import { Link2, Pencil, Plus, Trash2, X as XIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
+import {
+  Building2,
+  FileText,
+  Link2,
+  type LucideIcon,
+  Package,
+  Pencil,
+  Plus,
+  Save,
+  Tags,
+  Trash2,
+  X as XIcon,
+} from 'lucide-react'
 import { Combo } from '../../components/common/Combo'
 import { DataTable, type Column } from '../../components/common/DataTable'
 import { EmptyState } from '../../components/common/EmptyState'
+import { ACCENTS, type Accent } from '../../components/common/accents'
 import { useOrganizacao } from '../../store/organizacao'
 import { useCatalogo } from '../../store/catalogo'
 import { useUsuarios } from '../../store/usuarios'
@@ -45,6 +59,8 @@ const uid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(
  * dissertativas soltas. Campos e organização baseados no modelo real de
  * sistemas de DFD do setor (Secretaria/Setor/Ordenador/Responsável,
  * Categoria, Tipo de contratação, Grau de prioridade + itens do catálogo).
+ * Seções coloridas + ícones (Identificação/Classificação/Objeto/Itens) pra
+ * facilitar a leitura visual em vez de um bloco só de campos.
  *
  * Quando a DFD veio de um PCA (`dados.origemPca`), a lista de itens fica
  * travada: não dá pra adicionar item novo, só editar especificação/valor/
@@ -230,145 +246,151 @@ export function DfdManualFormulario({
         </p>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Campo label="Data">
-          <input
-            type="date"
-            value={dados.data ? isoDe(dados.data) : ''}
-            onChange={(e) => set('data', isoToBr(e.target.value))}
-            className="gt-input font-normal normal-case"
-          />
-        </Campo>
-        <Campo label="Descrição (simplificada)" span={2}>
-          <input
-            value={dados.descricaoSimplificada}
-            onChange={(e) => set('descricaoSimplificada', e.target.value)}
-            placeholder="Ex.: Cestas básicas de alimentos"
-            className="gt-input font-normal normal-case"
-          />
-        </Campo>
+      <Secao icon={Building2} titulo="Identificação da demanda" accent="blue">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Campo label="Data">
+            <input
+              type="date"
+              value={dados.data ? isoDe(dados.data) : ''}
+              onChange={(e) => set('data', isoToBr(e.target.value))}
+              className="gt-input font-normal normal-case"
+            />
+          </Campo>
+          <Campo label="Descrição (simplificada)" span={2}>
+            <input
+              value={dados.descricaoSimplificada}
+              onChange={(e) => set('descricaoSimplificada', e.target.value)}
+              placeholder="Ex.: Cestas básicas de alimentos"
+              className="gt-input font-normal normal-case"
+            />
+          </Campo>
+          <Campo label="Secretaria">
+            <Combo
+              value={dados.secretaria}
+              onChange={(v) => set('secretaria', v)}
+              options={unidades.map((u) => u.nome)}
+              placeholder={unidades.length === 0 ? 'Nenhuma unidade cadastrada' : 'Selecione'}
+              disabled={unidades.length === 0}
+              filterable
+            />
+          </Campo>
+          <Campo label="Setores/departamentos demandantes" span={2}>
+            {setoresCadastrados.length === 0 ? (
+              <span className="rounded-[var(--radius-control)] border border-[#f0d79a] bg-[#fdf6e3] px-3 py-2 text-xs font-normal normal-case text-[#8a6d1a]">
+                Nenhum setor cadastrado em Gerenciar Unidade/Setor.
+              </span>
+            ) : (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {setoresCadastrados.map((s) => {
+                  const on = dados.setores.includes(s.nome)
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => toggleSetor(s.nome)}
+                      className={`rounded-[var(--radius-pill)] border px-3 py-1.5 text-xs font-semibold normal-case transition ${
+                        on
+                          ? 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white'
+                          : 'border-[var(--color-line)] bg-white text-[var(--color-muted)]'
+                      }`}
+                    >
+                      {s.nome}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </Campo>
+        </div>
+      </Secao>
 
-        <Campo label="Secretaria">
-          <Combo
-            value={dados.secretaria}
-            onChange={(v) => set('secretaria', v)}
-            options={unidades.map((u) => u.nome)}
-            placeholder={unidades.length === 0 ? 'Nenhuma unidade cadastrada' : 'Selecione'}
-            disabled={unidades.length === 0}
-            filterable
-          />
-        </Campo>
-        <Campo label="Categoria">
-          <Combo
-            value={dados.categoria}
-            onChange={(v) => set('categoria', v)}
-            options={CATEGORIAS_ITEM_PCA.map((c) => c.nome)}
-            placeholder="Selecione"
-          />
-        </Campo>
-        <Campo label="Responsável pela demanda">
-          <Combo
-            value={dados.responsavel}
-            onChange={(v) => set('responsavel', v)}
-            options={nomesResponsaveis}
-            placeholder="Selecione"
-            filterable
-          />
-        </Campo>
-
-        <Campo label="Ordenador(a)">
-          <Combo
-            value={dados.ordenador}
-            onChange={(v) => set('ordenador', v)}
-            options={nomesResponsaveis}
-            placeholder="Selecione"
-            filterable
-          />
-        </Campo>
-        <Campo label="Tipo de contratação">
-          <select
-            value={dados.tipoContratacao}
-            onChange={(e) => set('tipoContratacao', e.target.value as DfdManual['tipoContratacao'])}
-            className="gt-input font-normal normal-case"
-          >
-            <option value="">Selecione</option>
-            {TIPOS_CONTRATACAO_DFD.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </Campo>
-        <Campo label="Grau de prioridade">
-          <div className="flex rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white p-1">
-            {GRAUS_PRIORIDADE.map((g: GrauPrioridade) => (
-              <button
-                key={g}
-                type="button"
-                onClick={() => set('grauPrioridade', g)}
-                className={`flex-1 rounded-[8px] px-2 py-1.5 text-xs font-semibold transition ${
-                  dados.grauPrioridade === g
-                    ? 'bg-[var(--color-primary)] text-white'
-                    : 'text-[var(--color-muted)]'
-                }`}
-              >
-                {g}
-              </button>
-            ))}
-          </div>
-        </Campo>
-
-        <Campo label="Setores/departamentos demandantes" span={3}>
-          {setoresCadastrados.length === 0 ? (
-            <span className="rounded-[var(--radius-control)] border border-[#f0d79a] bg-[#fdf6e3] px-3 py-2 text-xs font-normal normal-case text-[#8a6d1a]">
-              Nenhum setor cadastrado em Gerenciar Unidade/Setor.
-            </span>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {setoresCadastrados.map((s) => {
-                const on = dados.setores.includes(s.nome)
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => toggleSetor(s.nome)}
-                    className={`rounded-[var(--radius-pill)] border px-3 py-1.5 text-xs font-semibold normal-case transition ${
-                      on
-                        ? 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white'
-                        : 'border-[var(--color-line)] bg-white text-[var(--color-muted)]'
-                    }`}
-                  >
-                    {s.nome}
-                  </button>
-                )
-              })}
+      <Secao icon={Tags} titulo="Classificação e responsáveis" accent="teal">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Campo label="Categoria">
+            <Combo
+              value={dados.categoria}
+              onChange={(v) => set('categoria', v)}
+              options={CATEGORIAS_ITEM_PCA.map((c) => c.nome)}
+              placeholder="Selecione"
+            />
+          </Campo>
+          <Campo label="Tipo de contratação">
+            <select
+              value={dados.tipoContratacao}
+              onChange={(e) => set('tipoContratacao', e.target.value as DfdManual['tipoContratacao'])}
+              className="gt-input font-normal normal-case"
+            >
+              <option value="">Selecione</option>
+              {TIPOS_CONTRATACAO_DFD.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </Campo>
+          <Campo label="Grau de prioridade">
+            <div className="flex rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white p-1">
+              {GRAUS_PRIORIDADE.map((g: GrauPrioridade) => (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => set('grauPrioridade', g)}
+                  className={`flex-1 rounded-[8px] px-2 py-1.5 text-xs font-semibold transition ${
+                    dados.grauPrioridade === g
+                      ? 'bg-[var(--color-teal)] text-white'
+                      : 'text-[var(--color-muted)]'
+                  }`}
+                >
+                  {g}
+                </button>
+              ))}
             </div>
-          )}
-        </Campo>
-      </div>
+          </Campo>
+          <Campo label="Responsável pela demanda">
+            <Combo
+              value={dados.responsavel}
+              onChange={(v) => set('responsavel', v)}
+              options={nomesResponsaveis}
+              placeholder="Selecione"
+              filterable
+            />
+          </Campo>
+          <Campo label="Ordenador(a)">
+            <Combo
+              value={dados.ordenador}
+              onChange={(v) => set('ordenador', v)}
+              options={nomesResponsaveis}
+              placeholder="Selecione"
+              filterable
+            />
+          </Campo>
+        </div>
+      </Secao>
 
-      <Campo label="Objeto (detalhado)">
-        <textarea
-          rows={3}
-          value={dados.objeto}
-          onChange={(e) => set('objeto', e.target.value)}
-          className="gt-input resize-y font-normal normal-case"
-          placeholder="Descreva o objeto da contratação com detalhes."
-        />
-      </Campo>
-      <Campo label="Justificativa da contratação">
-        <textarea
-          rows={3}
-          value={dados.justificativa}
-          onChange={(e) => set('justificativa', e.target.value)}
-          className="gt-input resize-y font-normal normal-case"
-          placeholder="Por que essa contratação é necessária?"
-        />
-      </Campo>
+      <Secao icon={FileText} titulo="Objeto e justificativa" accent="amber">
+        <div className="flex flex-col gap-3">
+          <Campo label="Objeto (detalhado)">
+            <textarea
+              rows={3}
+              value={dados.objeto}
+              onChange={(e) => set('objeto', e.target.value)}
+              className="gt-input resize-y font-normal normal-case"
+              placeholder="Descreva o objeto da contratação com detalhes."
+            />
+          </Campo>
+          <Campo label="Justificativa da contratação">
+            <textarea
+              rows={3}
+              value={dados.justificativa}
+              onChange={(e) => set('justificativa', e.target.value)}
+              className="gt-input resize-y font-normal normal-case"
+              placeholder="Por que essa contratação é necessária?"
+            />
+          </Campo>
+        </div>
+      </Secao>
 
-      <div>
-        <h4 className="mb-2 font-display text-sm font-bold text-[#183263]">Itens</h4>
-
+      <Secao icon={Package} titulo="Itens" accent="green">
         {(!travado || editandoId) && (
           <div className="mb-3 flex flex-col gap-2 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-[#f8fafd] p-3">
             {editandoId && (
@@ -445,7 +467,7 @@ export function DfdManualFormulario({
                 type="button"
                 onClick={salvarItem}
                 disabled={!podeSalvarItem}
-                className="inline-flex items-center justify-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-primary)] px-3 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center justify-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-success)] px-3 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Plus size={14} /> {editandoId ? 'Salvar item' : 'Adicionar'}
               </button>
@@ -476,7 +498,7 @@ export function DfdManualFormulario({
           empty={<EmptyState title="Nenhum item adicionado" subtitle="Escolha um item do catálogo acima." />}
           footer={<span>Valor total dos itens: R$ {fmtBRL(valorTotalItens(dados))}</span>}
         />
-      </div>
+      </Secao>
 
       <div className="flex justify-end gap-2 border-t border-[var(--color-line)] pt-4">
         <button
@@ -487,9 +509,9 @@ export function DfdManualFormulario({
         </button>
         <button
           onClick={salvar}
-          className="rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-6 py-2 text-sm font-bold text-white"
+          className="inline-flex items-center gap-2 rounded-[var(--radius-control)] bg-[linear-gradient(180deg,#2d68c4_0%,#1f56ad_100%)] px-6 py-2 text-sm font-bold text-white"
         >
-          Salvar DFD
+          <Save size={15} /> Salvar DFD
         </button>
       </div>
     </div>
@@ -500,6 +522,31 @@ export function DfdManualFormulario({
 function isoDe(br: string) {
   const m = br?.match(/^(\d{2})\/(\d{2})\/(\d{4})/)
   return m ? `${m[3]}-${m[2]}-${m[1]}` : ''
+}
+
+function Secao({
+  icon: Icon,
+  titulo,
+  accent,
+  children,
+}: {
+  icon: LucideIcon
+  titulo: string
+  accent: Accent
+  children: ReactNode
+}) {
+  const a = ACCENTS[accent]
+  return (
+    <div className="rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-4">
+      <div className={`mb-3 flex items-center gap-2 border-l-4 ${a.border} pl-2.5`}>
+        <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-[8px] ${a.bg} ${a.text}`}>
+          <Icon size={15} />
+        </span>
+        <h4 className="font-display text-sm font-bold text-[#183263]">{titulo}</h4>
+      </div>
+      {children}
+    </div>
+  )
 }
 
 function Campo({
