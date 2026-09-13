@@ -71,6 +71,8 @@ export function GerenciarUsuariosPage() {
       <PageHeader
         title="Gerenciamento de Usuários"
         subtitle="Gerencie permissões e acesso dos usuários do sistema"
+        icon={Users}
+        accent="violet"
         center
       />
 

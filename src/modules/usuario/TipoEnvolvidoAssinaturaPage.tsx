@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Trash2, X } from 'lucide-react'
+import { FileSignature, Plus, Trash2, X } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { Button } from '../../components/common/Button'
 import { DataTable, type Column } from '../../components/common/DataTable'
@@ -53,6 +53,8 @@ export function TipoEnvolvidoAssinaturaPage() {
       <PageHeader
         title="Categorias de Assinantes"
         subtitle="Gerencie as categorias que identificam a função de cada assinante envolvido ao artefato."
+        icon={FileSignature}
+        accent="pink"
       />
 
       <div className="mb-4 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-4 shadow-[var(--shadow-card)]">

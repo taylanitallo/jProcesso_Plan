@@ -107,6 +107,8 @@ export function ModeloPersonalizadoPage() {
       <PageHeader
         title="Modelos Personalizados"
         subtitle="Crie, gerencie e atualize modelos alinhados aos requisitos do processo."
+        icon={FilePenLine}
+        accent="violet"
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-3 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-4 shadow-[var(--shadow-card)]">

@@ -1,22 +1,9 @@
 import { useState } from 'react'
-import type { ReactNode } from 'react'
-import {
-  Building2,
-  FileText,
-  Link2,
-  type LucideIcon,
-  Package,
-  Pencil,
-  Plus,
-  Save,
-  Tags,
-  Trash2,
-  X as XIcon,
-} from 'lucide-react'
+import { Building2, FileText, Link2, Package, Pencil, Plus, Save, Tags, Trash2, X as XIcon } from 'lucide-react'
 import { Combo } from '../../components/common/Combo'
 import { DataTable, type Column } from '../../components/common/DataTable'
 import { EmptyState } from '../../components/common/EmptyState'
-import { ACCENTS, type Accent } from '../../components/common/accents'
+import { Secao } from '../../components/common/Secao'
 import { useOrganizacao } from '../../store/organizacao'
 import { useCatalogo } from '../../store/catalogo'
 import { useUsuarios } from '../../store/usuarios'
@@ -522,31 +509,6 @@ export function DfdManualFormulario({
 function isoDe(br: string) {
   const m = br?.match(/^(\d{2})\/(\d{2})\/(\d{4})/)
   return m ? `${m[3]}-${m[2]}-${m[1]}` : ''
-}
-
-function Secao({
-  icon: Icon,
-  titulo,
-  accent,
-  children,
-}: {
-  icon: LucideIcon
-  titulo: string
-  accent: Accent
-  children: ReactNode
-}) {
-  const a = ACCENTS[accent]
-  return (
-    <div className="rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-4">
-      <div className={`mb-3 flex items-center gap-2 border-l-4 ${a.border} pl-2.5`}>
-        <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-[8px] ${a.bg} ${a.text}`}>
-          <Icon size={15} />
-        </span>
-        <h4 className="font-display text-sm font-bold text-[#183263]">{titulo}</h4>
-      </div>
-      {children}
-    </div>
-  )
 }
 
 function Campo({

@@ -1,5 +1,5 @@
 import { useMemo, type ReactNode } from 'react'
-import { AlertTriangle, Clock, FileSignature, FolderKanban, ShieldCheck } from 'lucide-react'
+import { AlertTriangle, Clock, FileSignature, FolderKanban, LayoutDashboard, ShieldCheck } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { Badge } from '../../components/common/Badge'
 import { DataTable, type Column } from '../../components/common/DataTable'
@@ -250,7 +250,12 @@ export function DashboardProcessoPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="Dashboard de Processos" subtitle="Acompanhe os KPIs e métricas de desempenho" />
+      <PageHeader
+        title="Dashboard de Processos"
+        subtitle="Acompanhe os KPIs e métricas de desempenho"
+        icon={LayoutDashboard}
+        accent="blue"
+      />
 
       <Section title="Visão Geral">
         <div className="grid gap-4 sm:grid-cols-2">

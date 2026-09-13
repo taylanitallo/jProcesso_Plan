@@ -42,6 +42,8 @@ export function ConsultaPncpPage() {
       <PageHeader
         title="Consulta PNCP"
         subtitle="Busque contratações, atas de registro de preço e contratos publicados no PNCP por qualquer órgão do Brasil — dado oficial ao vivo."
+        icon={Landmark}
+        accent="indigo"
       />
 
       <div className="mb-4 flex gap-2 border-b border-[var(--color-line)]">

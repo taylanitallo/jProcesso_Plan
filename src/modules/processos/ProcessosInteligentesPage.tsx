@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   FileSignature,
   Filter,
+  FolderKanban,
   MoreVertical,
   PenLine,
   Plus,
@@ -214,6 +215,8 @@ export function ProcessosInteligentesPage() {
       <PageHeader
         title="Processos Inteligentes"
         subtitle="Gerencie e acompanhe seus processos de forma inteligente"
+        icon={FolderKanban}
+        accent="blue"
       />
 
       <div className="mb-3 flex flex-wrap items-center gap-2">

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ClipboardX, FilePenLine, MessageSquareReply, Plus, Trash2 } from 'lucide-react'
+import { ClipboardList, ClipboardX, FilePenLine, MessageSquareReply, Plus, Trash2 } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { Button } from '../../components/common/Button'
 import { Badge } from '../../components/common/Badge'
@@ -159,6 +159,8 @@ export function RegistroNecessidadePage() {
       <PageHeader
         title="Registros de Necessidade"
         subtitle="Visualize registros e itens cadastrados"
+        icon={ClipboardList}
+        accent="teal"
         actions={
           <div className="flex rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-white p-1">
             {TABS.map((t) => (

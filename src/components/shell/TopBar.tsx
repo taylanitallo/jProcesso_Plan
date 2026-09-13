@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../store/auth'
 import { useUi } from '../../store/ui'
+import { ACCENTS, type Accent } from '../common/accents'
 import { NotificationPanel } from './NotificationPanel'
 import { UserMenuDropdown } from './UserMenuDropdown'
 
@@ -37,6 +38,23 @@ const ICONS: Record<string, LucideIcon> = {
   pca: CalendarRange,
   precos: Coins,
   pncp: Landmark,
+}
+
+/** Cada ícone de contexto tem sua cor — a barra deixa de ser toda azul. */
+const ACCENT_POR_ICONE: Record<string, Accent> = {
+  scale: 'violet',
+  book: 'amber',
+  search: 'violet',
+  database: 'blue',
+  analyzer: 'pink',
+  clipboard: 'teal',
+  list: 'teal',
+  workflow: 'teal',
+  modelo: 'violet',
+  normativa: 'indigo',
+  pca: 'amber',
+  precos: 'green',
+  pncp: 'indigo',
 }
 
 export function TopBar() {
@@ -60,6 +78,7 @@ export function TopBar() {
         <nav className="flex items-center gap-2 overflow-x-auto border-l border-[var(--color-line)] pl-4">
           {moduleLinks.map((l) => {
             const Icon = ICONS[l.icon] ?? Database
+            const a = ACCENTS[ACCENT_POR_ICONE[l.icon] ?? 'blue']
             return (
               <NavLink
                 key={l.key}
@@ -70,8 +89,8 @@ export function TopBar() {
                 className={({ isActive }) =>
                   `grid h-10 w-10 shrink-0 place-items-center rounded-[10px] border transition ${
                     isActive
-                      ? 'border-[#bcd0ee] bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)]'
-                      : 'border-[var(--color-line)] bg-white text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                      ? `${a.border} ${a.bg} ${a.text}`
+                      : `border-[var(--color-line)] bg-white ${a.text} opacity-70 hover:opacity-100`
                   }`
                 }
               >
@@ -88,8 +107,8 @@ export function TopBar() {
             className={({ isActive }) =>
               `grid h-10 w-10 shrink-0 place-items-center rounded-[10px] border transition ${
                 isActive
-                  ? 'border-[#bcd0ee] bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)]'
-                  : 'border-[var(--color-line)] bg-white text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                  ? `${ACCENTS.indigo.border} ${ACCENTS.indigo.bg} ${ACCENTS.indigo.text}`
+                  : `border-[var(--color-line)] bg-white ${ACCENTS.indigo.text} opacity-70 hover:opacity-100`
               }`
             }
           >

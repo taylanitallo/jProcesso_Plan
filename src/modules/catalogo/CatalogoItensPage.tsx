@@ -132,6 +132,8 @@ export function CatalogoItensPage() {
       <PageHeader
         title="Catálogo de Itens"
         subtitle="Configure os itens cadastrados para seus processos!"
+        icon={PackageSearch}
+        accent="blue"
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-3 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-4 shadow-[var(--shadow-card)]">

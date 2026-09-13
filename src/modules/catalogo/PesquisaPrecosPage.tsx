@@ -91,6 +91,8 @@ export function PesquisaPrecosPage() {
       <PageHeader
         title="Pesquisa de Preços"
         subtitle="Consulte preços praticados em compras públicas pra fundamentar a estimativa de valor do item."
+        icon={Coins}
+        accent="green"
       />
 
       <div className="mb-4 flex flex-col gap-4 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-4 shadow-[var(--shadow-card)]">

@@ -38,6 +38,8 @@ export function GerenciarUnidadeSetorPage() {
       <PageHeader
         title="Gerenciamento de Unidade e Setor"
         subtitle="Gerencie os Unidades e Setores da instituição"
+        icon={Building2}
+        accent="blue"
         actions={
           <div className="flex rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-white p-1">
             {TABS.map((t) => (

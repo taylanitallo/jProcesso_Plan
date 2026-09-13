@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Power, Search } from 'lucide-react'
+import { Plus, Power, Search, Workflow as WorkflowIcon } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { Button } from '../../components/common/Button'
 import { Badge } from '../../components/common/Badge'
@@ -73,6 +73,8 @@ export function ProcessosWorkflowPage() {
       <PageHeader
         title="Fluxos de Processos"
         subtitle="Configure fluxos automáticos para seus processos inteligentes"
+        icon={WorkflowIcon}
+        accent="teal"
       />
 
       <div className="mb-4 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-4 shadow-[var(--shadow-card)]">

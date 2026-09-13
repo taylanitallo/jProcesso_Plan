@@ -137,6 +137,8 @@ export function CriarPcaPage() {
       <PageHeader
         title="Criar PCA"
         subtitle="Cada Unidade Orçamentária monta o seu PCA. O administrador geral consolida e transmite todos ao PNCP."
+        icon={CalendarRange}
+        accent="amber"
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-3 rounded-[var(--radius-card)] border border-[var(--color-line)] bg-white p-4 shadow-[var(--shadow-card)]">

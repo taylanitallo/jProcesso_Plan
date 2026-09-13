@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Filter, MoreVertical } from 'lucide-react'
+import { BarChart3, ChevronLeft, ChevronRight, Filter, MoreVertical } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { Badge } from '../../components/common/Badge'
 import { DataTable, type Column } from '../../components/common/DataTable'
@@ -126,7 +126,7 @@ export function RelatorioUsoPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader title="Relatório de Uso" center />
+      <PageHeader title="Relatório de Uso" icon={BarChart3} accent="amber" center />
 
       <div className="flex justify-center">
         <div className="flex flex-wrap justify-center gap-1 rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-white p-1">
