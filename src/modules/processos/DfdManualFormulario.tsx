@@ -14,6 +14,7 @@ import {
   X as XIcon,
 } from 'lucide-react'
 import { Combo } from '../../components/common/Combo'
+import { ConfirmDialog } from '../../components/common/ConfirmDialog'
 import { DataTable, type Column } from '../../components/common/DataTable'
 import { EmptyState } from '../../components/common/EmptyState'
 import { Secao } from '../../components/common/Secao'
@@ -98,6 +99,7 @@ export function DfdManualFormulario({
   const [itemForm, setItemForm] = useState(itemVazio)
   const [itemCatalogoNome, setItemCatalogoNome] = useState('')
   const [editandoId, setEditandoId] = useState<string | null>(null)
+  const [excluirItemId, setExcluirItemId] = useState<string | null>(null)
 
   const travado = Boolean(dados.origemPca)
   const pcaOrigem = dados.origemPca ? pcas.find((p) => p.id === dados.origemPca?.pcaId) : undefined
@@ -267,7 +269,7 @@ export function DfdManualFormulario({
             <Pencil size={13} />
           </button>
           <button
-            onClick={() => removerItem(r.id)}
+            onClick={() => setExcluirItemId(r.id)}
             aria-label="Remover item"
             title={
               r.origemItemId
@@ -689,6 +691,25 @@ export function DfdManualFormulario({
           </button>
         )}
       </div>
+
+      <ConfirmDialog
+        open={Boolean(excluirItemId)}
+        title="Remover item?"
+        message={
+          <>
+            <strong>{dados.itens.find((it) => it.id === excluirItemId)?.descricao}</strong> será
+            removido desta DFD.
+            {dados.itens.find((it) => it.id === excluirItemId)?.origemItemId
+              ? ' A quantidade volta a ficar disponível no PCA pra outras execuções.'
+              : ' Esta ação não pode ser desfeita.'}
+          </>
+        }
+        onCancel={() => setExcluirItemId(null)}
+        onConfirm={() => {
+          if (excluirItemId) removerItem(excluirItemId)
+          setExcluirItemId(null)
+        }}
+      />
     </div>
   )
 }

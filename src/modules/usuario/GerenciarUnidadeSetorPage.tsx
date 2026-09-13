@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Building2, Plus, Trash2, X } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { EmptyState } from '../../components/common/EmptyState'
+import { ConfirmDialog } from '../../components/common/ConfirmDialog'
 import { useOrganizacao } from '../../store/organizacao'
 
 const TABS = ['Unidades', 'Setores']
@@ -20,6 +21,7 @@ export function GerenciarUnidadeSetorPage() {
   const [novoOpen, setNovoOpen] = useState(false)
   const [codigo, setCodigo] = useState('')
   const [nome, setNome] = useState('')
+  const [excluirId, setExcluirId] = useState<string | null>(null)
 
   const lista = isUnidade ? unidades : setores
   const rotulo = isUnidade ? 'Unidade' : 'Setor'
@@ -101,7 +103,8 @@ export function GerenciarUnidadeSetorPage() {
                   )}
                 </div>
                 <button
-                  onClick={() => (isUnidade ? removeUnidade(it.id) : removeSetor(it.id))}
+                  onClick={() => setExcluirId(it.id)}
+                  aria-label={`Excluir ${rotulo.toLowerCase()}`}
                   className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] border border-[#f0c2c8] text-[var(--color-danger)]"
                 >
                   <Trash2 size={14} />
@@ -169,6 +172,22 @@ export function GerenciarUnidadeSetorPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={Boolean(excluirId)}
+        title={`Excluir ${rotulo.toLowerCase()}?`}
+        message={
+          <>
+            <strong>{lista.find((i) => i.id === excluirId)?.nome}</strong> será removido(a). Esta
+            ação não pode ser desfeita.
+          </>
+        }
+        onCancel={() => setExcluirId(null)}
+        onConfirm={() => {
+          if (excluirId) (isUnidade ? removeUnidade : removeSetor)(excluirId)
+          setExcluirId(null)
+        }}
+      />
     </div>
   )
 }

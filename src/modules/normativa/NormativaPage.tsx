@@ -4,6 +4,7 @@ import { Badge } from '../../components/common/Badge'
 import { Button } from '../../components/common/Button'
 import { Modal } from '../../components/common/Modal'
 import { EmptyState } from '../../components/common/EmptyState'
+import { ConfirmDialog } from '../../components/common/ConfirmDialog'
 import { useModuleLinks } from '../../components/shell/useModuleLinks'
 import { PROCESSOS_MODULE_LINKS } from '../processos/processosLinks'
 import { useNormativas } from '../../store/normativas'
@@ -35,6 +36,7 @@ export function NormativaPage() {
   const [selId, setSelId] = useState<string | null>(null)
   const [arquivo, setArquivo] = useState<File | null>(null)
   const [enviando, setEnviando] = useState(false)
+  const [excluirId, setExcluirId] = useState<string | null>(null)
 
   const list = normativas.filter((n) => n.nome.toLowerCase().includes(query.toLowerCase()))
   const atual = normativas.find((n) => n.id === selId) ?? null
@@ -99,10 +101,7 @@ export function NormativaPage() {
                 </span>
               </button>
               <button
-                onClick={() => {
-                  remover(n.id)
-                  if (selId === n.id) setSelId(null)
-                }}
+                onClick={() => setExcluirId(n.id)}
                 aria-label="Excluir normativa"
                 className="grid h-7 w-7 shrink-0 place-items-center rounded-[var(--radius-control)] text-[var(--color-muted)] opacity-0 transition group-hover:opacity-100 hover:text-[var(--color-danger)]"
               >
@@ -166,6 +165,25 @@ export function NormativaPage() {
           {enviando ? 'Enviando…' : 'Enviar'}
         </Button>
       </Modal>
+
+      <ConfirmDialog
+        open={Boolean(excluirId)}
+        title="Excluir normativa?"
+        message={
+          <>
+            <strong>{normativas.find((n) => n.id === excluirId)?.nome}</strong> será removida. A
+            IA deixa de usá-la como referência. Esta ação não pode ser desfeita.
+          </>
+        }
+        onCancel={() => setExcluirId(null)}
+        onConfirm={() => {
+          if (excluirId) {
+            remover(excluirId)
+            if (selId === excluirId) setSelId(null)
+          }
+          setExcluirId(null)
+        }}
+      />
     </div>
   )
 }

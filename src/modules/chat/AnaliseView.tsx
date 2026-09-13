@@ -1,10 +1,13 @@
+import { useState } from 'react'
 import { ChevronLeft, Download, FileText, Trash2 } from 'lucide-react'
 import { AiBubble } from './ChatShell'
+import { ConfirmDialog } from '../../components/common/ConfirmDialog'
 import { useAnalises, type Analise } from '../../store/analises'
 
 /** Exibe um relatório salvo (Análise / Research) em modo leitura. */
 export function AnaliseView({ analise, onBack }: { analise: Analise; onBack: () => void }) {
   const remover = useAnalises((s) => s.remover)
+  const [excluirOpen, setExcluirOpen] = useState(false)
 
   const baixar = () => {
     const blob = new Blob([analise.corpo], { type: 'text/markdown;charset=utf-8' })
@@ -27,10 +30,7 @@ export function AnaliseView({ analise, onBack }: { analise: Analise; onBack: () 
           <ChevronLeft size={15} /> Voltar
         </button>
         <button
-          onClick={() => {
-            remover(analise.id)
-            onBack()
-          }}
+          onClick={() => setExcluirOpen(true)}
           className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-[#f0c2c8] px-3 py-1.5 text-xs font-semibold text-[var(--color-danger)]"
         >
           <Trash2 size={13} /> Excluir
@@ -56,6 +56,22 @@ export function AnaliseView({ analise, onBack }: { analise: Analise; onBack: () 
           </button>
         </div>
       </AiBubble>
+
+      <ConfirmDialog
+        open={excluirOpen}
+        title="Excluir relatório?"
+        message={
+          <>
+            <strong>{analise.titulo}</strong> será removido. Esta ação não pode ser desfeita.
+          </>
+        }
+        onCancel={() => setExcluirOpen(false)}
+        onConfirm={() => {
+          remover(analise.id)
+          setExcluirOpen(false)
+          onBack()
+        }}
+      />
     </div>
   )
 }

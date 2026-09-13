@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { FileSignature, Plus, Trash2, X } from 'lucide-react'
 import { PageHeader } from '../../components/common/PageHeader'
 import { Button } from '../../components/common/Button'
+import { ConfirmDialog } from '../../components/common/ConfirmDialog'
 import { DataTable, type Column } from '../../components/common/DataTable'
 import { useOrganizacao } from '../../store/organizacao'
 
@@ -15,6 +16,7 @@ export function TipoEnvolvidoAssinaturaPage() {
   const [page, setPage] = useState(1)
   const [novaOpen, setNovaOpen] = useState(false)
   const [nome, setNome] = useState('')
+  const [excluirNome, setExcluirNome] = useState<string | null>(null)
 
   const pages = Math.max(1, Math.ceil(categorias.length / PER_PAGE))
   const paginaAtual = Math.min(page, pages)
@@ -31,7 +33,8 @@ export function TipoEnvolvidoAssinaturaPage() {
       render: (r) => (
         <div className="flex justify-end gap-2">
           <button
-            onClick={() => removeCategoria(r.nome)}
+            onClick={() => setExcluirNome(r.nome)}
+            aria-label="Excluir categoria"
             className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] border border-[#f0c2c8] text-[var(--color-danger)]"
           >
             <Trash2 size={14} />
@@ -142,6 +145,22 @@ export function TipoEnvolvidoAssinaturaPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={Boolean(excluirNome)}
+        title="Excluir categoria?"
+        message={
+          <>
+            A categoria <strong>{excluirNome}</strong> será removida. Esta ação não pode ser
+            desfeita.
+          </>
+        }
+        onCancel={() => setExcluirNome(null)}
+        onConfirm={() => {
+          if (excluirNome) removeCategoria(excluirNome)
+          setExcluirNome(null)
+        }}
+      />
     </div>
   )
 }
