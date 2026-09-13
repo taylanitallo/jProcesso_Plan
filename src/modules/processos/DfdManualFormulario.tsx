@@ -338,14 +338,23 @@ export function DfdManualFormulario({
             />
           </Campo>
           <Campo label="Secretaria">
-            <Combo
-              value={dados.secretaria}
-              onChange={(v) => set('secretaria', v)}
-              options={unidades.map((u) => u.nome)}
-              placeholder={unidades.length === 0 ? 'Nenhuma unidade cadastrada' : 'Selecione'}
-              disabled={unidades.length === 0}
-              filterable
-            />
+            {travado ? (
+              <input
+                readOnly
+                value={dados.secretaria}
+                title="Secretaria vem do PCA de origem — não dá pra trocar aqui"
+                className="gt-input cursor-not-allowed bg-[#f1f4f9] font-normal normal-case text-[var(--color-muted)]"
+              />
+            ) : (
+              <Combo
+                value={dados.secretaria}
+                onChange={(v) => set('secretaria', v)}
+                options={unidades.map((u) => u.nome)}
+                placeholder={unidades.length === 0 ? 'Nenhuma unidade cadastrada' : 'Selecione'}
+                disabled={unidades.length === 0}
+                filterable
+              />
+            )}
           </Campo>
           <Campo label="Setores/departamentos demandantes" span={2}>
             {setoresCadastrados.length === 0 ? (
