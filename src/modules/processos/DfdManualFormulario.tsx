@@ -42,7 +42,6 @@ const itemVazio = {
   unidade: '',
   qtd: '',
   unitario: '',
-  previsaoIso: '',
   origemItemId: undefined as string | undefined,
 }
 
@@ -63,10 +62,10 @@ const uid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(
  * facilitar a leitura visual em vez de um bloco só de campos.
  *
  * Quando a DFD veio de um PCA (`dados.origemPca`), a lista de itens fica
- * travada: não dá pra adicionar item novo, só editar especificação/valor/
- * previsão e reduzir a quantidade — nunca ultrapassar o total da DFD do PCA,
- * controlado junto com todas as outras "DFDs de execução" que apontam pro
- * mesmo item (`disponibilidadeItemPca`).
+ * travada: não dá pra adicionar item novo, só editar especificação/valor e
+ * reduzir a quantidade — nunca ultrapassar o total da DFD do PCA, controlado
+ * junto com todas as outras "DFDs de execução" que apontam pro mesmo item
+ * (`disponibilidadeItemPca`).
  */
 export function DfdManualFormulario({
   chave,
@@ -150,7 +149,6 @@ export function DfdManualFormulario({
       unidadeFornecimento: itemForm.unidade.trim(),
       quantidade: Number(itemForm.qtd),
       valorUnitario: Number(itemForm.unitario),
-      previsao: isoToBr(itemForm.previsaoIso),
       origemItemId: itemForm.origemItemId,
     }
     setDados((d) => ({
@@ -169,7 +167,6 @@ export function DfdManualFormulario({
       unidade: it.unidadeFornecimento,
       qtd: String(it.quantidade),
       unitario: String(it.valorUnitario),
-      previsaoIso: isoDe(it.previsao),
       origemItemId: it.origemItemId,
     })
   }
@@ -207,7 +204,6 @@ export function DfdManualFormulario({
       align: 'right',
       render: (r) => fmtBRL(r.quantidade * r.valorUnitario),
     },
-    { key: 'previsao', header: 'Previsão', align: 'center', render: (r) => r.previsao || '—' },
     {
       key: 'acoes',
       header: '',
@@ -269,7 +265,7 @@ export function DfdManualFormulario({
           <Link2 size={14} className="mt-0.5 shrink-0" />
           DFD de execução puxada do PCA {pcaOrigem?.nome ?? ''}
           {dfdOrigem ? ` — DFD #${dfdOrigem.numero}` : ''}. Não dá pra adicionar item novo aqui; só
-          ajustar especificação, valor, previsão e reduzir quantidade — sem ultrapassar o total da DFD
+          ajustar especificação, valor e reduzir quantidade — sem ultrapassar o total da DFD
           do PCA.
         </p>
       )}
@@ -427,7 +423,7 @@ export function DfdManualFormulario({
           <Link2 size={14} className="mt-0.5 shrink-0" />
           DFD de execução puxada do PCA {pcaOrigem?.nome ?? ''}
           {dfdOrigem ? ` — DFD #${dfdOrigem.numero}` : ''}. Não dá pra adicionar item novo aqui; só
-          ajustar especificação, valor, previsão e reduzir quantidade — sem ultrapassar o total da DFD
+          ajustar especificação, valor e reduzir quantidade — sem ultrapassar o total da DFD
           do PCA.
         </p>
       )}
@@ -472,7 +468,7 @@ export function DfdManualFormulario({
                 className="gt-input cursor-not-allowed bg-[#f1f4f9] font-normal normal-case text-[var(--color-muted)]"
               />
             </div>
-            <div className="grid gap-2 sm:grid-cols-[repeat(3,minmax(0,1fr))_auto_auto]">
+            <div className="grid gap-2 sm:grid-cols-[repeat(2,minmax(0,1fr))_auto_auto]">
               <input
                 type="number"
                 min={0}
@@ -489,12 +485,6 @@ export function DfdManualFormulario({
                 value={itemForm.unitario}
                 onChange={(e) => setItemForm((f) => ({ ...f, unitario: e.target.value }))}
                 placeholder="Valor unit."
-                className="gt-input font-normal normal-case"
-              />
-              <input
-                type="date"
-                value={itemForm.previsaoIso}
-                onChange={(e) => setItemForm((f) => ({ ...f, previsaoIso: e.target.value }))}
                 className="gt-input font-normal normal-case"
               />
               {editandoId && (
@@ -530,7 +520,7 @@ export function DfdManualFormulario({
         {travado && !editandoId && (
           <p className="mb-3 rounded-[var(--radius-control)] border border-dashed border-[var(--color-line)] px-3 py-2 text-xs text-[var(--color-muted)]">
             Itens vêm da DFD do PCA de origem — clique no lápis de um item pra ajustar especificação,
-            valor, previsão ou reduzir a quantidade.
+            valor ou reduzir a quantidade.
           </p>
         )}
 

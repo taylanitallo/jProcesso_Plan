@@ -30,8 +30,6 @@ export type ItemDfdManual = {
   unidadeFornecimento: string
   quantidade: number
   valorUnitario: number
-  /** dd/mm/aaaa — previsão de entrega/execução do item. */
-  previsao: string
   /**
    * Id do `PcaItemLocal` de origem (quando o item veio de uma DFD do PCA).
    * Ausente = item digitado à mão, sem vínculo/limite de quantidade.
@@ -85,8 +83,8 @@ const uid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(
  * puxar na criação de um Processo Inteligente — cabeçalho + itens vêm
  * prontos. A partir daqui a lista de itens fica travada (não dá pra
  * acrescentar item novo — `origemPca` marca isso), mas cada item continua
- * editável (descrição/unidade/valor/previsão) e a quantidade pode ser
- * reduzida, nunca ultrapassar o que está na DFD do PCA — ver
+ * editável (descrição/valor) e a quantidade pode ser reduzida, nunca
+ * ultrapassar o que está na DFD do PCA — ver
  * `disponibilidadeItemPca`.
  */
 export function dfdManualDoPca(
@@ -115,7 +113,6 @@ export function dfdManualDoPca(
       unidadeFornecimento: it.unidadeFornecimento,
       quantidade: it.quantidadeEstimada,
       valorUnitario: it.valorUnitarioEstimado,
-      previsao: dfd.dataDesejada,
       origemItemId: it.id,
     })),
     atualizadoEm: '',
@@ -177,14 +174,24 @@ export const useDfdManual = create<State>()(
     }),
     {
       name: 'sollai-dfd-manual',
-      version: 2,
+      version: 3,
       migrate: (persisted) => {
-        type DfdManualAntiga = Omit<DfdManual, 'setores'> & { setor?: string; demandaParaPca?: boolean }
+        type ItemAntigo = ItemDfdManual & { previsao?: string }
+        type DfdManualAntiga = Omit<DfdManual, 'setores' | 'itens'> & {
+          setor?: string
+          setores?: string[]
+          demandaParaPca?: boolean
+          itens: ItemAntigo[]
+        }
         const s = persisted as { porChave?: Record<string, DfdManualAntiga> }
         const porChave: Record<string, DfdManual> = {}
         for (const [chave, d] of Object.entries(s.porChave ?? {})) {
-          const { setor, demandaParaPca: _demandaParaPca, ...resto } = d
-          porChave[chave] = { ...resto, setores: d.setor ? [setor as string] : [] }
+          const { setor, demandaParaPca: _demandaParaPca, itens, ...resto } = d
+          porChave[chave] = {
+            ...resto,
+            setores: d.setores ?? (setor ? [setor] : []),
+            itens: itens.map(({ previsao: _previsao, ...it }) => it),
+          }
         }
         return { porChave }
       },
