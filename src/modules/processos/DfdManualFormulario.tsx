@@ -42,7 +42,6 @@ const itemVazio = {
   unidade: '',
   qtd: '',
   unitario: '',
-  modoQtd: 'geral' as 'geral' | 'setor',
   qtdPorSetor: {} as Record<string, string>,
   origemItemId: undefined as string | undefined,
 }
@@ -126,7 +125,7 @@ export function DfdManualFormulario({
     }
   }
 
-  const usarRateioSetor = dados.setores.length > 1 && itemForm.modoQtd === 'setor'
+  const usarRateioSetor = dados.setores.length > 1
   const qtdEfetiva = usarRateioSetor
     ? dados.setores.reduce((s, nome) => s + (Number(itemForm.qtdPorSetor[nome]) || 0), 0)
     : Number(itemForm.qtd) || 0
@@ -177,7 +176,6 @@ export function DfdManualFormulario({
       unidade: it.unidadeFornecimento,
       qtd: String(it.quantidade),
       unitario: String(it.valorUnitario),
-      modoQtd: it.quantidades ? 'setor' : 'geral',
       qtdPorSetor: Object.fromEntries(
         Object.entries(it.quantidades ?? {}).map(([k, v]) => [k, String(v)]),
       ),
@@ -497,26 +495,11 @@ export function DfdManualFormulario({
                 className="gt-input cursor-not-allowed bg-[#f1f4f9] font-normal normal-case text-[var(--color-muted)]"
               />
             </div>
-            {dados.setores.length > 1 && (
-              <div className="flex rounded-[var(--radius-control)] border border-[var(--color-line)] bg-white p-1">
-                {(['geral', 'setor'] as const).map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setItemForm((f) => ({ ...f, modoQtd: m }))}
-                    className={`flex-1 rounded-[8px] px-3 py-1.5 text-xs font-semibold transition ${
-                      itemForm.modoQtd === m
-                        ? 'bg-[var(--color-success)] text-white'
-                        : 'text-[var(--color-muted)]'
-                    }`}
-                  >
-                    {m === 'geral' ? 'Quantidade geral' : 'Separar por setor'}
-                  </button>
-                ))}
-              </div>
-            )}
             {usarRateioSetor && (
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                <p className="text-[11px] font-semibold text-[var(--color-muted)] sm:col-span-2 lg:col-span-3">
+                  Mais de um setor demandante — informe a quantidade de cada um.
+                </p>
                 {dados.setores.map((nome) => (
                   <label
                     key={nome}
