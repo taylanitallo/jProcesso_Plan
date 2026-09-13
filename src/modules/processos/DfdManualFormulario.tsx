@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
+import { Pencil, Plus, Trash2, X as XIcon } from 'lucide-react'
 import { Combo } from '../../components/common/Combo'
 import { DataTable, type Column } from '../../components/common/DataTable'
 import { EmptyState } from '../../components/common/EmptyState'
@@ -20,7 +20,7 @@ import {
 const fmtBRL = (v: number) =>
   v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
-const itemVazio = { codigo: '', qtd: '', unitario: '', previsaoIso: '' }
+const itemVazio = { codigo: '', descricao: '', unidade: '', qtd: '', unitario: '', previsaoIso: '' }
 
 const isoToBr = (s: string) => {
   const m = s?.match(/^(\d{4})-(\d{2})-(\d{2})/)
@@ -61,6 +61,7 @@ export function DfdManualFormulario({
   const [dados, setDados] = useState<DfdManual>(existente ?? dfdManualVazio())
   const [itemForm, setItemForm] = useState(itemVazio)
   const [itemCatalogoNome, setItemCatalogoNome] = useState('')
+  const [editandoId, setEditandoId] = useState<string | null>(null)
 
   const set = <K extends keyof DfdManual>(campo: K, valor: DfdManual[K]) =>
     setDados((d) => ({ ...d, [campo]: valor }))
@@ -68,31 +69,58 @@ export function DfdManualFormulario({
   const escolherItemCatalogo = (nome: string) => {
     setItemCatalogoNome(nome)
     const item = catalogo.find((c) => `${c.codigo} — ${c.nome}` === nome)
-    if (item) setItemForm((f) => ({ ...f, codigo: item.codigo }))
+    if (item) {
+      setItemForm((f) => ({ ...f, codigo: item.codigo, descricao: item.nome, unidade: item.unidade }))
+    }
   }
 
-  const itemSelecionado = catalogo.find((c) => c.codigo === itemForm.codigo)
-  const podeAdicionarItem =
-    itemSelecionado && Number(itemForm.qtd) > 0 && Number(itemForm.unitario) > 0
+  const podeSalvarItem =
+    itemForm.codigo.trim() &&
+    itemForm.descricao.trim() &&
+    Number(itemForm.qtd) > 0 &&
+    Number(itemForm.unitario) > 0
 
-  const adicionarItem = () => {
-    if (!itemSelecionado || !podeAdicionarItem) return
-    const novo: ItemDfdManual = {
-      id: `it${uid()}`,
-      codigoItemCatalogo: itemSelecionado.codigo,
-      descricao: itemSelecionado.nome,
-      unidadeFornecimento: itemSelecionado.unidade,
-      quantidade: Number(itemForm.qtd),
-      valorUnitario: Number(itemForm.unitario),
-      previsao: isoToBr(itemForm.previsaoIso),
-    }
-    setDados((d) => ({ ...d, itens: [...d.itens, novo] }))
+  const cancelarEdicaoItem = () => {
+    setEditandoId(null)
     setItemForm(itemVazio)
     setItemCatalogoNome('')
   }
 
-  const removerItem = (id: string) =>
+  const salvarItem = () => {
+    if (!podeSalvarItem) return
+    const item: ItemDfdManual = {
+      id: editandoId ?? `it${uid()}`,
+      codigoItemCatalogo: itemForm.codigo.trim(),
+      descricao: itemForm.descricao.trim(),
+      unidadeFornecimento: itemForm.unidade.trim(),
+      quantidade: Number(itemForm.qtd),
+      valorUnitario: Number(itemForm.unitario),
+      previsao: isoToBr(itemForm.previsaoIso),
+    }
+    setDados((d) => ({
+      ...d,
+      itens: editandoId ? d.itens.map((it) => (it.id === editandoId ? item : it)) : [...d.itens, item],
+    }))
+    cancelarEdicaoItem()
+  }
+
+  const editarItem = (it: ItemDfdManual) => {
+    setEditandoId(it.id)
+    setItemCatalogoNome(`${it.codigoItemCatalogo} — ${it.descricao}`)
+    setItemForm({
+      codigo: it.codigoItemCatalogo,
+      descricao: it.descricao,
+      unidade: it.unidadeFornecimento,
+      qtd: String(it.quantidade),
+      unitario: String(it.valorUnitario),
+      previsaoIso: isoDe(it.previsao),
+    })
+  }
+
+  const removerItem = (id: string) => {
     setDados((d) => ({ ...d, itens: d.itens.filter((it) => it.id !== id) }))
+    if (editandoId === id) cancelarEdicaoItem()
+  }
 
   const salvar = () => {
     salvarStore(chave, dados)
@@ -118,13 +146,22 @@ export function DfdManualFormulario({
       header: '',
       align: 'right',
       render: (r) => (
-        <button
-          onClick={() => removerItem(r.id)}
-          aria-label="Remover item"
-          className="grid h-7 w-7 place-items-center rounded-[var(--radius-control)] text-[var(--color-danger)] hover:bg-[#fbeff1]"
-        >
-          <Trash2 size={13} />
-        </button>
+        <div className="flex justify-end gap-1">
+          <button
+            onClick={() => editarItem(r)}
+            aria-label="Editar item"
+            className="grid h-7 w-7 place-items-center rounded-[var(--radius-control)] text-[var(--color-primary-strong)] hover:bg-[var(--color-primary-soft)]"
+          >
+            <Pencil size={13} />
+          </button>
+          <button
+            onClick={() => removerItem(r.id)}
+            aria-label="Remover item"
+            className="grid h-7 w-7 place-items-center rounded-[var(--radius-control)] text-[var(--color-danger)] hover:bg-[#fbeff1]"
+          >
+            <Trash2 size={13} />
+          </button>
+        </div>
       ),
     },
   ]
@@ -269,46 +306,76 @@ export function DfdManualFormulario({
 
       <div>
         <h4 className="mb-2 font-display text-sm font-bold text-[#183263]">Itens</h4>
-        <div className="mb-3 grid gap-2 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-[#f8fafd] p-3 sm:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))_auto]">
-          <Combo
-            value={itemCatalogoNome}
-            onChange={escolherItemCatalogo}
-            options={catalogo.map((c) => `${c.codigo} — ${c.nome}`)}
-            placeholder={catalogo.length === 0 ? 'Nenhum item no catálogo' : 'Selecione o item'}
-            disabled={catalogo.length === 0}
-            filterable
-          />
-          <input
-            type="number"
-            min={0}
-            value={itemForm.qtd}
-            onChange={(e) => setItemForm((f) => ({ ...f, qtd: e.target.value }))}
-            placeholder="Quantidade"
-            className="gt-input font-normal normal-case"
-          />
-          <input
-            type="number"
-            min={0}
-            step="0.01"
-            value={itemForm.unitario}
-            onChange={(e) => setItemForm((f) => ({ ...f, unitario: e.target.value }))}
-            placeholder="Valor unit."
-            className="gt-input font-normal normal-case"
-          />
-          <input
-            type="date"
-            value={itemForm.previsaoIso}
-            onChange={(e) => setItemForm((f) => ({ ...f, previsaoIso: e.target.value }))}
-            className="gt-input font-normal normal-case"
-          />
-          <button
-            type="button"
-            onClick={adicionarItem}
-            disabled={!podeAdicionarItem}
-            className="inline-flex items-center justify-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-primary)] px-3 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <Plus size={14} /> Adicionar
-          </button>
+        <div className="mb-3 flex flex-col gap-2 rounded-[var(--radius-control)] border border-[var(--color-line)] bg-[#f8fafd] p-3">
+          {editandoId && (
+            <p className="text-[11px] font-bold uppercase tracking-wide text-[var(--color-primary-strong)]">
+              Editando item — ajuste a especificação e salve
+            </p>
+          )}
+          <div className="grid gap-2 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_minmax(0,1fr)]">
+            <Combo
+              value={itemCatalogoNome}
+              onChange={escolherItemCatalogo}
+              options={catalogo.map((c) => `${c.codigo} — ${c.nome}`)}
+              placeholder={catalogo.length === 0 ? 'Nenhum item no catálogo' : 'Base do catálogo'}
+              disabled={catalogo.length === 0}
+              filterable
+            />
+            <input
+              value={itemForm.descricao}
+              onChange={(e) => setItemForm((f) => ({ ...f, descricao: e.target.value }))}
+              placeholder="Descrição / especificação"
+              className="gt-input font-normal normal-case"
+            />
+            <input
+              value={itemForm.unidade}
+              onChange={(e) => setItemForm((f) => ({ ...f, unidade: e.target.value }))}
+              placeholder="Unidade"
+              className="gt-input font-normal normal-case"
+            />
+          </div>
+          <div className="grid gap-2 sm:grid-cols-[repeat(3,minmax(0,1fr))_auto_auto]">
+            <input
+              type="number"
+              min={0}
+              value={itemForm.qtd}
+              onChange={(e) => setItemForm((f) => ({ ...f, qtd: e.target.value }))}
+              placeholder="Quantidade"
+              className="gt-input font-normal normal-case"
+            />
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              value={itemForm.unitario}
+              onChange={(e) => setItemForm((f) => ({ ...f, unitario: e.target.value }))}
+              placeholder="Valor unit."
+              className="gt-input font-normal normal-case"
+            />
+            <input
+              type="date"
+              value={itemForm.previsaoIso}
+              onChange={(e) => setItemForm((f) => ({ ...f, previsaoIso: e.target.value }))}
+              className="gt-input font-normal normal-case"
+            />
+            {editandoId && (
+              <button
+                type="button"
+                onClick={cancelarEdicaoItem}
+                className="inline-flex items-center justify-center gap-1.5 rounded-[var(--radius-control)] border border-[var(--color-line)] px-3 py-2 text-xs font-bold text-[var(--color-muted)]"
+              >
+                <XIcon size={14} /> Cancelar
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={salvarItem}
+              disabled={!podeSalvarItem}
+              className="inline-flex items-center justify-center gap-1.5 rounded-[var(--radius-control)] bg-[var(--color-primary)] px-3 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Plus size={14} /> {editandoId ? 'Salvar item' : 'Adicionar'}
+            </button>
+          </div>
         </div>
 
         <DataTable<ItemDfdManual>

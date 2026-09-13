@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { PcaDfd, PcaLocal } from './pca'
 
 /**
  * Dados estruturados do DFD manual dentro de um Processo Inteligente —
@@ -68,6 +69,46 @@ export const dfdManualVazio = (): DfdManual => ({
 
 export const valorTotalItens = (d: DfdManual): number =>
   d.itens.reduce((s, it) => s + it.quantidade * it.valorUnitario, 0)
+
+const uid = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`
+
+/**
+ * Converte uma DFD de dentro de um PCA (Criar PCA) num DFD manual pra puxar
+ * na criação de um Processo Inteligente — cabeçalho + itens vêm prontos, mas
+ * continuam editáveis (descrição/unidade/quantidade/valor de cada item).
+ */
+export function dfdManualDoPca(
+  pca: PcaLocal,
+  dfd: PcaDfd,
+  setoresDisponiveis: string[],
+): DfdManual {
+  const setor = dfd.departamentos.find((d) => setoresDisponiveis.includes(d)) ?? ''
+  const categoria = dfd.itens[0]?.categoriaItemNome ?? ''
+  return {
+    data: new Date().toLocaleDateString('pt-BR'),
+    descricaoSimplificada: dfd.objeto,
+    secretaria: pca.unidadeNome,
+    setor,
+    responsavel: '',
+    ordenador: '',
+    categoria,
+    tipoContratacao: '',
+    grauPrioridade: dfd.grauPrioridade,
+    demandaParaPca: true,
+    objeto: dfd.objeto,
+    justificativa: dfd.justificativa,
+    itens: dfd.itens.map((it) => ({
+      id: `it${uid()}`,
+      codigoItemCatalogo: it.codigoItemCatalogo,
+      descricao: it.descricao,
+      unidadeFornecimento: it.unidadeFornecimento,
+      quantidade: it.quantidadeEstimada,
+      valorUnitario: it.valorUnitarioEstimado,
+      previsao: dfd.dataDesejada,
+    })),
+    atualizadoEm: '',
+  }
+}
 
 type State = {
   porChave: Record<string, DfdManual>
