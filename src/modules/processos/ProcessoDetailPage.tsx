@@ -19,7 +19,6 @@ import {
   X,
 } from 'lucide-react'
 import { AiBubble } from '../chat/ChatShell'
-import { Combo } from '../../components/common/Combo'
 import { useModuleLinks } from '../../components/shell/useModuleLinks'
 import { PROCESSOS_MODULE_LINKS } from './processosLinks'
 import { ArtefatoDetalheModal } from './ArtefatoDetalheModal'
@@ -32,7 +31,7 @@ import { useSolicitacoes, statusSolicitacaoLabel } from '../../store/solicitacoe
 import { useAuth } from '../../store/auth'
 import { Badge } from '../../components/common/Badge'
 
-const EDIT_VAZIO = { nome: '', numero: '', loteUnico: 'Não' as 'Sim' | 'Não', descricao: '' }
+const EDIT_VAZIO = { nome: '', numero: '', descricao: '' }
 
 export function ProcessoDetailPage() {
   useModuleLinks(PROCESSOS_MODULE_LINKS)
@@ -129,7 +128,6 @@ export function ProcessoDetailPage() {
     setEditForm({
       nome: proc.nome,
       numero: proc.numero,
-      loteUnico: proc.loteUnico,
       descricao: proc.descricao,
     })
     setEditOpen(true)
@@ -441,25 +439,14 @@ export function ProcessoDetailPage() {
                 />
               </label>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
-                  Número do Processo
-                  <input
-                    value={editForm.numero}
-                    onChange={(e) => setEditForm((f) => ({ ...f, numero: e.target.value }))}
-                    className="gt-input font-normal normal-case"
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
-                  Lote Único
-                  <Combo
-                    value={editForm.loteUnico}
-                    onChange={(v) => setEditForm((f) => ({ ...f, loteUnico: v as 'Sim' | 'Não' }))}
-                    options={['Sim', 'Não']}
-                    placeholder="Selecione"
-                  />
-                </label>
-              </div>
+              <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
+                Número do Processo
+                <input
+                  value={editForm.numero}
+                  onChange={(e) => setEditForm((f) => ({ ...f, numero: e.target.value }))}
+                  className="gt-input font-normal normal-case"
+                />
+              </label>
 
               <label className="flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
                 Descrição do Processo
@@ -478,7 +465,6 @@ export function ProcessoDetailPage() {
                 atualizar(proc.id, {
                   nome: editForm.nome.trim(),
                   numero: editForm.numero.trim(),
-                  loteUnico: editForm.loteUnico,
                   descricao: editForm.descricao,
                 })
                 setEditOpen(false)

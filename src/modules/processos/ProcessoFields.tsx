@@ -117,14 +117,6 @@ export function ProcessoFields({
             onChange={(e) => onChange({ nome: e.target.value })}
           />
         </div>
-        <Labelled label="LOTE ÚNICO">
-          <Combo
-            value={value.lote}
-            onChange={(v) => onChange({ lote: v })}
-            options={['Sim', 'Não']}
-            placeholder="Selecione:"
-          />
-        </Labelled>
       </div>
 
       <label className="mt-4 flex flex-col gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--color-muted)]">
