@@ -14,9 +14,24 @@
   --color-primary-soft: #eef4ff;
 
   --color-success: #198754;
+  --color-success-soft: #e6f7ee;
   --color-danger: #c93645;
+  --color-danger-soft: #fbecee;
   --color-warning: #d39a16;
   --color-info: #2672c9;
+
+  /* Paleta de destaque — usada pra diferenciar cards/módulos por cor
+     (SollAI real e a maioria dos painéis do setor não são monocromáticos). */
+  --color-teal: #0f766e;
+  --color-teal-soft: #e6f7f5;
+  --color-violet: #6d28d9;
+  --color-violet-soft: #f1ebfe;
+  --color-pink: #be185d;
+  --color-pink-soft: #fdeef3;
+  --color-amber: #b45309;
+  --color-amber-soft: #fef6e7;
+  --color-indigo: #3730a3;
+  --color-indigo-soft: #ecebfb;
 
   --color-canvas: #f3f6fb;
   --color-surface: #ffffff;
